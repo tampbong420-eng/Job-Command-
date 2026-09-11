@@ -39,8 +39,8 @@ export function CrewMap({
   return (
     <MapContainer center={center} zoom={12} scrollWheelZoom className="h-full w-full">
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <Fit points={points} />
       {jobs.map((job) => (

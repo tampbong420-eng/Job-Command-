@@ -11,12 +11,14 @@ import { useEffect, useMemo, useRef, useState, type Dispatch, type RefObject, ty
 import { useParams } from 'react-router-dom';
 
 export function FieldPortal() {
-  const { token } = useParams();
+  const token = useParams().token?.trim() ?? '';
   const { profile } = useCompany();
   const { employees, patchEmployee } = useEmployees();
   const { jobs } = useCustomers();
   const { upsertExpense } = useExpenses();
-  const employee = employees.find((item) => item.inviteToken === token);
+  const employee = employees.find(
+    (item) => item.inviteToken === token || item.id === token || item.inviteToken.replace(/^jc_/, '') === token,
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const watchRef = useRef<number | null>(null);
 

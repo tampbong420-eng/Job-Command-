@@ -1,4 +1,4 @@
-import { inviteToken, uid } from '@/lib/ids';
+import { uid } from '@/lib/ids';
 import type { AppState, Employee, Job } from '@/types';
 
 const now = () => new Date().toISOString();
@@ -11,6 +11,7 @@ function employee(
   status: Employee['status'],
   speed: number,
   battery: number,
+  token: string,
 ): Employee {
   return {
     id: uid('emp'),
@@ -23,7 +24,7 @@ function employee(
     battery,
     heading: Math.floor(Math.random() * 360),
     status,
-    inviteToken: inviteToken(),
+    inviteToken: token,
     lastPing: now(),
   };
 }
@@ -57,10 +58,10 @@ function job(
 }
 
 export function demoState(): AppState {
-  const marcus = employee('Marcus Hale', 'Lead Tech', 27.9506, -82.4572, 'enroute', 28, 86);
-  const rina = employee('Rina Patel', 'Installer', 27.9758, -82.5369, 'onjob', 0, 64);
-  const devon = employee('Devon Ruiz', 'Apprentice', 28.012, -82.492, 'available', 12, 91);
-  const kayla = employee('Kayla Nguyen', 'Service', 27.921, -82.439, 'available', 19, 73);
+  const marcus = employee('Marcus Hale', 'Lead Tech', 27.9506, -82.4572, 'enroute', 28, 86, 'jc_marcus_hale');
+  const rina = employee('Rina Patel', 'Installer', 27.9758, -82.5369, 'onjob', 0, 64, 'jc_rina_patel');
+  const devon = employee('Devon Ruiz', 'Apprentice', 28.012, -82.492, 'available', 12, 91, 'jc_devon_ruiz');
+  const kayla = employee('Kayla Nguyen', 'Service', 27.921, -82.439, 'available', 19, 73, 'jc_kayla_nguyen');
 
   return {
     company: {

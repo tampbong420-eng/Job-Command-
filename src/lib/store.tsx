@@ -21,7 +21,7 @@ import {
   type ReactNode,
 } from 'react';
 
-const STORAGE_KEY = 'job-command:v3';
+const STORAGE_KEY = 'job-command:v4';
 
 function loadLocal(): AppState | null {
   try {
@@ -64,7 +64,11 @@ type StoreApi = {
 const StoreContext = createContext<StoreApi | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppState>(() => loadLocal() ?? demoState());
+  const [state, setState] = useState<AppState>(() => {
+    const initial = loadLocal() ?? demoState();
+    saveLocal(initial);
+    return initial;
+  });
   const stateRef = useRef(state);
   const remoteTimer = useRef<number | null>(null);
 
