@@ -1,0 +1,29 @@
+import { describe, expect, it } from "vitest";
+import {
+  fieldDestination,
+  mapsUrl,
+  preferredNextStatus,
+  telUrl,
+} from "@/lib/field";
+
+describe("field helpers", () => {
+  it("prefers job location over the customer address", () => {
+    expect(
+      fieldDestination({
+        location: "Roof penthouse",
+        customerAddress: "1 Icehouse Rd",
+      }),
+    ).toBe("Roof penthouse");
+  });
+
+  it("builds maps and tel urls", () => {
+    expect(mapsUrl("Zone 4")).toContain("destination=Zone%204");
+    expect(telUrl("(206) 555-0130")).toBe("tel:2065550130");
+  });
+
+  it("moves a job forward without skipping to cancelled", () => {
+    expect(preferredNextStatus("assigned")).toBe("in_progress");
+    expect(preferredNextStatus("in_progress")).toBe("completed");
+    expect(preferredNextStatus("completed")).toBeNull();
+  });
+});
