@@ -37,7 +37,9 @@ export function JobForm({
   const [customerId, setCustomerId] = useState(job?.customerId ?? customers[0]?.id ?? "");
   const [assignee, setAssignee] = useState(job?.assignedToUserId ?? "unassigned");
 
-  async function onSubmit(formData: FormData) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     setPending(true);
     try {
       const payload = {
@@ -75,7 +77,7 @@ export function JobForm({
   }
 
   return (
-    <form action={onSubmit} className="grid gap-4 md:grid-cols-2">
+    <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2 md:col-span-2">
         <Label htmlFor="title">Title</Label>
         <Input id="title" name="title" defaultValue={job?.title} required />
