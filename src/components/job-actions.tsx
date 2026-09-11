@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { tapHaptic } from "@/lib/haptic";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
@@ -34,6 +35,7 @@ export function JobActions({
         method: "PATCH",
         body: JSON.stringify({ status: next }),
       });
+      tapHaptic("success");
       toast.success(`Moved to ${STATUS_LABELS[next]}`);
       router.refresh();
     } catch (error) {

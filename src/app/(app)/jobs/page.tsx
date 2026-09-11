@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { FieldActions } from "@/components/field-actions";
 import { PriorityBadge, StatusBadge } from "@/components/status-badge";
 import { getReadyDb } from "@/db";
 import { requireUser } from "@/lib/auth";
@@ -19,10 +20,12 @@ export default async function JobsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Jobs</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {user.role === "technician" ? "My jobs" : "Jobs"}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {user.role === "technician"
-              ? "Work assigned to you."
+              ? "Work assigned to you. Call, navigate, then close it out."
               : "Every work order in the workspace."}
           </p>
         </div>
@@ -32,7 +35,37 @@ export default async function JobsPage() {
           </Button>
         ) : null}
       </div>
-      <Card>
+
+      <div className="grid gap-3 md:hidden">
+        {jobs.map((job) => (
+          <Card key={job.id}>
+            <CardContent className="space-y-3 p-4">
+              <Link href={`/jobs/${job.id}`} className="block">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[11px] text-muted-foreground">
+                    {formatJobNumber(job.jobNumber)}
+                  </span>
+                  <div className="flex gap-1">
+                    <StatusBadge status={job.status} />
+                    <PriorityBadge priority={job.priority} />
+                  </div>
+                </div>
+                <p className="mt-2 font-medium leading-snug">{job.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{job.customerName}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {job.assigneeName ?? "Unassigned"} · {formatDateTime(job.scheduledAt)}
+                </p>
+              </Link>
+              <FieldActions job={job} user={user} compact />
+            </CardContent>
+          </Card>
+        ))}
+        {jobs.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">No jobs yet.</p>
+        ) : null}
+      </div>
+
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

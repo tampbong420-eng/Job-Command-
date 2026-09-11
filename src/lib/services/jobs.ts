@@ -43,6 +43,8 @@ export type JobListItem = {
   priority: JobPriority;
   customerId: string;
   customerName: string;
+  customerPhone: string | null;
+  customerAddress: string | null;
   assignedToUserId: string | null;
   assigneeName: string | null;
   scheduledAt: Date | null;
@@ -66,6 +68,8 @@ function mapJobRow(row: {
     priority: row.job.priority,
     customerId: row.customer.id,
     customerName: row.customer.name,
+    customerPhone: row.customer.phone,
+    customerAddress: row.customer.address,
     assignedToUserId: row.job.assignedToUserId,
     assigneeName: row.assignee?.name ?? null,
     scheduledAt: row.job.scheduledAt,

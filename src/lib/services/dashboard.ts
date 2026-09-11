@@ -15,6 +15,8 @@ export type DashboardData = {
   };
   columns: Record<JobStatus, JobListItem[]>;
   urgent: JobListItem[];
+  overdueJobs: JobListItem[];
+  focus: JobListItem | null;
   generatedAt: string;
 };
 
@@ -67,6 +69,21 @@ export async function getDashboard(db: AppDb, actor: PublicUser): Promise<Dashbo
       job.status !== "completed" &&
       job.status !== "cancelled",
   );
+  const overdueJobs = board.filter((job) => {
+    if (!job.scheduledAt || job.status === "completed" || job.status === "cancelled") {
+      return false;
+    }
+    return new Date(job.scheduledAt).getTime() <= startOfDay.getTime();
+  });
+  const open = board.filter(
+    (job) => job.status !== "completed" && job.status !== "cancelled",
+  );
+  const focus =
+    open.find((job) => job.status === "in_progress") ??
+    open.find((job) => job.status === "assigned") ??
+    urgent[0] ??
+    open[0] ??
+    null;
 
   return {
     metrics: {
@@ -79,6 +96,8 @@ export async function getDashboard(db: AppDb, actor: PublicUser): Promise<Dashbo
     },
     columns,
     urgent,
+    overdueJobs,
+    focus,
     generatedAt: new Date().toISOString(),
   } satisfies DashboardData;
 }

@@ -107,6 +107,8 @@ describe("Job Command core workflows", () => {
     const dashboard = await getDashboard(db, admin);
     expect(dashboard.metrics.open).toBeGreaterThan(0);
     expect(dashboard.columns.in_progress.length).toBeGreaterThan(0);
+    expect(dashboard.focus).toBeTruthy();
+    expect(dashboard.overdueJobs).toBeDefined();
   });
 
   it("uses in-memory PGlite when Vercel has no DATABASE_URL", async () => {

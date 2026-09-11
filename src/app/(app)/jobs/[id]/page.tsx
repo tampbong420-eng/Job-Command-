@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { FieldActions } from "@/components/field-actions";
 import { JobActions } from "@/components/job-actions";
 import { JobForm } from "@/components/job-form";
 import { PriorityBadge, StatusBadge } from "@/components/status-badge";
@@ -84,11 +85,16 @@ export default async function JobDetailPage({
                 <dd>{formatDateTime(job.scheduledAt)}</dd>
               </div>
               <div>
+                <dt className="text-muted-foreground">Phone</dt>
+                <dd>{job.customerPhone || "—"}</dd>
+              </div>
+              <div>
                 <dt className="text-muted-foreground">Location</dt>
-                <dd>{job.location || "—"}</dd>
+                <dd>{job.location || job.customerAddress || "—"}</dd>
               </div>
             </dl>
             <Separator />
+            <FieldActions job={job} user={user} />
             <JobActions
               jobId={job.id}
               status={job.status}

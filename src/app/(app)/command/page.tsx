@@ -9,5 +9,5 @@ export default async function CommandPage() {
   const user = await requireUser();
   const db = await getReadyDb();
   const dashboard = await getDashboard(db, user);
-  return <CommandBoard initial={dashboard} />;
+  return <CommandBoard initial={dashboard} user={user} />;
 }

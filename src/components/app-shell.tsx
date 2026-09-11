@@ -6,7 +6,6 @@ import {
   ClipboardList,
   LayoutGrid,
   LogOut,
-  Menu,
   Radio,
   Settings,
   Users,
@@ -23,13 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import type { PublicUser } from "@/lib/domain";
 import { ROLE_LABELS } from "@/lib/domain";
 import { initials } from "@/lib/format";
@@ -117,22 +109,9 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
           <div className="flex items-center gap-2 md:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Open navigation">
-                  <Menu className="size-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 bg-sidebar p-4">
-                <SheetHeader className="mb-4 p-0">
-                  <SheetTitle className="flex items-center gap-2 text-left">
-                    <Radio className="size-4 text-primary" />
-                    Job Command
-                  </SheetTitle>
-                </SheetHeader>
-                <NavLinks pathname={pathname} />
-              </SheetContent>
-            </Sheet>
+            <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <Radio className="size-3.5" />
+            </span>
             <span className="text-sm font-semibold">Job Command</span>
           </div>
           <p className="hidden font-mono text-xs text-muted-foreground md:block">
@@ -165,7 +144,33 @@ export function AppShell({
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 pb-24 md:p-6 md:pb-6">{children}</main>
+        <nav
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+          aria-label="Primary"
+        >
+          <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
+            {nav.map((item) => {
+              const active =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[10px] font-medium",
+                    active ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {item.label.replace(" board", "")}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </div>
   );
