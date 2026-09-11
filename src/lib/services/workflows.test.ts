@@ -109,6 +109,30 @@ describe("Job Command core workflows", () => {
     expect(dashboard.columns.in_progress.length).toBeGreaterThan(0);
   });
 
+  it("uses in-memory PGlite when Vercel has no DATABASE_URL", async () => {
+    const previousVercel = process.env.VERCEL;
+    const previousUrl = process.env.DATABASE_URL;
+    process.env.VERCEL = "1";
+    delete process.env.DATABASE_URL;
+    try {
+      const { shouldUseInMemoryPglite } = await import("@/db");
+      expect(shouldUseInMemoryPglite()).toBe(true);
+      const { driver } = await createDatabase();
+      expect(driver).toBe("pglite");
+    } finally {
+      if (previousVercel === undefined) {
+        delete process.env.VERCEL;
+      } else {
+        process.env.VERCEL = previousVercel;
+      }
+      if (previousUrl === undefined) {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = previousUrl;
+      }
+    }
+  });
+
   it("prevents dispatchers from creating admin teammates", async () => {
     const { db } = await freshDb();
     const dispatcher = await authenticateUser(

@@ -41,10 +41,19 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             {usesEphemeralDatabase() ? (
-              <p>
-                Running on local PGlite at <code>.data/job-command</code>. Set{" "}
-                <code>DATABASE_URL</code> to a Neon Postgres URL for production persistence.
-              </p>
+              process.env.VERCEL ? (
+                <p>
+                  Running on in-memory PGlite on this Vercel isolate (demo data resets on
+                  cold start). Set <code>DATABASE_URL</code> to a Neon Postgres URL for
+                  production persistence.
+                </p>
+              ) : (
+                <p>
+                  Running on local PGlite at <code>.data/job-command</code>. Set{" "}
+                  <code>DATABASE_URL</code> to a Neon Postgres URL for production
+                  persistence.
+                </p>
+              )
             ) : (
               <p>Connected to Neon via <code>DATABASE_URL</code>.</p>
             )}

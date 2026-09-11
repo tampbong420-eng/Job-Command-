@@ -17,10 +17,18 @@ type DbCache = {
   driver: "neon" | "pglite";
 };
 
-const globalForDb = globalThis as unknown as { __jobCommandDb?: DbCache };
+const globalForDb = globalThis as unknown as {
+  __jobCommandDb?: DbCache;
+  __jobCommandDbInit?: Promise<DbCache>;
+};
 
 export function usesEphemeralDatabase() {
   return !process.env.DATABASE_URL;
+}
+
+/** Vercel’s function filesystem is read-only except `/tmp`; file PGlite cannot live in cwd. */
+export function shouldUseInMemoryPglite() {
+  return usesEphemeralDatabase() && Boolean(process.env.VERCEL);
 }
 
 async function applySchema(db: AppDb) {
@@ -47,15 +55,21 @@ export async function createDatabase(options?: {
     db = drizzleNeon(client, { schema });
     driver = "neon";
   } else {
-    const pglite = options?.inMemory
+    const inMemory = options?.inMemory ?? shouldUseInMemoryPglite();
+    const pglite = inMemory
       ? new PGlite()
       : (() => {
           const dataDir =
             options?.dataDir ??
             process.env.PGLITE_DATA_DIR ??
             path.join(process.cwd(), ".data", "job-command");
-          mkdirSync(dataDir, { recursive: true });
-          return new PGlite(dataDir);
+          try {
+            mkdirSync(dataDir, { recursive: true });
+            return new PGlite(dataDir);
+          } catch {
+            // Read-only hosts (Vercel cwd, some CI) cannot persist a file DB.
+            return new PGlite();
+          }
         })();
     db = drizzlePglite(pglite, { schema });
     driver = "pglite";
@@ -74,11 +88,22 @@ export async function getReadyDb(): Promise<AppDb> {
   if (globalForDb.__jobCommandDb) {
     return globalForDb.__jobCommandDb.db;
   }
-  const created = await createDatabase();
-  globalForDb.__jobCommandDb = created;
+  if (!globalForDb.__jobCommandDbInit) {
+    globalForDb.__jobCommandDbInit = createDatabase()
+      .then((created) => {
+        globalForDb.__jobCommandDb = created;
+        return created;
+      })
+      .catch((error) => {
+        globalForDb.__jobCommandDbInit = undefined;
+        throw error;
+      });
+  }
+  const created = await globalForDb.__jobCommandDbInit;
   return created.db;
 }
 
 export function resetDbCache() {
   globalForDb.__jobCommandDb = undefined;
+  globalForDb.__jobCommandDbInit = undefined;
 }

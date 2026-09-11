@@ -55,6 +55,7 @@ Job status path: `queued` → `assigned` → `in_progress` → `blocked` / `comp
 - Drizzle ORM
 - Neon Postgres in production (`DATABASE_URL`)
 - PGlite file DB locally when `DATABASE_URL` is unset
+- In-memory PGlite on Vercel when `DATABASE_URL` is unset (demo only; data is per-isolate)
 - shadcn/ui + Tailwind CSS
 
 ## Local setup
