@@ -2,6 +2,7 @@
 
 import PayScheduleEditor from "@/components/PayScheduleEditor";
 import { clockLabel, initials, money } from "@/lib/format";
+import { shopPayroll } from "@/lib/payroll";
 import {
   scheduleOverview,
   scheduledHours,
@@ -49,10 +50,7 @@ export default function ProfilePage({
 }) {
   const selectedId = role === "employee" ? employeeId : member.id;
   const canEdit = role === "boss" && Boolean(onHourlyRate && onPaySchedule);
-  const payroll = crew.reduce(
-    (sum, row) => sum + weekPayDue(row.weeklyHoursLogged, row.hourlyRate),
-    0,
-  );
+  const payroll = shopPayroll(crew, timeCards).grossPay;
 
   return (
     <section className="page jobs-board">

@@ -1,10 +1,19 @@
 import { CREW, ESTIMATES, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
 import { syncJobRoutes } from "./assign";
+import { defaultCostCode, hydrateTimeCard } from "./payroll";
 import { weekdayHours } from "./schedule";
-import type { CrewMember, Estimate, Job, ShopMessage, TimeCard } from "./types";
+import type {
+  CrewMember,
+  Estimate,
+  Job,
+  PayAudit,
+  ShopMessage,
+  TimeCard,
+  Timesheet,
+} from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
-export const SHOP_VERSION = 4;
+export const SHOP_VERSION = 5;
 
 export type ShopSettings = {
   shopName: string;
@@ -17,6 +26,8 @@ export type PersistedShop = {
   crew: CrewMember[];
   estimates: Estimate[];
   timeCards: TimeCard[];
+  timesheets: Timesheet[];
+  payAudits: PayAudit[];
   messages: ShopMessage[];
   employeeId: string;
   settings: ShopSettings;
@@ -51,6 +62,11 @@ function hydrateCrew(member: CrewMember, seed?: CrewMember): CrewMember {
         ? member.weeklySchedule
         : (seed?.weeklySchedule ?? weekdayHours("08:00", "17:00")),
     hourlyRate: member.hourlyRate ?? seed?.hourlyRate ?? 0,
+    overtimeMultiplier: member.overtimeMultiplier ?? seed?.overtimeMultiplier ?? 1.5,
+    payCadence: member.payCadence ?? seed?.payCadence ?? "weekly",
+    unpaidBreakMinutes:
+      member.unpaidBreakMinutes ?? seed?.unpaidBreakMinutes ?? 30,
+    costCode: member.costCode || seed?.costCode || defaultCostCode(member.role || seed?.role || ""),
   };
 }
 
@@ -100,7 +116,12 @@ export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
     jobs: syncJobRoutes(mergeJobs(parsed.jobs ?? [], base.jobs)),
     crew: mergeCrew(parsed.crew ?? [], base.crew),
     estimates: mergeById(parsed.estimates ?? [], base.estimates),
-    timeCards: mergeById(parsed.timeCards ?? [], base.timeCards),
+    timeCards: mergeById(
+      (parsed.timeCards ?? []).map((row) => hydrateTimeCard(row)),
+      base.timeCards,
+    ),
+    timesheets: mergeById(parsed.timesheets ?? [], base.timesheets),
+    payAudits: mergeById(parsed.payAudits ?? [], base.payAudits),
     messages: mergeById(
       (parsed.messages ?? []).map(hydrateMessage),
       base.messages,
@@ -115,7 +136,9 @@ export function defaultShop(): PersistedShop {
     jobs: syncJobRoutes(JOBS.map(hydrateJob)),
     crew: CREW,
     estimates: ESTIMATES,
-    timeCards: TIMECARDS,
+    timeCards: TIMECARDS.map((row) => hydrateTimeCard(row)),
+    timesheets: [],
+    payAudits: [],
     messages: MESSAGES.map(hydrateMessage),
     employeeId: CREW[0]?.id ?? "e-mike",
     settings: DEFAULT_SETTINGS,

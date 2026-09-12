@@ -10,7 +10,8 @@ import CrewRolodex from "@/components/CrewRolodex";
 import EditHoursCalendar from "@/components/EditHoursCalendar";
 import EmployeeHome from "@/components/EmployeeHome";
 import EmployeeJobs from "@/components/EmployeeJobs";
-import EstimatesBoard, { TimeCardsBoard } from "@/components/EstimatesBoard";
+import EstimatesBoard from "@/components/EstimatesBoard";
+import PayrollBoard from "@/components/PayrollBoard";
 import JobStatusRail from "@/components/JobStatusRail";
 import JobTumbler from "@/components/JobTumbler";
 import LaneJobsDeck from "@/components/LaneJobsDeck";
@@ -27,7 +28,6 @@ import {
   assignedJobs,
   jobsByStatus,
   tumblerIndexForCrew,
-  toggleCrewClock,
   toggleCrewGps,
   updateHourlyRate,
   updateWeeklySchedule,
@@ -35,6 +35,14 @@ import {
 import { applyCommands, jobsMarkedForDelete } from "@/lib/commands";
 import { clampIndex } from "@/lib/format";
 import { hasUnreadMessage, markMessagesSeen } from "@/lib/messages";
+import {
+  editTimeCard,
+  flagTimeCard,
+  setTimesheetStatus,
+  syncLoggedHours,
+  togglePunch,
+  updatePayConfig,
+} from "@/lib/payroll";
 import {
   commitShop,
   getServerShopSnapshot,
@@ -46,6 +54,7 @@ import {
   type PersistedShop,
 } from "@/lib/session";
 import type {
+  CrewMember,
   DaySchedule,
   Job,
   JobStatus,
@@ -71,7 +80,7 @@ export default function JobCommandApp() {
     getShopSnapshot,
     getServerShopSnapshot,
   );
-  const { jobs, crew, estimates, timeCards, messages, employeeId, settings } = shop;
+  const { jobs, crew, estimates, timeCards, timesheets, payAudits, messages, employeeId, settings } = shop;
   useEffect(() => {
     const current = getShopSnapshot();
     if ((current.shopVersion ?? 0) < SHOP_VERSION) {
@@ -301,16 +310,38 @@ export default function JobCommandApp() {
     );
   }
 
+  function punchClock(employee: CrewMember, message?: string) {
+    const shopNow = getShopSnapshot();
+    const result = togglePunch(
+      shopNow.crew,
+      shopNow.timeCards,
+      shopNow.timesheets ?? [],
+      shopNow.payAudits ?? [],
+      employee.id,
+    );
+    if (result.crew.find((row) => row.id === employee.id)?.status === employee.status) {
+      ping("That timesheet is locked.");
+      return;
+    }
+    patchShop({
+      crew: syncLoggedHours(result.crew, result.timeCards),
+      timeCards: result.timeCards,
+      timesheets: result.timesheets,
+      payAudits: result.payAudits,
+    });
+    if (message) ping(message);
+  }
+
   function toggleClock() {
     if (!member) return;
-    patchShop({ crew: toggleCrewClock(getShopSnapshot().crew, member.id) });
+    punchClock(member);
   }
 
   function toggleEmployeeClock() {
     if (!employee) return;
     const wasOff = employee.status === "off";
-    patchShop({ crew: toggleCrewClock(getShopSnapshot().crew, employee.id) });
-    ping(
+    punchClock(
+      employee,
       wasOff
         ? `${employee.name.split(" ")[0]} clocked in.`
         : `${employee.name.split(" ")[0]} clocked out.`,
@@ -607,14 +638,78 @@ export default function JobCommandApp() {
       )}
 
       {tab === "jobs" && role === "boss" && paper === "timecards" && (
-        <TimeCardsBoard
+        <PayrollBoard
           crew={crew}
           jobs={jobs}
           timeCards={timeCards}
+          timesheets={timesheets ?? []}
+          payAudits={payAudits ?? []}
           onBack={() => setPaper("jobs")}
+          onPayCadence={(id, cadence) => {
+            patchShop({
+              crew: updatePayConfig(getShopSnapshot().crew, id, { payCadence: cadence }),
+            });
+          }}
+          onEditEntry={(target, entryId, patch) => {
+            const result = editTimeCard(
+              getShopSnapshot().timeCards,
+              getShopSnapshot().timesheets ?? [],
+              getShopSnapshot().payAudits ?? [],
+              target,
+              entryId,
+              patch,
+            );
+            if (!result) {
+              ping("Locked timesheets cannot be edited.");
+              return;
+            }
+            patchShop({
+              crew: syncLoggedHours(getShopSnapshot().crew, result.timeCards),
+              timeCards: result.timeCards,
+              timesheets: result.timesheets,
+              payAudits: result.payAudits,
+            });
+          }}
+          onFlagEntry={(target, entryId, flagged) => {
+            const result = flagTimeCard(
+              getShopSnapshot().timeCards,
+              getShopSnapshot().timesheets ?? [],
+              getShopSnapshot().payAudits ?? [],
+              target,
+              entryId,
+              flagged,
+            );
+            if (!result) {
+              ping("Locked timesheets cannot be flagged.");
+              return;
+            }
+            patchShop({
+              timeCards: result.timeCards,
+              timesheets: result.timesheets,
+              payAudits: result.payAudits,
+            });
+          }}
+          onTimesheetStatus={(target, status) => {
+            const result = setTimesheetStatus(
+              getShopSnapshot().timesheets ?? [],
+              getShopSnapshot().payAudits ?? [],
+              target,
+              new Date().toISOString().slice(0, 10),
+              status,
+            );
+            patchShop({
+              timesheets: result.timesheets,
+              payAudits: result.payAudits,
+            });
+            ping(
+              status === "locked"
+                ? `${target.name.split(" ")[0]}'s timesheet is locked for pay.`
+                : `${target.name.split(" ")[0]}'s timesheet is approved.`,
+            );
+          }}
         >
           {paperTabs}
-        </TimeCardsBoard>
+        </PayrollBoard>
       )}
 
       {tab === "jobs" && role === "employee" && employee && (

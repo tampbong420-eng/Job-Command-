@@ -161,6 +161,11 @@ export function applyCommand(
       hours: command.hours,
       date: now.slice(0, 10),
       notes: command.notes ?? "",
+      clockIn: null,
+      clockOut: null,
+      breakMinutes: 0,
+      costCode: employee.costCode || "",
+      flagged: false,
     };
     const crew = state.crew.map((row) =>
       row.id === employee.id
