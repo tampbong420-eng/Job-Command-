@@ -116,7 +116,7 @@ img {
   height: 100dvh;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 18px 18px 148px;
+  padding: 18px 18px 160px;
   display: flex;
   position: relative;
   overflow: hidden;
@@ -952,14 +952,23 @@ button.metric.toggle {
 
 .bottom-nav button {
   color: var(--muted);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   border-radius: 14px;
   justify-items: center;
+  align-content: start;
   gap: 4px;
-  padding: 10px 4px;
-  font-size: 10px;
+  padding: 10px 2px 8px;
+  font-size: 9px;
   display: grid;
+}
+
+.nav-label {
+  display: grid;
+  justify-items: center;
+  line-height: 1.15;
+  min-height: 2.3em;
+  text-align: center;
 }
 
 .theme-employee .bottom-nav button.selected {
@@ -982,7 +991,7 @@ button.metric.toggle {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 148px;
+  bottom: 160px;
   transform: translateX(-50%);
   background: #141800;
   color: var(--boss);
@@ -1784,7 +1793,7 @@ label.ghost-action {
 .talk-fab {
   position: fixed;
   z-index: 7;
-  bottom: 92px;
+  bottom: 104px;
   left: 50%;
   transform: translateX(-138px);
   min-width: 86px;

@@ -6,7 +6,8 @@ browser.
 
 Boss Command is the dispatch desk:
 
-- **Employees** rolodex with live hours, clock status, and weekly schedule
+- **Main Command** tab with the **Employees** rolodex, live hours, clock status, and weekly schedule
+- **All Jobs** tab for the customer board
 - **Employee Profiles** tab with every shop card, hours, and clock status
 - **Edit Hours** calendar for each employee
 - Combination-lock job tumbler that cycles **active jobs only**

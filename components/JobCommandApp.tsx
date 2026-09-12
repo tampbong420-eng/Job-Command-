@@ -54,8 +54,8 @@ import { useLiveDate } from "@/lib/use-live-time";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 const TABS: { id: NavTab; label: string; icon: string }[] = [
-  { id: "command", label: "Command", icon: "▣" },
-  { id: "jobs", label: "Jobs", icon: "⚒" },
+  { id: "command", label: "Main Command", icon: "▣" },
+  { id: "jobs", label: "All Jobs", icon: "⚒" },
   { id: "profile", label: "Profiles", icon: "☺" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
@@ -622,7 +622,11 @@ export default function JobCommandApp() {
             <span className="nav-icon" aria-hidden="true">
               {item.icon}
             </span>
-            {item.label}
+            <span className="nav-label">
+              {item.label.split(" ").map((word) => (
+                <span key={word}>{word}</span>
+              ))}
+            </span>
           </button>
         ))}
       </nav>
