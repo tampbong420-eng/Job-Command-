@@ -11,6 +11,7 @@ import EmployeeJobs from "@/components/EmployeeJobs";
 import EstimatesBoard, { TimeCardsBoard } from "@/components/EstimatesBoard";
 import JobStatusRail from "@/components/JobStatusRail";
 import JobTumbler from "@/components/JobTumbler";
+import LaneJobsDeck from "@/components/LaneJobsDeck";
 import PaperNav from "@/components/PaperNav";
 import ProfilePage from "@/components/ProfilePage";
 import PropertySheet from "@/components/PropertySheet";
@@ -20,6 +21,7 @@ import {
   lockJobToCrew,
   activeJobs,
   assignedJob,
+  jobsByStatus,
   tumblerIndexForCrew,
   toggleCrewClock,
   toggleCrewGps,
@@ -73,7 +75,9 @@ export default function JobCommandApp() {
   const [role, setRole] = useState<Role>("boss");
   const [tab, setTab] = useState<NavTab>("command");
   const [paper, setPaper] = useState<"jobs" | "estimates" | "timecards">("jobs");
-  const [desk, setDesk] = useState<"crew" | "hours">("crew");
+  const [desk, setDesk] = useState<"crew" | "hours" | "lane">("crew");
+  const [laneStatus, setLaneStatus] = useState<JobStatus | null>(null);
+  const [laneJobId, setLaneJobId] = useState<string | null>(null);
   const [crewIndex, setCrewIndex] = useState(0);
   const [jobIndex, setJobIndex] = useState(() =>
     tumblerIndexForCrew(
@@ -145,7 +149,7 @@ export default function JobCommandApp() {
     setPaper(view);
   }
 
-  function applyTalk(result: TalkResult) {
+  function applyTalk(result: TalkResult, navigate = true) {
     const next = applyCommands(snapshot, result.commands);
     patchShop({
       jobs: next.state.jobs,
@@ -154,7 +158,7 @@ export default function JobCommandApp() {
       timeCards: next.state.timeCards,
       messages: next.state.messages ?? getShopSnapshot().messages,
     });
-    goView(next.view);
+    if (navigate) goView(next.view);
     ping(result.say || next.notices.join(" "));
     if (member) {
       setJobIndex(
@@ -168,11 +172,21 @@ export default function JobCommandApp() {
     }
   }
 
-  function setJobStatus(jobId: string, status: JobStatus) {
-    applyTalk({
-      say: "",
-      commands: [{ type: "set_status", query: jobId, status }],
-    });
+  function setJobStatus(jobId: string, status: JobStatus, navigate = true) {
+    applyTalk(
+      {
+        say: "",
+        commands: [{ type: "set_status", query: jobId, status }],
+      },
+      navigate,
+    );
+  }
+
+  function openLane(status: JobStatus) {
+    const first = jobsByStatus(jobs, status)[0];
+    setLaneStatus(status);
+    setLaneJobId(first?.id ?? null);
+    setDesk("lane");
   }
 
   function deleteJob(jobId: string) {
@@ -281,6 +295,8 @@ export default function JobCommandApp() {
     );
     setPaper("jobs");
     setDesk("crew");
+    setLaneStatus(null);
+    setLaneJobId(null);
     setPropertyOpen(false);
     setSheetJobId(null);
     setNotice("Demo shop reset.");
@@ -361,13 +377,57 @@ export default function JobCommandApp() {
         />
       )}
 
+      {role === "boss" && tab === "command" && member && desk === "lane" && laneStatus && (
+        <LaneJobsDeck
+          status={laneStatus}
+          jobs={jobs}
+          estimates={estimates}
+          timeCards={timeCards}
+          crew={crew}
+          jobId={laneJobId}
+          onJobId={setLaneJobId}
+          onBack={() => {
+            setDesk("crew");
+            setLaneStatus(null);
+            setLaneJobId(null);
+          }}
+          onStatus={(jobId, status) => setJobStatus(jobId, status, false)}
+          onDelete={(jobId) => {
+            applyTalk({ say: "", commands: [{ type: "delete_job", query: jobId }] }, false);
+          }}
+          onOpenEstimates={() => {
+            setTab("jobs");
+            setPaper("estimates");
+          }}
+          onOpenTimeCards={() => {
+            setTab("jobs");
+            setPaper("timecards");
+          }}
+          onPhoto={(jobId, kind, dataUrl) => {
+            patchShop({
+              jobs: getShopSnapshot().jobs.map((row) =>
+                row.id === jobId
+                  ? {
+                      ...row,
+                      photos: [
+                        ...(row.photos ?? []),
+                        { id: `ph-${Date.now()}`, kind, dataUrl },
+                      ],
+                    }
+                  : row,
+              ),
+            });
+          }}
+        />
+      )}
+
       {role === "boss" && tab === "command" && member && desk === "crew" && (
         <section className="page crew-desk">
           <div className="crew-head">
             <p className="section-kicker">{fieldDate}</p>
             <h1>CREW</h1>
           </div>
-          <JobStatusRail jobs={jobs} />
+          <JobStatusRail jobs={jobs} onSelect={openLane} />
           <CrewRolodex
             crew={crew}
             index={crewIndex}
@@ -500,7 +560,9 @@ export default function JobCommandApp() {
             className={`${tab === item.id ? "selected" : ""}${item.id === "profile" && unreadPage ? " alert-glow" : ""}`}
             onClick={() => {
               setTab(item.id);
-              if (item.id !== "command") setDesk("crew");
+              setDesk("crew");
+              setLaneStatus(null);
+              setLaneJobId(null);
               if (item.id === "jobs") setPaper("jobs");
               if (item.id === "profile" && role === "employee" && actor) {
                 patchShop({

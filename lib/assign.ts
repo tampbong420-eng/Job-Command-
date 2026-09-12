@@ -1,4 +1,8 @@
-import type { CrewMember, Job } from "./types";
+import type { CrewMember, Job, JobStatus } from "./types";
+
+export function jobsByStatus(jobs: Job[], status: JobStatus): Job[] {
+  return jobs.filter((job) => job.status === status);
+}
 
 export function activeJobs(jobs: Job[]): Job[] {
   return jobs.filter((job) => job.status === "in_progress");

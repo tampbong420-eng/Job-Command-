@@ -5,6 +5,7 @@ import {
   activeJobs,
   assignedJob,
   employeeJobs,
+  jobsByStatus,
   onClockCrew,
   tumblerIndexForCrew,
   toggleCrewClock,
@@ -221,6 +222,25 @@ test("updateWeeklySchedule writes hours onto one crew card", () => {
   const updated = updateWeeklySchedule(crew, "e-mike", next);
   assert.equal(updated.find((row) => row.id === "e-mike")?.weeklySchedule[1].start, "09:00");
   assert.equal(updated.find((row) => row.id === "e-dana")?.weeklySchedule[0].start, "08:00");
+});
+
+test("jobsByStatus returns every job in a status lane", () => {
+  assert.deepEqual(
+    jobsByStatus(jobs, "in_progress").map((job) => job.id),
+    ["c-northline", "c-hale"],
+  );
+  assert.deepEqual(
+    jobsByStatus(jobs, "lead").map((job) => job.id),
+    ["c-shah"],
+  );
+  assert.deepEqual(
+    jobsByStatus(jobs, "pending").map((job) => job.id),
+    [],
+  );
+  assert.deepEqual(
+    jobsByStatus(jobs, "completed").map((job) => job.id),
+    ["c-done"],
+  );
 });
 
 test("employeeJobs lists open stops locked to that worker", () => {

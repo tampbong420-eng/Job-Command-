@@ -1050,6 +1050,10 @@ button.metric.toggle {
   padding: 0;
 }
 
+.status-rail > li {
+  min-width: 0;
+}
+
 .status-chip {
   display: flex;
   align-items: center;
@@ -1060,6 +1064,18 @@ button.metric.toggle {
   background: #18181b;
   border: 1px solid color-mix(in srgb, var(--tone) 55%, #000);
   color: var(--tone);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.status-chip:focus-visible {
+  outline: 2px solid var(--tone);
+  outline-offset: 2px;
+}
+
+button.status-chip:active {
+  transform: scale(0.98);
 }
 
 .status-chip i {
@@ -1105,6 +1121,29 @@ button.metric.toggle {
 .status-chip.tone-done {
   background: var(--job-done);
   color: #a1a1aa;
+}
+
+.lane-track {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.lane-track.is-dragging {
+  cursor: grabbing;
+}
+
+.lane-count {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lane-deck h1.tone-lead,
+.lane-deck h1.tone-pending,
+.lane-deck h1.tone-active {
+  color: var(--tone);
 }
 
 .job-chip {
