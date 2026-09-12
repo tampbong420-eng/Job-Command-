@@ -110,10 +110,10 @@ export default function JobTumbler({
         <span>
           <small>
             {lockedToThis
-              ? `Locked to ${member.name.split(" ")[0]} · stop ${current.routeOrder}`
+              ? `Locked to ${member.name.split(" ")[0]} · stop ${current.routeOrder} · tap to unlock`
               : `Assign to ${member.name.split(" ")[0]} as stop ${nextStop}`}
           </small>
-          <b>{lockedToThis ? "LOCKED" : "LOCK JOB"}</b>
+          <b>{lockedToThis ? "UNLOCK JOB" : "LOCK JOB"}</b>
         </span>
       </button>
     </section>

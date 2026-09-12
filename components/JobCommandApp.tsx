@@ -21,6 +21,7 @@ import SettingsPage from "@/components/SettingsPage";
 import TalkButton from "@/components/TalkButton";
 import {
   lockJobToCrew,
+  unlockJobFromCrew,
   activeJobs,
   assignedJob,
   assignedJobs,
@@ -28,6 +29,7 @@ import {
   tumblerIndexForCrew,
   toggleCrewClock,
   toggleCrewGps,
+  updateHourlyRate,
   updateWeeklySchedule,
 } from "@/lib/assign";
 import { applyCommands, jobsMarkedForDelete } from "@/lib/commands";
@@ -58,7 +60,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 const TABS: { id: NavTab; label: string; icon: string }[] = [
   { id: "command", label: "Main Command", icon: "▣" },
   { id: "jobs", label: "All Jobs", icon: "⚒" },
-  { id: "profile", label: "Profiles", icon: "☺" },
+  { id: "profile", label: "Employee Profiles", icon: "☺" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
@@ -258,7 +260,18 @@ export default function JobCommandApp() {
 
   function lockCurrentJob() {
     if (!member || !selectedJob) return;
-    if (selectedJob.workerId === member.id) return;
+    if (selectedJob.workerId === member.id) {
+      const result = unlockJobFromCrew(jobs, crew, selectedJob.id, member.id);
+      if (!result.unlocked) {
+        ping("That stop is already open.");
+        return;
+      }
+      patchShop({ jobs: result.jobs, crew: result.crew });
+      setTicking(true);
+      window.setTimeout(() => setTicking(false), 320);
+      ping(`Unlocked ${selectedJob.jobTitle} from ${member.name}. Other stops stay.`);
+      return;
+    }
     const result = lockJobToCrew(jobs, crew, selectedJob.id, member.id);
     if (!result.locked) {
       ping("Completed jobs stay closed.");
@@ -626,6 +639,16 @@ export default function JobCommandApp() {
             }
             const nextIndex = crew.findIndex((row) => row.id === id);
             if (nextIndex >= 0) selectCrew(nextIndex);
+          }}
+          onHourlyRate={(id, rate) => {
+            patchShop({
+              crew: updateHourlyRate(getShopSnapshot().crew, id, rate),
+            });
+          }}
+          onPaySchedule={(id, schedule) => {
+            patchShop({
+              crew: updateWeeklySchedule(getShopSnapshot().crew, id, schedule),
+            });
           }}
           messages={messages}
           unread={unreadPage}

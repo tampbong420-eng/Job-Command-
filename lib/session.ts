@@ -1,9 +1,10 @@
 import { CREW, ESTIMATES, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
 import { syncJobRoutes } from "./assign";
+import { weekdayHours } from "./schedule";
 import type { CrewMember, Estimate, Job, ShopMessage, TimeCard } from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
-export const SHOP_VERSION = 3;
+export const SHOP_VERSION = 4;
 
 export type ShopSettings = {
   shopName: string;
@@ -41,6 +42,31 @@ function hydrateMessage(row: ShopMessage): ShopMessage {
   return { ...row, seenBy: row.seenBy ?? [] };
 }
 
+function hydrateCrew(member: CrewMember, seed?: CrewMember): CrewMember {
+  return {
+    ...seed,
+    ...member,
+    weeklySchedule:
+      member.weeklySchedule?.length
+        ? member.weeklySchedule
+        : (seed?.weeklySchedule ?? weekdayHours("08:00", "17:00")),
+    hourlyRate: member.hourlyRate ?? seed?.hourlyRate ?? 0,
+  };
+}
+
+function mergeCrew(saved: CrewMember[], fresh: CrewMember[]): CrewMember[] {
+  const demo = new Map(fresh.map((row) => [row.id, row]));
+  const seen = new Set<string>();
+  const next = saved.map((row) => {
+    seen.add(row.id);
+    return hydrateCrew(row, demo.get(row.id));
+  });
+  for (const row of fresh) {
+    if (!seen.has(row.id)) next.push(hydrateCrew(row));
+  }
+  return next;
+}
+
 function mergeById<T extends { id: string }>(saved: T[], fresh: T[]): T[] {
   const have = new Set(saved.map((row) => row.id));
   return [...saved, ...fresh.filter((row) => !have.has(row.id))];
@@ -72,7 +98,7 @@ export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
     ...parsed,
     shopVersion: SHOP_VERSION,
     jobs: syncJobRoutes(mergeJobs(parsed.jobs ?? [], base.jobs)),
-    crew: parsed.crew ?? base.crew,
+    crew: mergeCrew(parsed.crew ?? [], base.crew),
     estimates: mergeById(parsed.estimates ?? [], base.estimates),
     timeCards: mergeById(parsed.timeCards ?? [], base.timeCards),
     messages: mergeById(

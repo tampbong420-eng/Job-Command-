@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  WEEKDAY_LABEL,
-  WEEKDAY_SHORT,
-  formatHourLabel,
-  patchDay,
-  scheduledHours,
-} from "@/lib/schedule";
+import PayScheduleEditor from "@/components/PayScheduleEditor";
 import { clockLabel, formatLiveHours } from "@/lib/format";
+import { scheduledHours } from "@/lib/schedule";
 import type { CrewMember, DaySchedule } from "@/lib/types";
 import { useLiveNow } from "@/lib/use-live-time";
 import { useState } from "react";
@@ -58,63 +53,7 @@ export default function EditHoursCalendar({
         </div>
       </div>
 
-      <ol className="week-calendar">
-        {schedule.map((day) => (
-          <li key={day.day} className={`day-card${day.off ? " is-off" : ""}`}>
-            <div className="day-card-top">
-              <b>
-                <span aria-hidden="true">{WEEKDAY_SHORT[day.day]}</span>
-                {WEEKDAY_LABEL[day.day]}
-              </b>
-              <label className="off-toggle">
-                <input
-                  type="checkbox"
-                  checked={!day.off}
-                  onChange={(event) =>
-                    setSchedule((current) =>
-                      patchDay(current, day.day, { off: !event.target.checked }),
-                    )
-                  }
-                />
-                {day.off ? "Off" : "On"}
-              </label>
-            </div>
-            <div className="day-times">
-              <label>
-                Start
-                <input
-                  type="time"
-                  value={day.start}
-                  disabled={day.off}
-                  onChange={(event) =>
-                    setSchedule((current) =>
-                      patchDay(current, day.day, { start: event.target.value }),
-                    )
-                  }
-                />
-              </label>
-              <label>
-                End
-                <input
-                  type="time"
-                  value={day.end}
-                  disabled={day.off}
-                  onChange={(event) =>
-                    setSchedule((current) =>
-                      patchDay(current, day.day, { end: event.target.value }),
-                    )
-                  }
-                />
-              </label>
-            </div>
-            <p className="day-summary">
-              {day.off
-                ? "Not scheduled"
-                : `${formatHourLabel(day.start)}–${formatHourLabel(day.end)}`}
-            </p>
-          </li>
-        ))}
-      </ol>
+      <PayScheduleEditor schedule={schedule} onChange={setSchedule} />
 
       <div className="hours-actions">
         <button type="button" className="ghost-action" onClick={onCancel}>
