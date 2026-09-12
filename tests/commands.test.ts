@@ -20,7 +20,7 @@ test("customer cards can move a lead to pending", () => {
     status: "pending",
   });
   assert.equal(result.state.jobs.find((job) => job.id === "c-shah")?.status, "pending");
-  assert.equal(result.notice.includes("Scheduled"), true);
+  assert.equal(result.notice.includes("Pending"), true);
 });
 
 test("finished and delete take a customer off the board", () => {
@@ -33,6 +33,7 @@ test("finished and delete take a customer off the board", () => {
     finished.state.jobs.find((job) => job.id === "c-northline")?.status,
     "completed",
   );
+  assert.equal(finished.notice.includes("Job Archive"), true);
   const gone = applyCommand(snapshot, { type: "delete_job", query: "Maya Chen" });
   assert.equal(gone.state.jobs.some((job) => job.id === "c-chen"), false);
 });
@@ -88,7 +89,24 @@ test("talk marks a customer pending from spoken copy", () => {
   assert.deepEqual(talk.commands[0], {
     type: "set_status",
     query: "Priya",
-    status: "scheduled",
+    status: "pending",
   });
   assert.equal(matchJob(JOBS, "Priya")?.id, "c-shah");
+});
+
+test("talk can send a job to Job Archive", () => {
+  const talk = parseTalk("mark Northline job archive", snapshot);
+  assert.equal(talk.commands[0]?.type, "set_status");
+  if (talk.commands[0]?.type === "set_status") {
+    assert.equal(talk.commands[0].status, "completed");
+  }
+});
+
+test("send_message pages the crew", () => {
+  const filed = applyCommand(snapshot, {
+    type: "send_message",
+    body: "Wrap exteriors.",
+  });
+  assert.equal(filed.state.messages?.[0]?.body, "Wrap exteriors.");
+  assert.equal(filed.notice, "Crew paged.");
 });

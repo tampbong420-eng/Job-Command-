@@ -1,4 +1,3 @@
-import { buildExpense, jobFromCall, quoteTotal } from "./field";
 import type {
   CrewMember,
   Estimate,
@@ -12,21 +11,14 @@ import type {
   TimeCard,
 } from "./types";
 
-function bag(state: ShopSnapshot) {
-  return {
-    expenses: state.expenses ?? [],
-    calls: state.calls ?? [],
-    messages: state.messages ?? [],
-  };
-}
-
 const STATUS_WORDS: { status: JobStatus; words: string[] }[] = [
   { status: "lead", words: ["new lead", "new leads", "lead"] },
-  { status: "scheduled", words: ["scheduled", "pending"] },
-  { status: "dispatched", words: ["dispatched", "en route", "enroute"] },
-  { status: "in_progress", words: ["active", "in progress", "on job"] },
-  { status: "completed", words: ["finished", "complete", "completed", "done"] },
-  { status: "invoiced", words: ["invoiced", "billed", "invoice"] },
+  { status: "pending", words: ["pending"] },
+  { status: "in_progress", words: ["active", "in progress"] },
+  {
+    status: "completed",
+    words: ["job archive", "archived", "finished", "complete", "completed", "done"],
+  },
 ];
 
 export function matchJob(jobs: Job[], query: string): Job | null {
@@ -102,15 +94,11 @@ export function applyCommand(
     const label =
       command.status === "lead"
         ? "New lead"
-        : command.status === "scheduled" || command.status === "pending"
-          ? "Scheduled"
-          : command.status === "dispatched"
-            ? "Dispatched"
-            : command.status === "in_progress"
-              ? "On job"
-              : command.status === "invoiced"
-                ? "Invoiced"
-                : "Job Archive";
+        : command.status === "pending"
+          ? "Pending"
+          : command.status === "in_progress"
+            ? "Active"
+            : "Job Archive";
     return {
       state: { ...state, jobs, crew },
       view: "jobs",
@@ -121,23 +109,12 @@ export function applyCommand(
   if (command.type === "delete_job") {
     const job = matchJob(state.jobs, command.query);
     if (!job) return { state, view: "jobs", notice: "Could not find that customer." };
-    const { expenses, calls, messages } = bag(state);
     const jobs = state.jobs.filter((row) => row.id !== job.id);
     const estimates = state.estimates.filter((row) => row.jobId !== job.id);
     const timeCards = state.timeCards.filter((row) => row.jobId !== job.id);
-    const nextExpenses = expenses.filter((row) => row.jobId !== job.id);
     const crew = syncCrew(state.crew, jobs);
     return {
-      state: {
-        ...state,
-        jobs,
-        estimates,
-        timeCards,
-        expenses: nextExpenses,
-        calls,
-        messages,
-        crew,
-      },
+      state: { ...state, jobs, estimates, timeCards, crew },
       view: "jobs",
       notice: `Deleted ${job.customerName}.`,
     };
@@ -149,22 +126,12 @@ export function applyCommand(
       state.jobs.find((row) => row.id === state.selectedJobId) ??
       null;
     if (!job) return { state, view: "estimates", notice: "Need a customer for that estimate." };
-    const labor = command.labor ?? command.amount;
-    const materials = command.materials ?? 0;
-    const amount =
-      command.labor != null || command.materials != null
-        ? quoteTotal(labor, materials)
-        : command.amount;
     const estimate: Estimate = {
       id: `est-${job.id}-${Date.parse(now)}`,
       jobId: job.id,
-      amount,
+      amount: command.amount,
       notes: command.notes ?? "",
       createdAt: now,
-      labor,
-      materials,
-      markup: 0.18,
-      taxRate: 0.075,
     };
     return {
       state: { ...state, estimates: [estimate, ...state.estimates] },
@@ -214,12 +181,7 @@ export function applyCommand(
           ...row,
           worker: employee.name,
           workerId: employee.id,
-          status:
-            row.status === "lead" ||
-            row.status === "pending" ||
-            row.status === "scheduled"
-              ? "in_progress"
-              : row.status,
+          status: row.status === "lead" || row.status === "pending" ? "in_progress" : row.status,
         };
       }
       if (row.workerId === employee.id && row.status === "in_progress") {
@@ -257,7 +219,6 @@ export function applyCommand(
       lat: null,
       lng: null,
       photos: [],
-      signature: null,
       scope: command.jobTitle ?? "New work",
     };
     return {
@@ -267,67 +228,20 @@ export function applyCommand(
     };
   }
 
-  if (command.type === "create_expense") {
-    const { expenses } = bag(state);
-    const employee =
-      (command.employee ? matchCrew(state.crew, command.employee) : null) ??
-      state.crew.find((row) => row.id === state.selectedCrewId) ??
-      state.crew[0];
-    if (!employee) {
-      return { state, view: "receipts", notice: "Need a crew member for that receipt." };
-    }
-    const job = command.query ? matchJob(state.jobs, command.query) : null;
-    const expense = buildExpense({
-      vendor: command.vendor,
-      amount: command.amount,
-      category: command.category,
-      employeeId: employee.id,
-      jobId: job?.id ?? employee.currentJobId,
-      now,
-    });
-    return {
-      state: { ...state, expenses: [expense, ...expenses] },
-      view: "receipts",
-      notice: `Receipt ${command.vendor} $${command.amount} filed.`,
-    };
-  }
-
-  if (command.type === "convert_call") {
-    const { calls } = bag(state);
-    const call = calls.find((row) => row.id === command.callId);
-    if (!call) return { state, view: "command", notice: "Call already gone." };
-    if (call.convertedJobId) {
-      return { state, view: "jobs", notice: "That lead is already on the board." };
-    }
-    const job = jobFromCall(call);
-    const nextCalls = calls.map((row) =>
-      row.id === call.id ? { ...row, convertedJobId: job.id } : row,
-    );
-    return {
-      state: { ...state, jobs: [job, ...state.jobs], calls: nextCalls },
-      view: "jobs",
-      notice: `${call.callerName} is a ${job.status === "dispatched" ? "dispatch" : "new lead"}.`,
-    };
-  }
-
   if (command.type === "send_message") {
-    const { messages } = bag(state);
-    const from =
-      (command.employee ? matchCrew(state.crew, command.employee) : null) ??
-      state.crew.find((row) => row.id === state.selectedCrewId) ??
-      state.crew[0];
+    const fromId = state.selectedCrewId ?? "e-mike";
     const message: ShopMessage = {
       id: `msg-${Date.parse(now)}`,
-      fromId: from?.id ?? "desk",
+      fromId,
       body: command.body,
       createdAt: now,
       broadcast: true,
-      seenBy: from ? [from.id] : [],
+      seenBy: [fromId],
     };
     return {
-      state: { ...state, messages: [message, ...messages] },
+      state: { ...state, messages: [message, ...(state.messages ?? [])] },
       view: "command",
-      notice: "Page sent to crew.",
+      notice: "Crew paged.",
     };
   }
 
@@ -335,11 +249,9 @@ export function applyCommand(
 }
 
 function jobTitleStatus(status: JobStatus): string {
-  if (status === "scheduled" || status === "pending") return "scheduled";
-  if (status === "dispatched") return "dispatched";
-  if (status === "in_progress") return "on job";
+  if (status === "pending") return "pending";
+  if (status === "in_progress") return "active";
   if (status === "completed") return "job archive";
-  if (status === "invoiced") return "invoiced";
   return "a new lead";
 }
 
@@ -399,9 +311,6 @@ export function parseTalk(text: string, snapshot: ShopSnapshot): TalkResult {
   if (/\b(time cards?|timecards?|hours log)\b/.test(lower) && /\b(open|show|go to|view)\b/.test(lower)) {
     return { say: "Opening time cards.", commands: [{ type: "open", view: "timecards" }] };
   }
-  if (/\b(receipts?|expenses?|ledger)\b/.test(lower) && /\b(open|show|go to|view)\b/.test(lower)) {
-    return { say: "Opening receipts.", commands: [{ type: "open", view: "receipts" }] };
-  }
   if (/\b(jobs? board|customers?)\b/.test(lower) && /\b(open|show|go to|view)\b/.test(lower)) {
     return { say: "Opening the job board.", commands: [{ type: "open", view: "jobs" }] };
   }
@@ -456,35 +365,6 @@ export function parseTalk(text: string, snapshot: ShopSnapshot): TalkResult {
     }
   }
 
-  if (/\b(receipt|expense)\b/.test(lower)) {
-    const amount = parseAmount(lower);
-    const vendor =
-      afterKeyword(raw, /(?:at|from|vendor)\s+([^$]+?)(?:\s+for|\s+\$|$)/i) ||
-      afterKeyword(raw, /(?:receipt|expense)\s+(?:from\s+)?([a-z][a-z\s.-]+?)(?:\s+\$|\s+for|$)/i) ||
-      "Vendor";
-    if (amount != null) {
-      const category = /fuel|gas/i.test(lower)
-        ? "Fuel"
-        : /permit/i.test(lower)
-          ? "Permits"
-          : /equip/i.test(lower)
-            ? "Equipment"
-            : "Materials";
-      return {
-        say: `Filing a ${category.toLowerCase()} receipt.`,
-        commands: [
-          {
-            type: "create_expense",
-            vendor: vendor.trim(),
-            amount,
-            category,
-            query: snapshot.jobs.find((job) => job.id === snapshot.selectedJobId)?.customerName,
-          },
-        ],
-      };
-    }
-  }
-
   if (/\bassign\b/.test(lower)) {
     const assigned = raw.match(/assign\s+(.+?)\s+to\s+(.+)/i);
     if (assigned) {
@@ -516,12 +396,9 @@ export function parseTalk(text: string, snapshot: ShopSnapshot): TalkResult {
     const query =
       afterKeyword(
         raw,
-        /(?:mark|set|make|move|put)?\s*(.+?)\s+(?:as|to|is)?\s*(?:a\s+)?(?:new lead|pending|scheduled|dispatched|en route|active|on job|finished|complete[d]?|done|invoiced|billed|in progress)/i,
+        /(?:mark|set|make|move|put)?\s*(.+?)\s+(?:as|to|is)?\s*(?:a\s+)?(?:new lead|pending|active|finished|job archive|complete[d]?|done|in progress)/i,
       ) ||
-      afterKeyword(
-        raw,
-        /(?:new lead|pending|scheduled|dispatched|active|finished|complete[d]?|invoiced)\s+(?:for\s+)?(.+)/i,
-      ) ||
+      afterKeyword(raw, /(?:new lead|pending|active|finished|job archive|complete[d]?)\s+(?:for\s+)?(.+)/i) ||
       snapshot.jobs.find((job) => job.id === snapshot.selectedJobId)?.customerName ||
       "";
     if (query) {

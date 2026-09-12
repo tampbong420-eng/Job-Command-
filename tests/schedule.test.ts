@@ -38,12 +38,7 @@ test("job tones follow the boss status hierarchy", () => {
   assert.equal(jobTone("in_progress"), "tone-active");
   assert.equal(jobTone("completed"), "tone-done");
   assert.equal(jobStatusLabel("lead"), "New lead");
-  assert.equal(jobStatusLabel("pending"), "Scheduled");
-  assert.equal(jobStatusLabel("scheduled"), "Scheduled");
-  assert.equal(jobStatusLabel("dispatched"), "Dispatched");
-  assert.equal(jobStatusLabel("in_progress"), "On job");
+  assert.equal(jobStatusLabel("pending"), "Pending");
+  assert.equal(jobStatusLabel("in_progress"), "Active");
   assert.equal(jobStatusLabel("completed"), "Job Archive");
-  assert.equal(jobStatusLabel("invoiced"), "Invoiced");
-  assert.equal(jobTone("dispatched"), "tone-dispatch");
-  assert.equal(jobTone("invoiced"), "tone-done");
 });

@@ -44,7 +44,7 @@ export default function CustomerCard({
       ? mapsStreetViewUrl(job.lat, job.lng)
       : mapsDirectionsUrl(job);
   const hoursTotal = cards.reduce((sum, row) => sum + row.hours, 0);
-  const invoiceLabel = job.status === "invoiced" ? "Invoice" : "Quote";
+  const invoiceLabel = job.status === "completed" ? "Invoice" : "Quote";
 
   return (
     <article className={`customer-card ${jobTone(job.status)}`}>
@@ -168,9 +168,7 @@ export default function CustomerCard({
 
       <p className="card-label">Who worked</p>
       {cards.length === 0 ? (
-        <p className="board-copy tight">
-          {job.worker} · no hours filed yet
-        </p>
+        <p className="board-copy tight">{job.worker} · no hours filed yet</p>
       ) : (
         cards.map((row) => {
           const member = crew.find((item) => item.id === row.employeeId);

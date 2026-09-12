@@ -27,8 +27,8 @@ export default function EmployeeJobs({
         <strong>Stops.</strong>
       </h1>
       <p className="board-copy">
-        Only jobs locked to you. En route, on job, or job archive — plus
-        directions.
+        Only jobs locked to you. Get directions or send a stop to Job Archive
+        when the work is done.
       </p>
       {mine.length === 0 ? (
         <p className="empty-group">No active jobs on your card yet.</p>
@@ -47,7 +47,7 @@ export default function EmployeeJobs({
                 {jobStatusLabel(job.status)}
               </span>
             </div>
-            <div className="rolodex-actions three">
+            <div className="rolodex-actions">
               <a
                 className="ghost-action directions"
                 href={mapsDirectionsUrl(job, originQuery(member))}
@@ -60,20 +60,6 @@ export default function EmployeeJobs({
               >
                 Get Directions
               </a>
-              <button
-                type="button"
-                className="ghost-action"
-                onClick={() => onStatus(job.id, "dispatched")}
-              >
-                En route
-              </button>
-              <button
-                type="button"
-                className="ghost-action hours"
-                onClick={() => onStatus(job.id, "in_progress")}
-              >
-                On job
-              </button>
               <button
                 type="button"
                 className="ghost-action hours"

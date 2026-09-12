@@ -46,39 +46,11 @@ export function formatLiveHours(startedAt: string | null, now = Date.now()): str
   return `${hours}h ${String(minutes).padStart(2, "0")}m`;
 }
 
-export function jobStatusLabel(
-  status:
-    | "lead"
-    | "pending"
-    | "scheduled"
-    | "dispatched"
-    | "in_progress"
-    | "completed"
-    | "invoiced",
-): string {
+export function jobStatusLabel(status: "lead" | "pending" | "in_progress" | "completed"): string {
   if (status === "lead") return "New lead";
-  if (status === "pending" || status === "scheduled") return "Scheduled";
-  if (status === "dispatched") return "Dispatched";
-  if (status === "in_progress") return "On job";
-  if (status === "invoiced") return "Invoiced";
+  if (status === "pending") return "Pending";
+  if (status === "in_progress") return "Active";
   return "Job Archive";
-}
-
-export function jobTone(
-  status:
-    | "lead"
-    | "pending"
-    | "scheduled"
-    | "dispatched"
-    | "in_progress"
-    | "completed"
-    | "invoiced",
-): string {
-  if (status === "lead") return "tone-lead";
-  if (status === "pending" || status === "scheduled") return "tone-pending";
-  if (status === "dispatched") return "tone-dispatch";
-  if (status === "in_progress") return "tone-active";
-  return "tone-done";
 }
 
 export function money(amount: number): string {
@@ -89,9 +61,11 @@ export function money(amount: number): string {
   }).format(amount);
 }
 
-export function batteryLabel(percent: number | undefined): string {
-  if (percent == null) return "—";
-  return `${Math.round(percent)}%`;
+export function jobTone(status: "lead" | "pending" | "in_progress" | "completed"): string {
+  if (status === "lead") return "tone-lead";
+  if (status === "pending") return "tone-pending";
+  if (status === "in_progress") return "tone-active";
+  return "tone-done";
 }
 
 export function initials(name: string): string {

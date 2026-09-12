@@ -1,20 +1,17 @@
-import type { PaperTab } from "@/lib/types";
-
 export default function PaperNav({
   paper,
   onPaper,
 }: {
-  paper: PaperTab;
-  onPaper: (paper: PaperTab) => void;
+  paper: "jobs" | "estimates" | "timecards";
+  onPaper: (paper: "jobs" | "estimates" | "timecards") => void;
 }) {
   return (
-    <div className="paper-nav four" role="tablist" aria-label="Job paperwork">
+    <div className="paper-nav" role="tablist" aria-label="Job paperwork">
       {(
         [
           ["jobs", "Cards"],
-          ["estimates", "Quotes"],
-          ["timecards", "Hours"],
-          ["receipts", "Receipts"],
+          ["estimates", "Estimates"],
+          ["timecards", "Time cards"],
         ] as const
       ).map(([id, label]) => (
         <button

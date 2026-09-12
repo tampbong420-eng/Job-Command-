@@ -1,24 +1,17 @@
 import { useSyncExternalStore } from "react";
 import { formatClockTime, greeting, longDate } from "./format";
 
-let clientNow = 0;
-
 function subscribeNow(onChange: () => void) {
-  if (clientNow === 0) clientNow = Date.now();
-  const id = window.setInterval(() => {
-    clientNow = Date.now();
-    onChange();
-  }, 1000);
+  const id = window.setInterval(onChange, 1000);
   return () => window.clearInterval(id);
 }
 
-function getClientNow() {
-  if (clientNow === 0) clientNow = Date.now();
-  return clientNow;
-}
-
 export function useLiveNow(): number {
-  return useSyncExternalStore(subscribeNow, getClientNow, () => 0);
+  return useSyncExternalStore(
+    subscribeNow,
+    () => Date.now(),
+    () => 0,
+  );
 }
 
 export function useLiveDate(): string {

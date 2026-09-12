@@ -1,6 +1,5 @@
 "use client";
 
-import SignaturePad from "@/components/SignaturePad";
 import StatusButtons from "@/components/StatusButtons";
 import { jobStatusLabel, jobTone } from "@/lib/format";
 import {
@@ -18,16 +17,12 @@ export default function PropertySheet({
   onClose,
   onStatus,
   onDelete,
-  onPhoto,
-  onSign,
 }: {
   job: Job;
   member: CrewMember;
   onClose: () => void;
   onStatus: (status: JobStatus) => void;
   onDelete: () => void;
-  onPhoto?: (kind: "before" | "after", dataUrl: string) => void;
-  onSign?: (dataUrl: string) => void;
 }) {
   const origin = originQuery(member);
   const directions = mapsDirectionsUrl(job, origin);
@@ -84,53 +79,6 @@ export default function PropertySheet({
           onStatus={(status) => onStatus(status)}
           onDelete={onDelete}
         />
-        {onPhoto && (
-          <div className="rolodex-actions">
-            <label className="ghost-action hours">
-              Before photo
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                hidden
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = () => onPhoto("before", String(reader.result ?? ""));
-                  reader.readAsDataURL(file);
-                }}
-              />
-            </label>
-            <label className="ghost-action hours">
-              After photo
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                hidden
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = () => onPhoto("after", String(reader.result ?? ""));
-                  reader.readAsDataURL(file);
-                }}
-              />
-            </label>
-          </div>
-        )}
-        {(job.photos ?? []).length > 0 && (
-          <div className="photo-strip">
-            {(job.photos ?? []).map((photo) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={photo.id} src={photo.dataUrl} alt={photo.kind} />
-            ))}
-          </div>
-        )}
-        {onSign && (
-          <SignaturePad value={job.signature ?? null} onChange={onSign} />
-        )}
         <div className="street-view">
           {streetViewEmbed ? (
             <iframe

@@ -5,11 +5,9 @@ import type { Job, JobStatus } from "@/lib/types";
 
 const BUTTONS: { status: JobStatus; label: string }[] = [
   { status: "lead", label: "New lead" },
-  { status: "scheduled", label: "Scheduled" },
-  { status: "dispatched", label: "Dispatched" },
-  { status: "in_progress", label: "On job" },
+  { status: "pending", label: "Pending" },
+  { status: "in_progress", label: "Active" },
   { status: "completed", label: "Job Archive" },
-  { status: "invoiced", label: "Invoiced" },
 ];
 
 export default function StatusButtons({
@@ -21,15 +19,14 @@ export default function StatusButtons({
   onStatus: (status: JobStatus) => void;
   onDelete: () => void;
 }) {
-  const current = job.status === "pending" ? "scheduled" : job.status;
   return (
-    <div className="status-buttons six" role="group" aria-label="Customer status">
+    <div className="status-buttons" role="group" aria-label="Customer status">
       {BUTTONS.map((button) => (
         <button
           key={button.status}
           type="button"
-          className={`lane-button ${jobTone(button.status)}${current === button.status ? " is-on" : ""}`}
-          aria-pressed={current === button.status}
+          className={`lane-button ${jobTone(button.status)}${job.status === button.status ? " is-on" : ""}`}
+          aria-pressed={job.status === button.status}
           onClick={() => onStatus(button.status)}
         >
           {button.label}

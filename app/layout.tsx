@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Oswald } from "next/font/google";
 import "./globals.css";
 
@@ -23,26 +23,7 @@ const display = Oswald({
 export const metadata: Metadata = {
   title: "JOB COMMAND",
   description:
-    "Two phone apps on one shop: green Boss Command and orange Employee Command.",
-  applicationName: "JOB COMMAND",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "JOB COMMAND",
-  },
-  icons: {
-    icon: "/job-command-logo.jpg",
-    apple: "/job-command-logo.jpg",
-  },
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-  themeColor: "#09090b",
+    "Boss crew desk with weekly hour editing, live Google Maps tracking, and color-coded job status.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

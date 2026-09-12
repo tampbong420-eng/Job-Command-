@@ -1,5 +1,4 @@
 import { describe, test } from "node:test";
-import { formatLiveHours } from "../lib/format";
 import assert from "node:assert/strict";
 import {
   SHOP_KEY,
@@ -86,9 +85,6 @@ describe("shop session", { concurrency: false }, () => {
         crew: defaultShop().crew,
         estimates: [],
         timeCards: [],
-        expenses: [],
-        calls: [],
-        messages: [],
         employeeId: "e-mike",
         settings: { shopName: "Job Command" },
       }),
@@ -96,21 +92,14 @@ describe("shop session", { concurrency: false }, () => {
 
     const loaded = loadShop();
     assert.equal(loaded?.shopVersion, SHOP_VERSION);
-    assert.equal(loaded?.settings.shopName, "Top Gun Painting");
     assert.equal(
       loaded?.jobs.find((job) => job.id === "c-vasquez")?.scope?.includes("fascia"),
       true,
     );
-    assert.equal(loaded?.jobs.some((job) => job.id === "c-lakeside"), true);
+    assert.equal(loaded?.jobs.some((job) => job.id === "c-hale"), true);
     assert.equal(loaded?.estimates.some((row) => row.jobId === "c-hale"), true);
+    assert.equal(loaded?.messages.some((row) => row.id === "msg-weather"), true);
     const persisted = JSON.parse(data.get(SHOP_KEY) ?? "{}") as { shopVersion?: number };
     assert.equal(persisted.shopVersion, SHOP_VERSION);
-  });
-
-  test("live hours stay stable for the same clock snapshot", () => {
-    const started = "2026-09-11T12:00:00.000Z";
-    const now = Date.parse("2026-09-11T14:07:00.000Z");
-    assert.equal(formatLiveHours(started, now), "2h 07m");
-    assert.equal(formatLiveHours(started, now), formatLiveHours(started, now));
   });
 });

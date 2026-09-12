@@ -1,13 +1,29 @@
 # Job Command
 
-Two **phone** apps on a black shop desk — not a desktop board.
+Field-ops dashboard for Job Command. Both **Boss** and **Employee** roles share
+the same shop: crew, jobs, estimates, time cards, and settings persist in the
+browser.
 
-- **BOSS** (green) — crew rolodex, job tumbler, maps, 6-stage cards, quotes, time cards, receipts, AI line, invites
-- **EMPLOYEE** (orange) — clock tile, assigned stop, en route / on job, directions, My Stops
+Boss Command is the dispatch desk:
 
-New field tools live inside that same shell: AI receptionist (arm + inbound test + convert to job), receipt scanner, crew invite / field portal (`/crew/:token`), before/after photos, customer sign-off, crew radio, and company hub (Top Gun Painting, Hot Springs).
+- **CREW** rolodex with live hours, clock status, and weekly schedule
+- **Edit Hours** calendar for each crew member
+- Combination-lock job tumbler that cycles **active jobs only**
+- **Get Directions** opens Street View and Google Maps
+- Live Google Map on the crew desk
+- Semantic job colors: new leads red, pending orange/yellow, active light green, finished charcoal
+- Customer cards with **New lead / Pending / Active / Finished / Delete**
+- **Add customer** form plus Cards / Estimates / Time cards tabs
+- **AI Talk** on every page for status, estimates, time cards, and new leads
 
-Switch **EMPLOYEE / BOSS** in the top bar. Bottom nav is Command, Jobs, Profile, Settings. Shop data stays in the browser.
+Employee Command is the field side of the same shop:
+
+- Orange **Clocked Out** / green **Clocked In** tile wired to the shared crew roster
+- Assigned job with **Get Directions**
+- On-clock crew Call list
+- **My Stops** board (jobs locked to that employee)
+- Profile identity picker so the phone can clock in as Mike, Dana, Sam, or Liv
+- Settings for shop name, account chip, page alerts, and **Reset demo shop**
 
 ```bash
 npm install
@@ -15,4 +31,5 @@ npm test
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) on a phone-sized screen, or Add to Home Screen from the browser.
+Open [http://localhost:3000](http://localhost:3000). Switch **EMPLOYEE** /
+**BOSS** in the top bar.

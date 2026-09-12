@@ -3,21 +3,11 @@ import type { ShopCommand, ShopSnapshot, TalkResult } from "@/lib/types";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-const statusEnum = z.enum([
-  "lead",
-  "pending",
-  "scheduled",
-  "dispatched",
-  "in_progress",
-  "completed",
-  "invoiced",
-]);
-
 const commandSchema: z.ZodType<ShopCommand> = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("set_status"),
     query: z.string(),
-    status: statusEnum,
+    status: z.enum(["lead", "pending", "in_progress", "completed"]),
   }),
   z.object({
     type: z.literal("delete_job"),
@@ -28,8 +18,6 @@ const commandSchema: z.ZodType<ShopCommand> = z.discriminatedUnion("type", [
     query: z.string(),
     amount: z.number(),
     notes: z.string().optional(),
-    labor: z.number().optional(),
-    materials: z.number().optional(),
   }),
   z.object({
     type: z.literal("create_timecard"),
@@ -40,14 +28,7 @@ const commandSchema: z.ZodType<ShopCommand> = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("open"),
-    view: z.enum([
-      "command",
-      "hours",
-      "jobs",
-      "estimates",
-      "timecards",
-      "receipts",
-    ]),
+    view: z.enum(["command", "hours", "jobs", "estimates", "timecards"]),
   }),
   z.object({
     type: z.literal("assign"),
@@ -60,24 +41,11 @@ const commandSchema: z.ZodType<ShopCommand> = z.discriminatedUnion("type", [
     address: z.string().optional(),
     jobTitle: z.string().optional(),
     phone: z.string().optional(),
-    status: statusEnum.optional(),
-  }),
-  z.object({
-    type: z.literal("create_expense"),
-    vendor: z.string(),
-    amount: z.number(),
-    category: z.enum(["Materials", "Fuel", "Equipment", "Permits", "Other"]),
-    employee: z.string().optional(),
-    query: z.string().optional(),
-  }),
-  z.object({
-    type: z.literal("convert_call"),
-    callId: z.string(),
+    status: z.enum(["lead", "pending", "in_progress", "completed"]).optional(),
   }),
   z.object({
     type: z.literal("send_message"),
     body: z.string(),
-    employee: z.string().optional(),
   }),
 ]);
 
@@ -119,9 +87,9 @@ Selected crew: ${snapshot.selectedCrewId ?? "none"}
 Request: ${text}
 
 Rules:
-- Stages: lead, scheduled, dispatched, in_progress, completed, invoiced.
-- Pending maps to scheduled. Active / on job maps to in_progress. Finished / job archive maps to completed.
-- Receipts use create_expense. Convert a receptionist call with convert_call.
+- New lead / pending / active / finished / job archive map to statuses lead, pending, in_progress, completed.
+- Delete removes the customer card.
+- Estimates and time cards must include the customer or crew name in query/employee.
 - Prefer one or two commands. Keep say short.`,
     });
     if (output && output.commands.length > 0) {

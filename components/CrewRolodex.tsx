@@ -1,6 +1,6 @@
 "use client";
 
-import { batteryLabel, clockLabel, formatLiveHours, initials, wrapIndex } from "@/lib/format";
+import { clockLabel, formatLiveHours, initials, wrapIndex } from "@/lib/format";
 import { scheduleOverview, WEEKDAY_SHORT } from "@/lib/schedule";
 import type { CrewMember, Job } from "@/lib/types";
 import { useLiveNow } from "@/lib/use-live-time";
@@ -13,7 +13,6 @@ export default function CrewRolodex({
   onIndexChange,
   onEditHours,
   onGetDirections,
-  onInvite,
 }: {
   crew: CrewMember[];
   index: number;
@@ -21,7 +20,6 @@ export default function CrewRolodex({
   onIndexChange: (index: number) => void;
   onEditHours: () => void;
   onGetDirections: () => void;
-  onInvite: () => void;
 }) {
   const member = crew[index];
   const now = useLiveNow();
@@ -65,10 +63,6 @@ export default function CrewRolodex({
           <p className="card-label">{member.role}</p>
           <h2>{member.name}</h2>
           <p>{member.id.toUpperCase()}</p>
-          <p>
-            Batt {batteryLabel(member.battery)} · {member.speedMph ?? 0} mph
-            {member.battery != null && member.battery < 15 ? " · LOW" : ""}
-          </p>
         </div>
         <span className={`status-pill ${member.status}`} aria-live="polite">
           <span className="status-dot" />
@@ -98,7 +92,7 @@ export default function CrewRolodex({
         </div>
       </div>
 
-      <div className="rolodex-actions three">
+      <div className="rolodex-actions">
         <button
           type="button"
           className="ghost-action directions"
@@ -115,14 +109,6 @@ export default function CrewRolodex({
           onClick={onEditHours}
         >
           Edit Hours
-        </button>
-        <button
-          type="button"
-          className="ghost-action"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={onInvite}
-        >
-          Invite
         </button>
       </div>
 

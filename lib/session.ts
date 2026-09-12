@@ -1,14 +1,5 @@
-import { CREW, CALLS, ESTIMATES, EXPENSES, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
-import { inviteTokenFor, normalizeJobStatus } from "./field";
-import type {
-  CallLog,
-  CrewMember,
-  Estimate,
-  Expense,
-  Job,
-  ShopMessage,
-  TimeCard,
-} from "./types";
+import { CREW, ESTIMATES, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
+import type { CrewMember, Estimate, Job, ShopMessage, TimeCard } from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
 export const SHOP_VERSION = 2;
@@ -17,11 +8,6 @@ export type ShopSettings = {
   shopName: string;
   account: string;
   pageAlerts: boolean;
-  companyPhone: string;
-  headquarters: string;
-  plan: "starter" | "pro" | "enterprise";
-  lineArmed: boolean;
-  greeting: string;
 };
 
 export type PersistedShop = {
@@ -29,8 +15,6 @@ export type PersistedShop = {
   crew: CrewMember[];
   estimates: Estimate[];
   timeCards: TimeCard[];
-  expenses: Expense[];
-  calls: CallLog[];
   messages: ShopMessage[];
   employeeId: string;
   settings: ShopSettings;
@@ -38,39 +22,21 @@ export type PersistedShop = {
 };
 
 export const DEFAULT_SETTINGS: ShopSettings = {
-  shopName: "Top Gun Painting",
+  shopName: "Job Command",
   account: "ERIC12345",
   pageAlerts: true,
-  companyPhone: "501-385-2100",
-  headquarters: "Hot Springs, AR",
-  plan: "pro",
-  lineArmed: true,
-  greeting:
-    "Thanks for calling Top Gun Painting. Tell us the address and what you need painted.",
 };
 
 function hydrateJob(job: Job): Job {
   return {
     ...job,
-    status: normalizeJobStatus(job.status),
     photos: job.photos ?? [],
-    signature: job.signature ?? null,
     scope: job.scope ?? job.jobTitle,
   };
 }
 
 function hydrateMessage(row: ShopMessage): ShopMessage {
   return { ...row, seenBy: row.seenBy ?? [] };
-}
-
-function hydrateCrew(member: CrewMember): CrewMember {
-  return {
-    ...member,
-    battery: member.battery ?? (member.status === "off" ? 64 : 81),
-    speedMph: member.speedMph ?? (member.gpsLive ? 18 : 0),
-    lastCheckIn: member.lastCheckIn ?? member.startedAt ?? null,
-    inviteToken: inviteTokenFor(member),
-  };
 }
 
 function mergeById<T extends { id: string }>(saved: T[], fresh: T[]): T[] {
@@ -89,7 +55,6 @@ function mergeJobs(saved: Job[], fresh: Job[]): Job[] {
       ...job,
       photos: job.photos?.length ? job.photos : (seed?.photos ?? []),
       scope: job.scope || seed?.scope || job.jobTitle,
-      signature: job.signature ?? seed?.signature ?? null,
     });
   });
   for (const row of fresh) {
@@ -100,37 +65,29 @@ function mergeJobs(saved: Job[], fresh: Job[]): Job[] {
 
 export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
   const base = defaultShop();
-  const settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
-  if (!parsed.settings?.shopName || parsed.settings.shopName === "Job Command") {
-    settings.shopName = DEFAULT_SETTINGS.shopName;
-  }
   return {
     ...base,
     ...parsed,
     shopVersion: SHOP_VERSION,
     jobs: mergeJobs(parsed.jobs ?? [], base.jobs),
-    crew: (parsed.crew ?? base.crew).map(hydrateCrew),
+    crew: parsed.crew ?? base.crew,
     estimates: mergeById(parsed.estimates ?? [], base.estimates),
     timeCards: mergeById(parsed.timeCards ?? [], base.timeCards),
-    expenses: mergeById(parsed.expenses ?? [], base.expenses),
-    calls: mergeById(parsed.calls ?? [], base.calls),
     messages: mergeById(
       (parsed.messages ?? []).map(hydrateMessage),
       base.messages,
     ),
     employeeId: parsed.employeeId ?? base.employeeId,
-    settings,
+    settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
   };
 }
 
 export function defaultShop(): PersistedShop {
   return {
     jobs: JOBS.map(hydrateJob),
-    crew: CREW.map(hydrateCrew),
+    crew: CREW,
     estimates: ESTIMATES,
     timeCards: TIMECARDS,
-    expenses: EXPENSES,
-    calls: CALLS,
     messages: MESSAGES.map(hydrateMessage),
     employeeId: CREW[0]?.id ?? "e-mike",
     settings: DEFAULT_SETTINGS,
