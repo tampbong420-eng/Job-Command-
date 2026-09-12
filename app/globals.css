@@ -952,23 +952,33 @@ button.metric.toggle {
 
 .bottom-nav button {
   color: var(--muted);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   border-radius: 14px;
   justify-items: center;
   align-content: start;
-  gap: 4px;
-  padding: 10px 2px 8px;
-  font-size: 9px;
+  gap: 3px;
+  padding: 8px 1px 7px;
+  font-size: 8px;
+  min-width: 0;
   display: grid;
 }
 
 .nav-label {
-  display: grid;
-  justify-items: center;
-  line-height: 1.15;
-  min-height: 2.3em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  line-height: 1.2;
+  min-height: 2.4em;
   text-align: center;
+}
+
+.nav-label span {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
 }
 
 .theme-employee .bottom-nav button.selected {
