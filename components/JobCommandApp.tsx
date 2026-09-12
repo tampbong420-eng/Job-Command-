@@ -56,7 +56,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 const TABS: { id: NavTab; label: string; icon: string }[] = [
   { id: "command", label: "Command", icon: "▣" },
   { id: "jobs", label: "Jobs", icon: "⚒" },
-  { id: "profile", label: "Profile", icon: "☺" },
+  { id: "profile", label: "Profiles", icon: "☺" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
@@ -468,7 +468,7 @@ export default function JobCommandApp() {
         <section className="page crew-desk">
           <div className="crew-head">
             <p className="section-kicker">{fieldDate}</p>
-            <h1>CREW</h1>
+            <h1>Employees</h1>
           </div>
           <JobStatusRail jobs={jobs} onSelect={openLane} />
           <CrewRolodex
@@ -567,11 +567,16 @@ export default function JobCommandApp() {
           crew={crew}
           role={role}
           employeeId={employeeId}
-          onPickEmployee={(id) => {
-            patchShop({ employeeId: id });
-            ping(
-              `Field login is ${crew.find((row) => row.id === id)?.name ?? "crew"}.`,
-            );
+          onSelectEmployee={(id) => {
+            if (role === "employee") {
+              patchShop({ employeeId: id });
+              ping(
+                `Field login is ${crew.find((row) => row.id === id)?.name ?? "employee"}.`,
+              );
+              return;
+            }
+            const nextIndex = crew.findIndex((row) => row.id === id);
+            if (nextIndex >= 0) selectCrew(nextIndex);
           }}
           messages={messages}
           unread={unreadPage}

@@ -39,7 +39,7 @@ export default function CrewRolodex({
   return (
     <section
       className={`rolodex-strip${swipe.dragging ? " is-dragging" : ""}`}
-      aria-label="Crew rolodex"
+      aria-label="Employee rolodex"
       onPointerDown={swipe.onPointerDown}
       onPointerMove={swipe.onPointerMove}
       onPointerUp={swipe.onPointerUp}
@@ -112,7 +112,7 @@ export default function CrewRolodex({
         </button>
       </div>
 
-      <p className="swipe-hint">Swipe crew</p>
+      <p className="swipe-hint">Swipe employees</p>
       <div className="rolodex-dots">
         {crew.map((row, i) => (
           <button

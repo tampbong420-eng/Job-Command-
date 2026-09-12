@@ -67,7 +67,7 @@ export default function LaneJobsDeck({
     <section className="page hours-desk lane-deck">
       <div className="hours-head">
         <button type="button" className="text-back" onClick={onBack}>
-          ← Crew
+          ← Employees
         </button>
         <p className="section-kicker">Status lane</p>
         <h1 className={jobTone(status)}>{jobStatusLabel(status)}</h1>

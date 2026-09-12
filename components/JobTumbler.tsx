@@ -43,7 +43,7 @@ export default function JobTumbler({
       <div className="tumbler-head">
         <div>
           <p className="card-label">Job tumbler</p>
-          <p className="swipe-hint">Flick to cycle · lock to this crew</p>
+          <p className="swipe-hint">Flick to cycle · lock to this employee</p>
         </div>
         <span className="shift-tag shock">
           {jobIndex + 1} / {stack.length}
@@ -105,7 +105,7 @@ export default function JobTumbler({
         <span>
           <small>
             {lockedToThis
-              ? "Locked to this crew"
+              ? "Locked to this employee"
               : `Assign to ${member.name.split(" ")[0]}`}
           </small>
           <b>{lockedToThis ? "LOCKED" : "LOCK JOB"}</b>
