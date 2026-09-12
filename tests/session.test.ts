@@ -3,6 +3,7 @@ import { formatLiveHours } from "../lib/format";
 import assert from "node:assert/strict";
 import {
   SHOP_KEY,
+  SHOP_VERSION,
   commitShop,
   defaultShop,
   getShopSnapshot,
@@ -47,6 +48,63 @@ describe("shop session", { concurrency: false }, () => {
     resetShop();
     assert.equal(loadShop(), null);
     assert.equal(getShopSnapshot().employeeId, defaultShop().employeeId);
+  });
+
+  test("old saved shops pick up packet fields without a reset", () => {
+    const data = new Map<string, string>();
+    (globalThis as { window: { localStorage: Pick<Storage, "getItem" | "setItem" | "removeItem"> } }).window = {
+      localStorage: {
+        getItem: (key: string) => data.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          data.set(key, value);
+        },
+        removeItem: (key: string) => {
+          data.delete(key);
+        },
+      },
+    };
+
+    window.localStorage.setItem(
+      SHOP_KEY,
+      JSON.stringify({
+        jobs: [
+          {
+            id: "c-vasquez",
+            customerName: "Elena Vasquez",
+            phone: "(206) 555-0147",
+            address: "2418 9th Ave W, Seattle, WA 98119",
+            jobTitle: "Exterior paint · Queen Anne",
+            status: "in_progress",
+            scheduledTime: "08:30 AM",
+            worker: "Unassigned",
+            workerId: null,
+            priority: "high",
+            lat: 47.639844278404,
+            lng: -122.368877694281,
+          },
+        ],
+        crew: defaultShop().crew,
+        estimates: [],
+        timeCards: [],
+        expenses: [],
+        calls: [],
+        messages: [],
+        employeeId: "e-mike",
+        settings: { shopName: "Job Command" },
+      }),
+    );
+
+    const loaded = loadShop();
+    assert.equal(loaded?.shopVersion, SHOP_VERSION);
+    assert.equal(loaded?.settings.shopName, "Top Gun Painting");
+    assert.equal(
+      loaded?.jobs.find((job) => job.id === "c-vasquez")?.scope?.includes("fascia"),
+      true,
+    );
+    assert.equal(loaded?.jobs.some((job) => job.id === "c-lakeside"), true);
+    assert.equal(loaded?.estimates.some((row) => row.jobId === "c-hale"), true);
+    const persisted = JSON.parse(data.get(SHOP_KEY) ?? "{}") as { shopVersion?: number };
+    assert.equal(persisted.shopVersion, SHOP_VERSION);
   });
 
   test("live hours stay stable for the same clock snapshot", () => {

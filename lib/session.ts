@@ -11,6 +11,7 @@ import type {
 } from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
+export const SHOP_VERSION = 2;
 
 export type ShopSettings = {
   shopName: string;
@@ -33,6 +34,7 @@ export type PersistedShop = {
   messages: ShopMessage[];
   employeeId: string;
   settings: ShopSettings;
+  shopVersion?: number;
 };
 
 export const DEFAULT_SETTINGS: ShopSettings = {
@@ -71,6 +73,56 @@ function hydrateCrew(member: CrewMember): CrewMember {
   };
 }
 
+function mergeById<T extends { id: string }>(saved: T[], fresh: T[]): T[] {
+  const have = new Set(saved.map((row) => row.id));
+  return [...saved, ...fresh.filter((row) => !have.has(row.id))];
+}
+
+function mergeJobs(saved: Job[], fresh: Job[]): Job[] {
+  const demo = new Map(fresh.map((row) => [row.id, row]));
+  const seen = new Set<string>();
+  const next = saved.map((job) => {
+    seen.add(job.id);
+    const seed = demo.get(job.id);
+    return hydrateJob({
+      ...seed,
+      ...job,
+      photos: job.photos?.length ? job.photos : (seed?.photos ?? []),
+      scope: job.scope || seed?.scope || job.jobTitle,
+      signature: job.signature ?? seed?.signature ?? null,
+    });
+  });
+  for (const row of fresh) {
+    if (!seen.has(row.id)) next.push(hydrateJob(row));
+  }
+  return next;
+}
+
+export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
+  const base = defaultShop();
+  const settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
+  if (!parsed.settings?.shopName || parsed.settings.shopName === "Job Command") {
+    settings.shopName = DEFAULT_SETTINGS.shopName;
+  }
+  return {
+    ...base,
+    ...parsed,
+    shopVersion: SHOP_VERSION,
+    jobs: mergeJobs(parsed.jobs ?? [], base.jobs),
+    crew: (parsed.crew ?? base.crew).map(hydrateCrew),
+    estimates: mergeById(parsed.estimates ?? [], base.estimates),
+    timeCards: mergeById(parsed.timeCards ?? [], base.timeCards),
+    expenses: mergeById(parsed.expenses ?? [], base.expenses),
+    calls: mergeById(parsed.calls ?? [], base.calls),
+    messages: mergeById(
+      (parsed.messages ?? []).map(hydrateMessage),
+      base.messages,
+    ),
+    employeeId: parsed.employeeId ?? base.employeeId,
+    settings,
+  };
+}
+
 export function defaultShop(): PersistedShop {
   return {
     jobs: JOBS.map(hydrateJob),
@@ -82,6 +134,7 @@ export function defaultShop(): PersistedShop {
     messages: MESSAGES.map(hydrateMessage),
     employeeId: CREW[0]?.id ?? "e-mike",
     settings: DEFAULT_SETTINGS,
+    shopVersion: SHOP_VERSION,
   };
 }
 
@@ -92,19 +145,11 @@ export function loadShop(): PersistedShop | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<PersistedShop>;
     if (!Array.isArray(parsed.jobs) || !Array.isArray(parsed.crew)) return null;
-    const base = defaultShop();
-    return {
-      ...base,
-      ...parsed,
-      jobs: (parsed.jobs ?? base.jobs).map(hydrateJob),
-      crew: (parsed.crew ?? base.crew).map(hydrateCrew),
-      estimates: parsed.estimates ?? base.estimates,
-      timeCards: parsed.timeCards ?? base.timeCards,
-      expenses: parsed.expenses ?? base.expenses,
-      calls: parsed.calls ?? base.calls,
-      messages: (parsed.messages ?? base.messages).map(hydrateMessage),
-      settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
-    };
+    const shop = upgradeShop(parsed);
+    if ((parsed.shopVersion ?? 0) < SHOP_VERSION) {
+      saveShop(shop);
+    }
+    return shop;
   } catch {
     return null;
   }
@@ -140,8 +185,8 @@ export function getShopSnapshot(): PersistedShop {
   if (typeof window === "undefined") return SERVER_SHOP;
   const raw = window.localStorage.getItem(SHOP_KEY);
   if (raw === cachedRaw) return cachedShop;
-  cachedRaw = raw;
   cachedShop = loadShop() ?? SERVER_SHOP;
+  cachedRaw = window.localStorage.getItem(SHOP_KEY);
   return cachedShop;
 }
 

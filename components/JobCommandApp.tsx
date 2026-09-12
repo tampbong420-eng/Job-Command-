@@ -35,7 +35,9 @@ import {
   getServerShopSnapshot,
   getShopSnapshot,
   resetShop,
+  SHOP_VERSION,
   subscribeShop,
+  upgradeShop,
   type PersistedShop,
 } from "@/lib/session";
 import type {
@@ -66,6 +68,12 @@ export default function JobCommandApp() {
     getServerShopSnapshot,
   );
   const { jobs, crew, estimates, timeCards, expenses, calls, messages, employeeId, settings } = shop;
+  useEffect(() => {
+    const current = getShopSnapshot();
+    if ((current.shopVersion ?? 0) < SHOP_VERSION) {
+      commitShop(upgradeShop(current));
+    }
+  }, []);
   const [role, setRole] = useState<Role>("boss");
   const [tab, setTab] = useState<NavTab>("command");
   const [paper, setPaper] = useState<PaperTab>("jobs");
