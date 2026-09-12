@@ -20,6 +20,7 @@ const member: CrewMember = {
   startedAt: null,
   weeklyHoursTarget: 40,
   weeklyHoursLogged: 4,
+  hourlyRate: 48,
   weeklySchedule: weekdayHours("07:00", "16:00"),
   lat: 47.62482,
   lng: -122.3629,

@@ -25,6 +25,7 @@ export type CrewMember = {
   startedAt: string | null;
   weeklyHoursTarget: number;
   weeklyHoursLogged: number;
+  hourlyRate: number;
   weeklySchedule: DaySchedule[];
   lat: number | null;
   lng: number | null;

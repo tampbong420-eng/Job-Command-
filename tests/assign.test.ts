@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   lockJobToCrew,
+  unlockJobFromCrew,
   activeJobs,
   assignedJob,
   assignedJobs,
@@ -11,6 +12,7 @@ import {
   tumblerIndexForCrew,
   toggleCrewClock,
   toggleCrewGps,
+  updateHourlyRate,
   updateWeeklySchedule,
 } from "../lib/assign";
 import { weekdayHours } from "../lib/schedule";
@@ -29,6 +31,7 @@ const crew: CrewMember[] = [
     startedAt: "2026-09-10T14:45:00.000Z",
     weeklyHoursTarget: 40,
     weeklyHoursLogged: 4.5,
+    hourlyRate: 48,
     weeklySchedule: weekdayHours("07:00", "16:00"),
     lat: 47.62,
     lng: -122.36,
@@ -46,6 +49,7 @@ const crew: CrewMember[] = [
     startedAt: "2026-09-10T14:45:00.000Z",
     weeklyHoursTarget: 36,
     weeklyHoursLogged: 8,
+    hourlyRate: 42,
     weeklySchedule: weekdayHours("08:00", "16:00", ["mon", "tue", "wed", "thu"]),
     lat: 47.62,
     lng: -122.3,
@@ -275,6 +279,29 @@ test("assignedJobs orders the day by stop number", () => {
       ["c-shah", 2],
     ],
   );
+});
+
+test("unlockJobFromCrew drops one stop and keeps the rest numbered", () => {
+  const locked = lockJobToCrew(jobs, crew, "c-shah", "e-mike");
+  const result = unlockJobFromCrew(locked.jobs, locked.crew, "c-northline", "e-mike");
+  assert.equal(result.unlocked, true);
+  assert.equal(result.jobs.find((job) => job.id === "c-northline")?.workerId, null);
+  assert.equal(result.jobs.find((job) => job.id === "c-northline")?.worker, "Unassigned");
+  assert.equal(result.jobs.find((job) => job.id === "c-shah")?.workerId, "e-mike");
+  assert.equal(result.jobs.find((job) => job.id === "c-shah")?.routeOrder, 1);
+  assert.equal(result.crew.find((row) => row.id === "e-mike")?.currentJobId, "c-shah");
+});
+
+test("unlockJobFromCrew refuses jobs locked to someone else", () => {
+  const result = unlockJobFromCrew(jobs, crew, "c-hale", "e-mike");
+  assert.equal(result.unlocked, false);
+  assert.equal(result.jobs, jobs);
+});
+
+test("updateHourlyRate writes pay onto one crew card", () => {
+  const updated = updateHourlyRate(crew, "e-mike", 55.5);
+  assert.equal(updated.find((row) => row.id === "e-mike")?.hourlyRate, 55.5);
+  assert.equal(updated.find((row) => row.id === "e-dana")?.hourlyRate, 42);
 });
 
 test("onClockCrew hides people who are clocked out", () => {

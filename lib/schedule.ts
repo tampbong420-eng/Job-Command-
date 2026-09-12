@@ -68,6 +68,11 @@ export function scheduledHours(schedule: DaySchedule[]): number {
   }, 0);
 }
 
+export function weekPayDue(hours: number, hourlyRate: number): number {
+  if (!Number.isFinite(hours) || !Number.isFinite(hourlyRate)) return 0;
+  return Math.round(Math.max(0, hours) * Math.max(0, hourlyRate) * 100) / 100;
+}
+
 export function compactDayRange(days: Weekday[]): string {
   if (days.length === 0) return "OFF";
   if (days.length === 7) return "ALL WEEK";

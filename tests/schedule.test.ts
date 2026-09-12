@@ -6,6 +6,7 @@ import {
   patchDay,
   scheduleOverview,
   scheduledHours,
+  weekPayDue,
   weekdayHours,
 } from "../lib/schedule";
 import { jobStatusLabel, jobTone } from "../lib/format";
@@ -16,6 +17,12 @@ test("weekdayHours marks weekend off by default", () => {
   assert.equal(week[5].off, true);
   assert.equal(week[6].off, true);
   assert.equal(scheduledHours(week), 45);
+});
+
+test("weekPayDue multiplies logged hours by the hourly rate", () => {
+  assert.equal(weekPayDue(4.5, 48), 216);
+  assert.equal(weekPayDue(8, 42), 336);
+  assert.equal(weekPayDue(-2, 40), 0);
 });
 
 test("scheduleOverview compresses a uniform weekday block", () => {

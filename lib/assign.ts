@@ -127,6 +127,33 @@ export function lockJobToCrew(
   };
 }
 
+export function unlockJobFromCrew(
+  jobs: Job[],
+  crew: CrewMember[],
+  jobId: string,
+  employeeId: string,
+): { jobs: Job[]; crew: CrewMember[]; unlocked: boolean } {
+  const job = jobs.find((row) => row.id === jobId);
+  if (!job || job.workerId !== employeeId || job.status === "completed") {
+    return { jobs, crew, unlocked: false };
+  }
+
+  const nextJobs = compactEmployeeRoute(
+    jobs.map((row) =>
+      row.id === jobId
+        ? { ...row, worker: "Unassigned", workerId: null, routeOrder: null }
+        : row,
+    ),
+    employeeId,
+  );
+
+  return {
+    jobs: nextJobs,
+    crew: syncCrewToJobs(crew, nextJobs),
+    unlocked: true,
+  };
+}
+
 export function toggleCrewClock(
   crew: CrewMember[],
   employeeId: string,
@@ -163,6 +190,17 @@ export function updateWeeklySchedule(
 ): CrewMember[] {
   return crew.map((row) =>
     row.id === employeeId ? { ...row, weeklySchedule } : row,
+  );
+}
+
+export function updateHourlyRate(
+  crew: CrewMember[],
+  employeeId: string,
+  hourlyRate: number,
+): CrewMember[] {
+  const rate = Number.isFinite(hourlyRate) ? Math.max(0, hourlyRate) : 0;
+  return crew.map((row) =>
+    row.id === employeeId ? { ...row, hourlyRate: rate } : row,
   );
 }
 
