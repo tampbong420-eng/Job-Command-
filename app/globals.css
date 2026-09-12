@@ -5,16 +5,16 @@
   --metal-3: #3f3f46;
   --ink: #f4f4f5;
   --muted: #a1a1aa;
-  --boss: #4ade80;
-  --boss-deep: #166534;
-  --boss-edge: #86efac;
-  --boss-glow: #4ade8038;
-  --boss-grad: linear-gradient(180deg, #bbf7d0 0%, #4ade80 100%);
+  --boss: #c6f000;
+  --boss-deep: #3d6b00;
+  --boss-edge: #e4ff4d;
+  --boss-glow: #c6f00040;
+  --boss-grad: linear-gradient(180deg, #f2ff5c 0%, #b8f000 46%, #5cb000 100%);
   --employee: #ff7700;
   --employee-deep: #ea580c;
   --employee-glow: #ff770038;
   --employee-grad: linear-gradient(180deg, #fb923c 0%, #ea580c 100%);
-  --lime: #86efac;
+  --lime: #d8ff3a;
   --duty-red: #ff3b30;
   --lead-new: #ff2d2d;
   --lead-pending: #ffb020;
@@ -246,7 +246,7 @@ img {
 
 .role-tab.boss.on {
   background: var(--boss-grad);
-  color: #022c22;
+  color: #141800;
   box-shadow: 0 0 0 1px var(--boss-edge);
 }
 
@@ -536,27 +536,56 @@ h1 strong {
 }
 
 .crew-photo {
+  background: var(--plate);
+  border: 1px solid var(--line);
   width: 64px;
   height: 64px;
-  border-radius: 50%;
+  box-shadow: inset 0 1px #ffffff2e, var(--shadow);
+  border-radius: 12px;
   overflow: hidden;
   flex: none;
-  background: #18181b;
+  position: relative;
 }
 
 .crew-photo.duty-active {
-  border: 2px solid var(--lime);
-  box-shadow: 0 0 0 4px #86efac22, var(--shadow);
+  box-shadow: inset 0 1px #ffffff2e, 0 0 18px var(--boss-glow), var(--shadow);
 }
 
 .crew-photo.duty-off {
-  border: 2px solid var(--duty-red);
-  box-shadow: 0 0 0 4px #ff3b3022, var(--shadow);
+  box-shadow: inset 0 1px #ffffff2e, var(--shadow);
+}
+
+.crew-photo.duty-off img {
+  filter: grayscale(0.4) brightness(0.82);
 }
 
 .crew-photo.duty-break {
-  border: 2px solid var(--employee);
-  box-shadow: 0 0 0 4px var(--employee-glow), var(--shadow);
+  box-shadow: inset 0 1px #ffffff2e, 0 0 16px var(--employee-glow), var(--shadow);
+}
+
+.crew-photo::after {
+  content: "";
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid #09090b;
+  z-index: 1;
+}
+
+.crew-photo.duty-active::after {
+  background: var(--boss-grad);
+  box-shadow: 0 0 8px var(--boss-glow);
+}
+
+.crew-photo.duty-off::after {
+  background: var(--duty-red);
+}
+
+.crew-photo.duty-break::after {
+  background: var(--employee);
 }
 
 .crew-photo img {
@@ -570,10 +599,15 @@ h1 strong {
   height: 100%;
   place-items: center;
   display: grid;
-  background: var(--boss-grad);
-  color: #022c22;
+  background:
+    radial-gradient(circle at 50% 18%, #71717a38, #0000 42%),
+    linear-gradient(#27272a, #09090b);
+  color: var(--lime);
   font-family: var(--font-display), Oswald, sans-serif;
   font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 14px var(--boss-glow);
 }
 
 .rolodex-copy {
@@ -815,7 +849,7 @@ h1 strong {
 
 .lock-button.locked {
   background: var(--boss-grad);
-  color: #052e16;
+  color: #141800;
   border-color: var(--boss-edge);
 }
 
@@ -930,7 +964,7 @@ button.metric.toggle {
 .theme-boss .bottom-nav button.selected {
   color: var(--boss);
   border: 1px solid var(--boss-edge);
-  background: #4ade8029;
+  background: var(--boss-glow);
 }
 
 .nav-icon {
@@ -943,7 +977,7 @@ button.metric.toggle {
   left: 50%;
   bottom: 148px;
   transform: translateX(-50%);
-  background: #022c22;
+  background: #141800;
   color: var(--boss);
   border: 1px solid var(--boss-edge);
   border-radius: 16px;
@@ -987,7 +1021,7 @@ button.metric.toggle {
 
 .tone-active {
   --tone: var(--lime);
-  --tone-glow: #86efac33;
+  --tone-glow: var(--boss-glow);
 }
 
 .tone-done {
@@ -1157,7 +1191,7 @@ select.talk-input {
 }
 
 .status-chip.tone-active {
-  background: #052e1633;
+  background: #14180066;
 }
 
 .status-chip.tone-done {
@@ -1244,7 +1278,7 @@ select.talk-input {
 
 .week-strip span.on {
   background: var(--lime);
-  color: #052e16;
+  color: #141800;
 }
 
 .week-strip span.off {
@@ -1378,7 +1412,7 @@ select.talk-input {
   display: grid;
   place-items: center;
   background: var(--lime);
-  color: #052e16;
+  color: #141800;
   font-size: 11px;
 }
 
@@ -1774,9 +1808,9 @@ select.talk-input {
 }
 
 .clock-tile.in {
-  background: #00ff66;
-  color: #052e16;
-  box-shadow: 0 0 28px #00ff6680;
+  background: var(--boss-grad);
+  color: #141800;
+  box-shadow: 0 0 28px var(--boss-glow);
 }
 
 .job-go {
@@ -1834,7 +1868,7 @@ select.talk-input {
 
 .paper-nav button.on {
   background: var(--boss-grad);
-  color: #052e16;
+  color: #141800;
 }
 
 .add-customer {
