@@ -53,7 +53,12 @@ function hydrateJob(job: Job): Job {
     status: normalizeJobStatus(job.status),
     photos: job.photos ?? [],
     signature: job.signature ?? null,
+    scope: job.scope ?? job.jobTitle,
   };
+}
+
+function hydrateMessage(row: ShopMessage): ShopMessage {
+  return { ...row, seenBy: row.seenBy ?? [] };
 }
 
 function hydrateCrew(member: CrewMember): CrewMember {
@@ -74,7 +79,7 @@ export function defaultShop(): PersistedShop {
     timeCards: TIMECARDS,
     expenses: EXPENSES,
     calls: CALLS,
-    messages: MESSAGES,
+    messages: MESSAGES.map(hydrateMessage),
     employeeId: CREW[0]?.id ?? "e-mike",
     settings: DEFAULT_SETTINGS,
   };
@@ -97,7 +102,7 @@ export function loadShop(): PersistedShop | null {
       timeCards: parsed.timeCards ?? base.timeCards,
       expenses: parsed.expenses ?? base.expenses,
       calls: parsed.calls ?? base.calls,
-      messages: parsed.messages ?? base.messages,
+      messages: (parsed.messages ?? base.messages).map(hydrateMessage),
       settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
     };
   } catch {

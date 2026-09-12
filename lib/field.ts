@@ -5,6 +5,7 @@ import type {
   ExpenseCategory,
   Job,
   JobStatus,
+  ShopMessage,
 } from "./types";
 
 const CLOSED: JobStatus[] = ["completed", "invoiced"];
@@ -132,7 +133,22 @@ export function jobFromCall(call: CallLog): Job {
     lng: -93.0552,
     photos: [],
     signature: null,
+    scope: call.summary,
   };
+}
+
+export function hasUnreadMessage(messages: ShopMessage[], userId: string): boolean {
+  return messages.some(
+    (row) => row.fromId !== userId && !(row.seenBy ?? []).includes(userId),
+  );
+}
+
+export function markMessagesSeen(messages: ShopMessage[], userId: string): ShopMessage[] {
+  return messages.map((row) =>
+    (row.seenBy ?? []).includes(userId)
+      ? row
+      : { ...row, seenBy: [...(row.seenBy ?? []), userId] },
+  );
 }
 
 export function buildExpense(input: {

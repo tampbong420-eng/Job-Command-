@@ -114,6 +114,7 @@ export const JOBS: Job[] = [
     priority: "high",
     lat: 47.639844278404,
     lng: -122.368877694281,
+    scope: "Prep, two coats exterior latex, fascia, and south wall. Includes caulk and masking.",
   },
   {
     id: "c-hale",
@@ -128,6 +129,15 @@ export const JOBS: Job[] = [
     priority: "medium",
     lat: 47.625540435866,
     lng: -122.308577423016,
+    scope: "Cedar fence rebuild with new posts, gate hardware, and stain.",
+    photos: [
+      {
+        id: "ph-hale-before",
+        kind: "before",
+        dataUrl:
+          "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=60",
+      },
+    ],
   },
   {
     id: "c-northline",
@@ -142,6 +152,21 @@ export const JOBS: Job[] = [
     priority: "high",
     lat: 47.6246084,
     lng: -122.3635414,
+    scope: "Pull the old rooftop split, set Unit 4B, recover refrigerant, and restore trim.",
+    photos: [
+      {
+        id: "ph-nl-before",
+        kind: "before",
+        dataUrl:
+          "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=60",
+      },
+      {
+        id: "ph-nl-after",
+        kind: "after",
+        dataUrl:
+          "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=60",
+      },
+    ],
   },
   {
     id: "c-shah",
@@ -156,6 +181,7 @@ export const JOBS: Job[] = [
     priority: "low",
     lat: 47.615450303025,
     lng: -122.312680476486,
+    scope: "Interior latex living room and hall. Two coats, cut-in, and trim.",
   },
   {
     id: "c-chen",
@@ -170,6 +196,7 @@ export const JOBS: Job[] = [
     priority: "medium",
     lat: 47.6729,
     lng: -122.376,
+    scope: "Deck stain · Ballard. Wash, sand high traffic, two coats oil stain.",
   },
   {
     id: "c-elliott",
@@ -185,6 +212,7 @@ export const JOBS: Job[] = [
     lat: 47.61982222018,
     lng: -122.348868893303,
     signature: null,
+    scope: "Rooftop unit swap. Crane window, disconnect, set, and start-up.",
   },
   {
     id: "c-owens",
@@ -199,6 +227,7 @@ export const JOBS: Job[] = [
     priority: "medium",
     lat: 34.5037,
     lng: -93.0552,
+    scope: "Kitchen cabinets and trim. Spray enamel, new pulls, and caulk.",
   },
   {
     id: "c-lakeside",
@@ -213,6 +242,7 @@ export const JOBS: Job[] = [
     priority: "high",
     lat: 34.451,
     lng: -93.081,
+    scope: "Clubhouse exterior. Pressure wash, scrape, two coats, and fascia.",
   },
 ];
 
@@ -227,6 +257,17 @@ export const ESTIMATES: Estimate[] = [
     createdAt: "2026-09-09T18:00:00.000Z",
     labor: 2800,
     materials: 1400,
+    markup: 0.18,
+    taxRate: 0.075,
+  },
+  {
+    id: "est-lakeside",
+    jobId: "c-lakeside",
+    amount: 8640,
+    notes: "Clubhouse exterior invoice",
+    createdAt: "2026-09-08T16:00:00.000Z",
+    labor: 4200,
+    materials: 1800,
     markup: 0.18,
     taxRate: 0.075,
   },
@@ -248,6 +289,14 @@ export const TIMECARDS: TimeCard[] = [
     hours: 8,
     date: "2026-09-10",
     notes: "Fence layout and posts",
+  },
+  {
+    id: "tc-mike-2",
+    employeeId: "e-mike",
+    jobId: "c-elliott",
+    hours: 9,
+    date: "2026-09-09",
+    notes: "Rooftop swap and start-up",
   },
 ];
 
@@ -295,5 +344,6 @@ export const MESSAGES: ShopMessage[] = [
     body: "Storm cell after 3. Wrap exteriors by 2:30.",
     createdAt: "2026-09-11T13:05:00.000Z",
     broadcast: true,
+    seenBy: ["e-mike"],
   },
 ];

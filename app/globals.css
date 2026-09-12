@@ -82,6 +82,25 @@ img {
   }
 }
 
+@keyframes alert-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px color-mix(in srgb, var(--alert, var(--lead-new)) 40%, transparent);
+    filter: brightness(0.92);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px color-mix(in srgb, var(--alert, var(--lead-new)) 22%, transparent),
+      0 0 28px color-mix(in srgb, var(--alert, var(--lead-new)) 85%, transparent);
+    filter: brightness(1.28);
+  }
+}
+
+.alert-glow {
+  --alert: var(--employee);
+  animation: alert-pulse 2.2s ease-in-out infinite;
+}
+
 @keyframes tick {
   0% {
     transform: rotateX(12deg) scale(0.98);
@@ -1002,9 +1021,14 @@ button.metric.toggle {
   .tumbler-slot,
   .tumbler-slot.is-ticking,
   .hours-desk,
-  .property-sheet {
+  .property-sheet,
+  .alert-glow,
+  .lane-button.tone-lead.is-on,
+  .clock-tile.in,
+  .metric.clock.on {
     animation: none;
     transition: none;
+    filter: none;
   }
 }
 
@@ -1056,8 +1080,8 @@ button.metric.toggle {
 }
 
 .tone-invoice {
-  --tone: #fde047;
-  --tone-glow: #facc1533;
+  --tone: #a1a1aa;
+  --tone-glow: #71717a33;
 }
 
 .status-chip.tone-dispatch {
@@ -1065,7 +1089,7 @@ button.metric.toggle {
 }
 
 .status-chip.tone-invoice {
-  background: #2a2308;
+  background: #18181b;
 }
 
 .rolodex-actions.three {
@@ -1646,8 +1670,88 @@ select.talk-input {
 }
 
 .customer-card {
-  padding: 10px 0 12px;
-  border-top: 1px solid #ffffff12;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--shock) 70%, var(--tone, #00bfff));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tone, var(--shock)) 18%, transparent), #09090b 64%),
+    #09090b;
+  box-shadow: 0 0 0 1px #00bfff55, 0 0 18px var(--shock-glow), var(--shadow);
+}
+
+.customer-card.tone-lead {
+  box-shadow: 0 0 0 1px #ff2d2d66, 0 0 18px #ff2d2d33, var(--shadow);
+}
+
+.customer-card.tone-pending {
+  box-shadow: 0 0 0 1px #ffb02066, 0 0 16px #ffb02033, var(--shadow);
+}
+
+.customer-card.tone-active {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--lime) 55%, #000), 0 0 16px var(--boss-glow), var(--shadow);
+}
+
+.customer-card.tone-done {
+  background: linear-gradient(180deg, #27272a, #09090b);
+  border-color: #3f3f46;
+  box-shadow: inset 0 1px #ffffff10, 0 8px 18px #00000080;
+}
+
+.customer-card.tone-dispatch {
+  box-shadow: 0 0 0 1px #00bfff88, 0 0 18px var(--shock-glow), var(--shadow);
+}
+
+.card-facts {
+  margin: 10px 0 8px;
+}
+
+.card-invoice {
+  margin: 8px 0 4px;
+}
+
+.card-invoice b {
+  display: block;
+  font-family: var(--font-display), Oswald, sans-serif;
+  font-size: 22px;
+  color: var(--shock);
+}
+
+.card-invoice span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.customer-card .street-view iframe {
+  height: 160px;
+}
+
+.lane-button.tone-lead.is-on {
+  --alert: var(--lead-new);
+  background: var(--lead-new);
+  color: #fff;
+  border-color: #ff6b63;
+  animation: alert-pulse 2.2s ease-in-out infinite;
+}
+
+.clock-tile.in,
+.metric.clock.on {
+  --alert: #c6f000;
+  animation: alert-pulse 2.2s ease-in-out infinite;
+}
+
+.bottom-nav button.alert-glow {
+  --alert: var(--employee);
+  color: var(--employee);
+  border: 1px solid #ff770088;
 }
 
 .customer-card-top {

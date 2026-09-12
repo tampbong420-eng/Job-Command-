@@ -73,6 +73,7 @@ export type Job = {
   lng: number | null;
   photos?: JobPhoto[];
   signature?: string | null;
+  scope?: string;
 };
 
 export type GeoPoint = {
@@ -137,6 +138,7 @@ export type ShopMessage = {
   body: string;
   createdAt: string;
   broadcast: boolean;
+  seenBy?: string[];
 };
 
 export type ShopSnapshot = {

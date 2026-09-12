@@ -8,7 +8,7 @@ const BUTTONS: { status: JobStatus; label: string }[] = [
   { status: "scheduled", label: "Scheduled" },
   { status: "dispatched", label: "Dispatched" },
   { status: "in_progress", label: "On job" },
-  { status: "completed", label: "Finished" },
+  { status: "completed", label: "Job Archive" },
   { status: "invoiced", label: "Invoiced" },
 ];
 

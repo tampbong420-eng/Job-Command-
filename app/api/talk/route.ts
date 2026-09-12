@@ -120,7 +120,7 @@ Request: ${text}
 
 Rules:
 - Stages: lead, scheduled, dispatched, in_progress, completed, invoiced.
-- Pending maps to scheduled. Active / on job maps to in_progress. Finished maps to completed.
+- Pending maps to scheduled. Active / on job maps to in_progress. Finished / job archive maps to completed.
 - Receipts use create_expense. Convert a receptionist call with convert_call.
 - Prefer one or two commands. Keep say short.`,
     });

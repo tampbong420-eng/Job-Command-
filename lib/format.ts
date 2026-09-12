@@ -61,7 +61,7 @@ export function jobStatusLabel(
   if (status === "dispatched") return "Dispatched";
   if (status === "in_progress") return "On job";
   if (status === "invoiced") return "Invoiced";
-  return "Finished";
+  return "Job Archive";
 }
 
 export function jobTone(
@@ -78,7 +78,6 @@ export function jobTone(
   if (status === "pending" || status === "scheduled") return "tone-pending";
   if (status === "dispatched") return "tone-dispatch";
   if (status === "in_progress") return "tone-active";
-  if (status === "invoiced") return "tone-invoice";
   return "tone-done";
 }
 

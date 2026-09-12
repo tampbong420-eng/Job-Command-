@@ -27,7 +27,7 @@ export default function EmployeeJobs({
         <strong>Stops.</strong>
       </h1>
       <p className="board-copy">
-        Only jobs locked to you. En route, on job, or finished — plus
+        Only jobs locked to you. En route, on job, or job archive — plus
         directions.
       </p>
       {mine.length === 0 ? (
@@ -79,7 +79,7 @@ export default function EmployeeJobs({
                 className="ghost-action hours"
                 onClick={() => onStatus(job.id, "completed")}
               >
-                Finished
+                Job Archive
               </button>
             </div>
           </article>

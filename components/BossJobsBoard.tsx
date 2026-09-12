@@ -2,7 +2,7 @@
 
 import CustomerCard from "@/components/CustomerCard";
 import { jobStatusLabel, jobTone } from "@/lib/format";
-import type { Estimate, Job, JobStatus, TimeCard } from "@/lib/types";
+import type { CrewMember, Estimate, Job, JobStatus, TimeCard } from "@/lib/types";
 import type { ReactNode } from "react";
 
 const GROUPS: JobStatus[] = [
@@ -18,19 +18,23 @@ export default function BossJobsBoard({
   jobs,
   estimates,
   timeCards,
+  crew,
   onStatus,
   onDelete,
   onOpenEstimates,
   onOpenTimeCards,
+  onPhoto,
   children,
 }: {
   jobs: Job[];
   estimates: Estimate[];
   timeCards: TimeCard[];
+  crew: CrewMember[];
   onStatus: (jobId: string, status: JobStatus) => void;
   onDelete: (jobId: string) => void;
   onOpenEstimates: (jobId: string) => void;
   onOpenTimeCards: (jobId: string) => void;
+  onPhoto: (jobId: string, kind: "before" | "after", dataUrl: string) => void;
   children?: ReactNode;
 }) {
   return (
@@ -42,7 +46,7 @@ export default function BossJobsBoard({
         <strong>Cards.</strong>
       </h1>
       <p className="board-copy">
-        Tap New lead → Scheduled → Dispatched → On job → Finished → Invoiced.
+        Tap New lead → Scheduled → Dispatched → On job → Job Archive → Invoiced.
         Receipts, quotes, and time cards stay on the same customer.
       </p>
       {children}
@@ -67,10 +71,12 @@ export default function BossJobsBoard({
                   job={job}
                   estimates={estimates}
                   timeCards={timeCards}
+                  crew={crew}
                   onStatus={(next) => onStatus(job.id, next)}
                   onDelete={() => onDelete(job.id)}
                   onOpenEstimates={() => onOpenEstimates(job.id)}
                   onOpenTimeCards={() => onOpenTimeCards(job.id)}
+                  onPhoto={(kind, dataUrl) => onPhoto(job.id, kind, dataUrl)}
                 />
               ))
             )}

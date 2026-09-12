@@ -110,7 +110,7 @@ export function applyCommand(
               ? "On job"
               : command.status === "invoiced"
                 ? "Invoiced"
-                : "Finished";
+                : "Job Archive";
     return {
       state: { ...state, jobs, crew },
       view: "jobs",
@@ -258,6 +258,7 @@ export function applyCommand(
       lng: null,
       photos: [],
       signature: null,
+      scope: command.jobTitle ?? "New work",
     };
     return {
       state: { ...state, jobs: [job, ...state.jobs] },
@@ -321,6 +322,7 @@ export function applyCommand(
       body: command.body,
       createdAt: now,
       broadcast: true,
+      seenBy: from ? [from.id] : [],
     };
     return {
       state: { ...state, messages: [message, ...messages] },
@@ -336,7 +338,7 @@ function jobTitleStatus(status: JobStatus): string {
   if (status === "scheduled" || status === "pending") return "scheduled";
   if (status === "dispatched") return "dispatched";
   if (status === "in_progress") return "on job";
-  if (status === "completed") return "finished";
+  if (status === "completed") return "job archive";
   if (status === "invoiced") return "invoiced";
   return "a new lead";
 }

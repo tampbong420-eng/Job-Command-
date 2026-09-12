@@ -15,6 +15,7 @@ export default function ProfilePage({
   employeeId,
   onPickEmployee,
   messages,
+  unread,
   onBroadcast,
 }: {
   member: CrewMember;
@@ -26,6 +27,7 @@ export default function ProfilePage({
   employeeId: string;
   onPickEmployee: (id: string) => void;
   messages?: ShopMessage[];
+  unread?: boolean;
   onBroadcast?: (body: string) => void;
 }) {
   const assigned = jobs.filter((job) => job.workerId === member.id && job.status === "in_progress");
@@ -103,6 +105,7 @@ export default function ProfilePage({
         <RadioBox
           messages={messages ?? []}
           crew={crew}
+          unread={Boolean(unread)}
           onBroadcast={onBroadcast}
         />
       )}
@@ -113,10 +116,12 @@ export default function ProfilePage({
 function RadioBox({
   messages,
   crew,
+  unread,
   onBroadcast,
 }: {
   messages: ShopMessage[];
   crew: CrewMember[];
+  unread: boolean;
   onBroadcast: (body: string) => void;
 }) {
   const [body, setBody] = useState("");
@@ -132,7 +137,7 @@ function RadioBox({
       />
       <button
         type="button"
-        className="lock-button locked"
+        className={`lock-button locked${unread ? " alert-glow" : ""}`}
         disabled={!body.trim()}
         onClick={() => {
           onBroadcast(body.trim());

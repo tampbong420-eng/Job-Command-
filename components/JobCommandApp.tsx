@@ -29,7 +29,7 @@ import {
   updateWeeklySchedule,
 } from "@/lib/assign";
 import { applyCommands } from "@/lib/commands";
-import { buildExpense, quoteTotal, simulateInboundCall } from "@/lib/field";
+import { buildExpense, hasUnreadMessage, markMessagesSeen, quoteTotal, simulateInboundCall } from "@/lib/field";
 import {
   commitShop,
   getServerShopSnapshot,
@@ -89,6 +89,9 @@ export default function JobCommandApp() {
   const employee =
     crew.find((row) => row.id === employeeId) ?? crew[0] ?? member;
   const actor = role === "employee" ? employee : member;
+  const unreadPage = Boolean(
+    role === "employee" && actor && hasUnreadMessage(messages, actor.id),
+  );
   const stack = useMemo(() => activeJobs(jobs), [jobs]);
   const selectedJob = stack[jobIndex] ?? null;
   const assigned =
@@ -427,10 +430,26 @@ export default function JobCommandApp() {
           jobs={jobs}
           estimates={estimates}
           timeCards={timeCards}
+          crew={crew}
           onStatus={setJobStatus}
           onDelete={deleteJob}
           onOpenEstimates={() => setPaper("estimates")}
           onOpenTimeCards={() => setPaper("timecards")}
+          onPhoto={(jobId, kind, dataUrl) => {
+            patchShop({
+              jobs: getShopSnapshot().jobs.map((row) =>
+                row.id === jobId
+                  ? {
+                      ...row,
+                      photos: [
+                        ...(row.photos ?? []),
+                        { id: `ph-${Date.now()}`, kind, dataUrl },
+                      ],
+                    }
+                  : row,
+              ),
+            });
+          }}
         >
           {paperTabs}
           <AddCustomerForm onAdd={addCustomer} />
@@ -523,6 +542,7 @@ export default function JobCommandApp() {
             );
           }}
           messages={messages}
+          unread={unreadPage}
           onBroadcast={(body) =>
             applyTalk({
               say: "Crew paged.",
@@ -548,11 +568,16 @@ export default function JobCommandApp() {
           <button
             key={item.id}
             type="button"
-            className={tab === item.id ? "selected" : ""}
+            className={`${tab === item.id ? "selected" : ""}${item.id === "profile" && unreadPage ? " alert-glow" : ""}`}
             onClick={() => {
               setTab(item.id);
               if (item.id !== "command") setDesk("crew");
               if (item.id === "jobs") setPaper("jobs");
+              if (item.id === "profile" && role === "employee" && actor) {
+                patchShop({
+                  messages: markMessagesSeen(getShopSnapshot().messages, actor.id),
+                });
+              }
             }}
           >
             <span className="nav-icon" aria-hidden="true">

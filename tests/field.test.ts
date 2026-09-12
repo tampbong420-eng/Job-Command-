@@ -4,7 +4,9 @@ import { applyCommand, parseTalk } from "../lib/commands";
 import { CREW, ESTIMATES, JOBS, TIMECARDS } from "../lib/demo-data";
 import {
   crewByToken,
+  hasUnreadMessage,
   jobFromCall,
+  markMessagesSeen,
   normalizeJobStatus,
   parseReceiptAmount,
   quoteTotal,
@@ -52,6 +54,23 @@ describe("field extras", () => {
     );
     assert.equal(filed.state.jobs[0]?.customerName, call.callerName);
     assert.equal(filed.view, "jobs");
+  });
+
+  test("unread pages skip the sender until the employee opens them", () => {
+    const unread = [
+      {
+        id: "msg-1",
+        fromId: "e-mike",
+        body: "Wrap exteriors",
+        createdAt: "2026-09-11T13:05:00.000Z",
+        broadcast: true,
+        seenBy: ["e-mike"],
+      },
+    ];
+    assert.equal(hasUnreadMessage(unread, "e-mike"), false);
+    assert.equal(hasUnreadMessage(unread, "e-dana"), true);
+    const seen = markMessagesSeen(unread, "e-dana");
+    assert.equal(hasUnreadMessage(seen, "e-dana"), false);
   });
 
   test("talk files a materials receipt", () => {
