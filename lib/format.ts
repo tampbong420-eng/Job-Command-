@@ -3,6 +3,12 @@ export function wrapIndex(index: number, delta: number, length: number): number 
   return (index + delta + length * 10) % length;
 }
 
+export function clampIndex(index: number, length: number): number {
+  if (length <= 0) return 0;
+  if (!Number.isFinite(index)) return 0;
+  return Math.min(length - 1, Math.max(0, index));
+}
+
 export function clockLabel(status: "active" | "break" | "off"): string {
   if (status === "active") return "ON THE CLOCK";
   if (status === "break") return "ON BREAK";

@@ -33,6 +33,7 @@ import {
   updateWeeklySchedule,
 } from "@/lib/assign";
 import { applyCommands, jobsMarkedForDelete } from "@/lib/commands";
+import { clampIndex } from "@/lib/format";
 import { hasUnreadMessage, markMessagesSeen } from "@/lib/messages";
 import {
   commitShop,
@@ -111,7 +112,12 @@ export default function JobCommandApp() {
     role === "employee" && actor && hasUnreadMessage(messages, actor.id),
   );
   const stack = useMemo(() => activeJobs(jobs), [jobs]);
-  const selectedJob = stack[jobIndex] ?? null;
+  const tumblerIndex = clampIndex(jobIndex, stack.length);
+  const selectedJob = stack[tumblerIndex] ?? null;
+
+  useEffect(() => {
+    if (jobIndex !== tumblerIndex) setJobIndex(tumblerIndex);
+  }, [jobIndex, tumblerIndex]);
   const assigned =
     actor ? assignedJob(jobs, actor) : null;
   const property =
@@ -543,7 +549,7 @@ export default function JobCommandApp() {
           />
           <JobTumbler
             jobs={jobs}
-            jobIndex={jobIndex}
+            jobIndex={tumblerIndex}
             member={member}
             ticking={ticking}
             onIndexChange={setJobIndex}
