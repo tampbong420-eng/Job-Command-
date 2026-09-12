@@ -47,6 +47,7 @@ export type Job = {
   scheduledTime: string;
   worker: string;
   workerId: string | null;
+  routeOrder: number | null;
   priority: JobPriority;
   lat: number | null;
   lng: number | null;

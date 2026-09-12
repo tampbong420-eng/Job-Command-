@@ -1,11 +1,12 @@
 "use client";
 
-import { assignedJob, onClockCrew } from "@/lib/assign";
+import { assignedJob, assignedJobs, onClockCrew } from "@/lib/assign";
 import { clockLabel, formatLiveHours } from "@/lib/format";
 import { scheduleOverview } from "@/lib/schedule";
 import type { CrewMember, Job } from "@/lib/types";
 import { useLiveClockTime, useLiveDate, useLiveGreeting, useLiveNow } from "@/lib/use-live-time";
 import { useMemo } from "react";
+import StopBadge from "@/components/StopBadge";
 
 export default function EmployeeHome({
   member,
@@ -26,6 +27,7 @@ export default function EmployeeHome({
   const now = useLiveNow();
   const onClock = member.status !== "off";
   const job = assignedJob(jobs, member);
+  const stops = useMemo(() => assignedJobs(jobs, member.id), [jobs, member.id]);
   const live = !onClock
     ? `${member.weeklyHoursLogged}h this week`
     : now === 0
@@ -87,13 +89,20 @@ export default function EmployeeHome({
             ◎
           </div>
           <div>
-            <p className="card-label">Assigned job</p>
-            <p className={`gps-line ${job ? "live" : ""}`}>
-              {job
-                ? `${job.scheduledTime} · ${job.customerName}`
-                : "No active job locked to you"}
-            </p>
-            {job && <p className="board-copy tight">{job.address}</p>}
+            <p className="card-label">Assigned jobs</p>
+            {stops.length === 0 ? (
+              <p className="gps-line">No jobs locked to you</p>
+            ) : (
+              stops.map((stop) => (
+                <p key={stop.id} className="gps-line live stop-line">
+                  {stop.routeOrder != null && <StopBadge n={stop.routeOrder} />}
+                  <span>
+                    {stop.scheduledTime} · {stop.customerName}
+                    <small>{stop.address}</small>
+                  </span>
+                </p>
+              ))
+            )}
           </div>
         </div>
         {job && (

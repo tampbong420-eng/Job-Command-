@@ -10,7 +10,8 @@ Boss Command is the dispatch desk:
 - **All Jobs** tab for the customer board
 - **Employee Profiles** tab with every shop card, hours, and clock status
 - **Edit Hours** calendar for each employee
-- Combination-lock job tumbler that cycles **active jobs only**
+- Combination-lock job tumbler that can lock **multiple jobs** to one employee with orange stop numbers
+- **Get Directions** opens that employee's customer cards in 1, 2, 3 order
 - **Get Directions** opens Street View and Google Maps
 - Live Google Map on the employees desk
 - Semantic job colors: new leads red, pending orange/yellow, active light green, finished charcoal
