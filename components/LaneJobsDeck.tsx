@@ -54,10 +54,14 @@ export default function LaneJobsDeck({
   }, [jobId, lane, onJobId]);
 
   const swipe = useSwipe((delta) => {
+    step(delta);
+  }, "x", 72);
+
+  function step(delta: number) {
     if (lane.length === 0) return;
     const next = wrapIndex(index, delta, lane.length);
     onJobId(lane[next]?.id ?? null);
-  }, "x", 72);
+  }
 
   return (
     <section className="page hours-desk lane-deck">
@@ -75,45 +79,58 @@ export default function LaneJobsDeck({
       </div>
 
       {current ? (
-        <div
-          className={`lane-track${swipe.dragging ? " is-dragging" : ""}`}
-          aria-label={`${jobStatusLabel(status)} jobs`}
-          onPointerDown={swipe.onPointerDown}
-          onPointerMove={swipe.onPointerMove}
-          onPointerUp={swipe.onPointerUp}
-          onPointerCancel={swipe.onPointerUp}
-          style={{
-            transform: swipe.dragging
-              ? `translateX(${Math.max(-56, Math.min(56, swipe.drag * 0.28))}px)`
-              : undefined,
-          }}
-        >
-          <div className="lane-count">
-            <span className={`job-chip ${jobTone(status)}`}>
-              {index + 1} / {lane.length}
-            </span>
-            <p className="swipe-hint">Swipe jobs</p>
-          </div>
+        <>
           <div
-            onPointerDown={(event) => {
-              const target = event.target as HTMLElement | null;
-              if (target?.closest("button, a, input, textarea, iframe, label")) {
-                event.stopPropagation();
-              }
+            className={`lane-flick${swipe.dragging ? " is-dragging" : ""}`}
+            aria-label={`${jobStatusLabel(status)} jobs`}
+            onPointerDown={swipe.onPointerDown}
+            onPointerMove={swipe.onPointerMove}
+            onPointerUp={swipe.onPointerUp}
+            onPointerCancel={swipe.onPointerUp}
+            style={{
+              transform: swipe.dragging
+                ? `translateX(${Math.max(-56, Math.min(56, swipe.drag * 0.28))}px)`
+                : undefined,
             }}
           >
-            <CustomerCard
-              job={current}
-              estimates={estimates}
-              timeCards={timeCards}
-              crew={crew}
-              onStatus={(next) => onStatus(current.id, next)}
-              onDelete={() => onDelete(current.id)}
-              onOpenEstimates={onOpenEstimates}
-              onOpenTimeCards={onOpenTimeCards}
-              onPhoto={(kind, dataUrl) => onPhoto(current.id, kind, dataUrl)}
-            />
+            <button
+              type="button"
+              className="ghost-action lane-step"
+              aria-label="Previous job"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => step(-1)}
+              disabled={lane.length < 2}
+            >
+              ←
+            </button>
+            <div className="lane-count">
+              <span className={`job-chip ${jobTone(status)}`}>
+                {index + 1} / {lane.length}
+              </span>
+              <p className="swipe-hint">Swipe jobs</p>
+            </div>
+            <button
+              type="button"
+              className="ghost-action lane-step"
+              aria-label="Next job"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => step(1)}
+              disabled={lane.length < 2}
+            >
+              →
+            </button>
           </div>
+          <CustomerCard
+            job={current}
+            estimates={estimates}
+            timeCards={timeCards}
+            crew={crew}
+            onStatus={(next) => onStatus(current.id, next)}
+            onDelete={() => onDelete(current.id)}
+            onOpenEstimates={onOpenEstimates}
+            onOpenTimeCards={onOpenTimeCards}
+            onPhoto={(kind, dataUrl) => onPhoto(current.id, kind, dataUrl)}
+          />
           <div className="rolodex-dots">
             {lane.map((job) => (
               <button
@@ -122,12 +139,11 @@ export default function LaneJobsDeck({
                 className={job.id === current.id ? "on" : ""}
                 aria-label={`Show ${job.customerName}`}
                 aria-pressed={job.id === current.id}
-                onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => onJobId(job.id)}
               />
             ))}
           </div>
-        </div>
+        </>
       ) : (
         <p className="empty-group">None in this lane.</p>
       )}

@@ -1123,21 +1123,32 @@ button.status-chip:active {
   color: #a1a1aa;
 }
 
-.lane-track {
-  touch-action: pan-y;
+.lane-flick {
+  touch-action: pan-x;
   user-select: none;
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.lane-track.is-dragging {
+.lane-flick.is-dragging {
   cursor: grabbing;
+}
+
+.lane-step {
+  min-height: 44px;
+  font-size: 18px;
 }
 
 .lane-count {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 4px;
+  min-height: 52px;
 }
 
 .lane-deck h1.tone-lead,
