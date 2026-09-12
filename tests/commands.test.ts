@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { applyCommand, matchJob, parseTalk } from "../lib/commands";
+import { applyCommand, jobsMarkedForDelete, matchJob, parseTalk } from "../lib/commands";
 import { CREW, ESTIMATES, JOBS, TIMECARDS } from "../lib/demo-data";
 import type { ShopSnapshot } from "../lib/types";
 
@@ -12,6 +12,18 @@ const snapshot: ShopSnapshot = {
   selectedJobId: "c-northline",
   selectedCrewId: "e-mike",
 };
+
+test("jobsMarkedForDelete lists every customer a delete command would remove", () => {
+  const marked = jobsMarkedForDelete(JOBS, [
+    { type: "delete_job", query: "Maya Chen" },
+    { type: "set_status", query: "Priya", status: "pending" },
+    { type: "delete_job", query: "c-shah" },
+  ]);
+  assert.deepEqual(
+    marked.map((job) => job.id),
+    ["c-chen", "c-shah"],
+  );
+});
 
 test("customer cards can move a lead to pending", () => {
   const result = applyCommand(snapshot, {

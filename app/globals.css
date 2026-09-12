@@ -1841,6 +1841,24 @@ label.ghost-action {
   z-index: 9;
 }
 
+.confirm-backdrop {
+  z-index: 12;
+  place-items: center;
+}
+
+.confirm-sheet {
+  max-height: none;
+}
+
+.confirm-sheet h2 {
+  font-size: 26px;
+}
+
+.confirm-actions .lane-button.tone-delete {
+  min-height: 44px;
+  font-size: 12px;
+}
+
 .clock-tile {
   width: 100%;
   min-height: 72px;

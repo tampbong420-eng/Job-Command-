@@ -2,6 +2,7 @@
 
 import AddCustomerForm from "@/components/AddCustomerForm";
 import BossJobsBoard from "@/components/BossJobsBoard";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import CrewMap from "@/components/CrewMap";
 import CrewMetrics from "@/components/CrewMetrics";
 import CrewRolodex from "@/components/CrewRolodex";
@@ -27,7 +28,7 @@ import {
   toggleCrewGps,
   updateWeeklySchedule,
 } from "@/lib/assign";
-import { applyCommands } from "@/lib/commands";
+import { applyCommands, jobsMarkedForDelete } from "@/lib/commands";
 import { hasUnreadMessage, markMessagesSeen } from "@/lib/messages";
 import {
   commitShop,
@@ -90,6 +91,12 @@ export default function JobCommandApp() {
   const [notice, setNotice] = useState<string | null>(null);
   const [propertyOpen, setPropertyOpen] = useState(false);
   const [sheetJobId, setSheetJobId] = useState<string | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string;
+    body: string;
+    confirmLabel: string;
+    action: () => void;
+  } | null>(null);
   const fieldDate = useLiveDate();
 
   const member = crew[crewIndex] ?? crew[0];
@@ -149,7 +156,7 @@ export default function JobCommandApp() {
     setPaper(view);
   }
 
-  function applyTalk(result: TalkResult, navigate = true) {
+  function runTalk(result: TalkResult, navigate = true, after?: () => void) {
     const next = applyCommands(snapshot, result.commands);
     patchShop({
       jobs: next.state.jobs,
@@ -170,6 +177,29 @@ export default function JobCommandApp() {
         ),
       );
     }
+    after?.();
+  }
+
+  function applyTalk(result: TalkResult, navigate = true, after?: () => void) {
+    const deletes = result.commands.filter((command) => command.type === "delete_job");
+    if (deletes.length > 0) {
+      const marked = jobsMarkedForDelete(jobs, result.commands);
+      const who =
+        marked.length > 0
+          ? marked.map((job) => job.customerName).join(", ")
+          : deletes.map((command) => command.query).join(", ");
+      setPendingConfirm({
+        title: marked.length > 1 ? "Delete these customers?" : `Delete ${who}?`,
+        body: `Are you sure you want to delete ${who}? This cannot be undone.`,
+        confirmLabel: "Delete",
+        action: () => {
+          setPendingConfirm(null);
+          runTalk(result, navigate, after);
+        },
+      });
+      return;
+    }
+    runTalk(result, navigate, after);
   }
 
   function setJobStatus(jobId: string, status: JobStatus, navigate = true) {
@@ -190,12 +220,17 @@ export default function JobCommandApp() {
   }
 
   function deleteJob(jobId: string) {
-    applyTalk({
-      say: "",
-      commands: [{ type: "delete_job", query: jobId }],
-    });
-    setPropertyOpen(false);
-    setSheetJobId(null);
+    applyTalk(
+      {
+        say: "",
+        commands: [{ type: "delete_job", query: jobId }],
+      },
+      true,
+      () => {
+        setPropertyOpen(false);
+        setSheetJobId(null);
+      },
+    );
   }
 
   function addCustomer(input: {
@@ -283,23 +318,31 @@ export default function JobCommandApp() {
   }
 
   function resetDemoShop() {
-    resetShop();
-    const next = getShopSnapshot();
-    setCrewIndex(0);
-    setJobIndex(
-      tumblerIndexForCrew(
-        next.jobs,
-        next.crew[0]?.id ?? "",
-        next.crew[0]?.currentJobId ?? null,
-      ),
-    );
-    setPaper("jobs");
-    setDesk("crew");
-    setLaneStatus(null);
-    setLaneJobId(null);
-    setPropertyOpen(false);
-    setSheetJobId(null);
-    setNotice("Demo shop reset.");
+    setPendingConfirm({
+      title: "Reset demo shop?",
+      body: "Are you sure you want to wipe the shop back to the sample customers and hours? This cannot be undone.",
+      confirmLabel: "Reset",
+      action: () => {
+        setPendingConfirm(null);
+        resetShop();
+        const next = getShopSnapshot();
+        setCrewIndex(0);
+        setJobIndex(
+          tumblerIndexForCrew(
+            next.jobs,
+            next.crew[0]?.id ?? "",
+            next.crew[0]?.currentJobId ?? null,
+          ),
+        );
+        setPaper("jobs");
+        setDesk("crew");
+        setLaneStatus(null);
+        setLaneJobId(null);
+        setPropertyOpen(false);
+        setSheetJobId(null);
+        setNotice("Demo shop reset.");
+      },
+    });
   }
 
   const paperTabs = (
@@ -590,6 +633,15 @@ export default function JobCommandApp() {
           }}
           onStatus={(status) => setJobStatus(property.id, status)}
           onDelete={() => deleteJob(property.id)}
+        />
+      )}
+      {pendingConfirm && (
+        <ConfirmDialog
+          title={pendingConfirm.title}
+          body={pendingConfirm.body}
+          confirmLabel={pendingConfirm.confirmLabel}
+          onCancel={() => setPendingConfirm(null)}
+          onConfirm={pendingConfirm.action}
         />
       )}
     </main>

@@ -42,6 +42,19 @@ export function matchJob(jobs: Job[], query: string): Job | null {
   return scored[0]?.job ?? null;
 }
 
+export function jobsMarkedForDelete(jobs: Job[], commands: ShopCommand[]): Job[] {
+  const seen = new Set<string>();
+  const marked: Job[] = [];
+  for (const command of commands) {
+    if (command.type !== "delete_job") continue;
+    const job = matchJob(jobs, command.query);
+    if (!job || seen.has(job.id)) continue;
+    seen.add(job.id);
+    marked.push(job);
+  }
+  return marked;
+}
+
 export function matchCrew(crew: CrewMember[], query: string): CrewMember | null {
   const q = query.trim().toLowerCase();
   if (!q) return null;
