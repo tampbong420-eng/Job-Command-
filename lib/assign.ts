@@ -8,11 +8,64 @@ export function activeJobs(jobs: Job[]): Job[] {
   return jobs.filter((job) => job.status === "in_progress");
 }
 
+export function assignedJobs(jobs: Job[], employeeId: string): Job[] {
+  return jobs
+    .filter((job) => job.workerId === employeeId && job.status !== "completed")
+    .sort((a, b) => {
+      const aOrder = a.routeOrder ?? 99;
+      const bOrder = b.routeOrder ?? 99;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.scheduledTime.localeCompare(b.scheduledTime);
+    });
+}
+
 export function assignedJob(jobs: Job[], member: CrewMember): Job | null {
+  const stops = assignedJobs(jobs, member.id);
   if (member.currentJobId) {
-    return jobs.find((job) => job.id === member.currentJobId) ?? null;
+    return stops.find((job) => job.id === member.currentJobId) ?? stops[0] ?? null;
   }
-  return jobs.find((job) => job.workerId === member.id && job.status === "in_progress") ?? null;
+  return stops[0] ?? null;
+}
+
+function compactEmployeeRoute(jobs: Job[], employeeId: string): Job[] {
+  const mine = assignedJobs(jobs, employeeId);
+  const order = new Map(mine.map((job, index) => [job.id, index + 1]));
+  return jobs.map((job) => {
+    if (job.workerId !== employeeId) return job;
+    if (job.status === "completed") return { ...job, routeOrder: null };
+    const n = order.get(job.id);
+    return n != null ? { ...job, routeOrder: n } : { ...job, routeOrder: null };
+  });
+}
+
+export function syncJobRoutes(jobs: Job[]): Job[] {
+  const owners = new Set(
+    jobs
+      .filter((job) => job.workerId && job.status !== "completed")
+      .map((job) => job.workerId as string),
+  );
+  let next = jobs.map((job) =>
+    !job.workerId || job.status === "completed"
+      ? { ...job, routeOrder: null }
+      : job,
+  );
+  for (const id of owners) {
+    next = compactEmployeeRoute(next, id);
+  }
+  return next;
+}
+
+export function syncCrewToJobs(crew: CrewMember[], jobs: Job[]): CrewMember[] {
+  return crew.map((member) => {
+    const stops = assignedJobs(jobs, member.id);
+    const current =
+      stops.find((job) => job.id === member.currentJobId) ?? stops[0] ?? null;
+    return {
+      ...member,
+      currentJobId: current?.id ?? null,
+      currentJob: current?.jobTitle ?? "Unassigned",
+    };
+  });
 }
 
 export function tumblerIndexForCrew(
@@ -41,47 +94,37 @@ export function lockJobToCrew(
     return { jobs, crew, locked: false };
   }
 
-  const nextJobs = jobs.map((row) => {
-    if (row.id === jobId) {
-      return {
-        ...row,
-        worker: employee.name,
-        workerId: employee.id,
-        status:
-          row.status === "lead" || row.status === "pending"
-            ? "in_progress"
-            : row.status,
-      };
-    }
-    if (row.workerId === employee.id && row.status !== "completed") {
-      return {
-        ...row,
-        worker: "Unassigned",
-        workerId: null,
-      };
-    }
-    return row;
-  });
+  const previousOwner =
+    job.workerId && job.workerId !== employeeId ? job.workerId : null;
+  const alreadyOnRoute = job.workerId === employeeId;
+  const nextOrder = alreadyOnRoute
+    ? (job.routeOrder ?? assignedJobs(jobs, employeeId).length)
+    : assignedJobs(jobs, employeeId).length + 1;
 
-  const nextCrew = crew.map((row) => {
-    if (row.id !== employee.id) {
-      if (row.currentJobId === jobId) {
-        return {
-          ...row,
-          currentJobId: null,
-          currentJob: "Unassigned",
-        };
-      }
-      return row;
-    }
+  let nextJobs = jobs.map((row) => {
+    if (row.id !== jobId) return row;
     return {
       ...row,
-      currentJobId: job.id,
-      currentJob: job.jobTitle,
+      worker: employee.name,
+      workerId: employee.id,
+      routeOrder: nextOrder,
+      status:
+        row.status === "lead" || row.status === "pending"
+          ? "in_progress"
+          : row.status,
     };
   });
 
-  return { jobs: nextJobs, crew: nextCrew, locked: true };
+  if (previousOwner) {
+    nextJobs = compactEmployeeRoute(nextJobs, previousOwner);
+  }
+  nextJobs = compactEmployeeRoute(nextJobs, employeeId);
+
+  return {
+    jobs: nextJobs,
+    crew: syncCrewToJobs(crew, nextJobs),
+    locked: true,
+  };
 }
 
 export function toggleCrewClock(
@@ -124,9 +167,7 @@ export function updateWeeklySchedule(
 }
 
 export function employeeJobs(jobs: Job[], employeeId: string): Job[] {
-  return jobs.filter(
-    (job) => job.workerId === employeeId && job.status !== "completed",
-  );
+  return assignedJobs(jobs, employeeId);
 }
 
 export function onClockCrew(crew: CrewMember[]): CrewMember[] {

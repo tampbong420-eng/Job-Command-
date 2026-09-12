@@ -1,8 +1,9 @@
 import { CREW, ESTIMATES, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
+import { syncJobRoutes } from "./assign";
 import type { CrewMember, Estimate, Job, ShopMessage, TimeCard } from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
-export const SHOP_VERSION = 2;
+export const SHOP_VERSION = 3;
 
 export type ShopSettings = {
   shopName: string;
@@ -32,6 +33,7 @@ function hydrateJob(job: Job): Job {
     ...job,
     photos: job.photos ?? [],
     scope: job.scope ?? job.jobTitle,
+    routeOrder: job.routeOrder ?? null,
   };
 }
 
@@ -69,7 +71,7 @@ export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
     ...base,
     ...parsed,
     shopVersion: SHOP_VERSION,
-    jobs: mergeJobs(parsed.jobs ?? [], base.jobs),
+    jobs: syncJobRoutes(mergeJobs(parsed.jobs ?? [], base.jobs)),
     crew: parsed.crew ?? base.crew,
     estimates: mergeById(parsed.estimates ?? [], base.estimates),
     timeCards: mergeById(parsed.timeCards ?? [], base.timeCards),
@@ -84,7 +86,7 @@ export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
 
 export function defaultShop(): PersistedShop {
   return {
-    jobs: JOBS.map(hydrateJob),
+    jobs: syncJobRoutes(JOBS.map(hydrateJob)),
     crew: CREW,
     estimates: ESTIMATES,
     timeCards: TIMECARDS,

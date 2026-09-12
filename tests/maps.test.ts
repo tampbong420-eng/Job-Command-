@@ -36,6 +36,7 @@ const job: Job = {
   scheduledTime: "08:30 AM",
   worker: "Mike Reyes",
   workerId: "e-mike",
+  routeOrder: 1,
   priority: "high",
   lat: 47.6246084,
   lng: -122.3635414,

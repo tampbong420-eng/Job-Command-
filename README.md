@@ -6,11 +6,14 @@ browser.
 
 Boss Command is the dispatch desk:
 
-- **CREW** rolodex with live hours, clock status, and weekly schedule
-- **Edit Hours** calendar for each crew member
-- Combination-lock job tumbler that cycles **active jobs only**
+- **Main Command** tab with the **Employees** rolodex, live hours, clock status, and weekly schedule
+- **All Jobs** tab for the customer board
+- **Employee Profiles** tab with every shop card, hours, and clock status
+- **Edit Hours** calendar for each employee
+- Combination-lock job tumbler that can lock **multiple jobs** to one employee with orange stop numbers
+- **Get Directions** opens that employee's customer cards in 1, 2, 3 order
 - **Get Directions** opens Street View and Google Maps
-- Live Google Map on the crew desk
+- Live Google Map on the employees desk
 - Semantic job colors: new leads red, pending orange/yellow, active light green, finished charcoal
 - Customer cards with **New lead / Pending / Active / Finished / Delete**
 - **Add customer** form plus Cards / Estimates / Time cards tabs
@@ -22,7 +25,7 @@ Employee Command is the field side of the same shop:
 - Assigned job with **Get Directions**
 - On-clock crew Call list
 - **My Stops** board (jobs locked to that employee)
-- Profile identity picker so the phone can clock in as Mike, Dana, Sam, or Liv
+- **Employee Profiles** tab to pick which phone is clocking in
 - Settings for shop name, account chip, page alerts, and **Reset demo shop**
 
 ```bash

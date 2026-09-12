@@ -4,6 +4,7 @@ import {
   lockJobToCrew,
   activeJobs,
   assignedJob,
+  assignedJobs,
   employeeJobs,
   jobsByStatus,
   onClockCrew,
@@ -63,6 +64,7 @@ const jobs: Job[] = [
     scheduledTime: "08:30 AM",
     worker: "Mike Reyes",
     workerId: "e-mike",
+    routeOrder: 1,
     priority: "high",
     lat: 47.62,
     lng: -122.36,
@@ -77,6 +79,7 @@ const jobs: Job[] = [
     scheduledTime: "07:45 AM",
     worker: "Dana Cole",
     workerId: "e-dana",
+    routeOrder: 1,
     priority: "medium",
     lat: 47.62,
     lng: -122.3,
@@ -91,6 +94,7 @@ const jobs: Job[] = [
     scheduledTime: "10:00 AM",
     worker: "Unassigned",
     workerId: null,
+    routeOrder: null,
     priority: "low",
     lat: 47.61,
     lng: -122.31,
@@ -105,6 +109,7 @@ const jobs: Job[] = [
     scheduledTime: "Yesterday",
     worker: "Mike Reyes",
     workerId: "e-mike",
+    routeOrder: null,
     priority: "high",
     lat: 47.61,
     lng: -122.34,
@@ -119,15 +124,20 @@ test("lockJobToCrew assigns an active job to the selected crew member", () => {
   assert.equal(locked?.worker, "Mike Reyes");
   assert.equal(locked?.workerId, "e-mike");
   assert.equal(locked?.status, "in_progress");
-  assert.equal(mike?.currentJobId, "c-shah");
-  assert.equal(mike?.currentJob, "Interior paint");
+  assert.equal(locked?.routeOrder, 2);
+  assert.equal(mike?.currentJobId, "c-northline");
+  assert.equal(mike?.currentJob, "Unit 4B — HVAC replacement");
 });
 
 test("lockJobToCrew clears the job from the previous current worker", () => {
   const result = lockJobToCrew(jobs, crew, "c-hale", "e-mike");
   const dana = result.crew.find((row) => row.id === "e-dana");
   const hale = result.jobs.find((job) => job.id === "c-hale");
+  const northline = result.jobs.find((job) => job.id === "c-northline");
   assert.equal(hale?.workerId, "e-mike");
+  assert.equal(hale?.routeOrder, 2);
+  assert.equal(northline?.workerId, "e-mike");
+  assert.equal(northline?.routeOrder, 1);
   assert.equal(dana?.currentJobId, null);
   assert.equal(dana?.currentJob, "Unassigned");
 });
@@ -145,7 +155,7 @@ test("activeJobs keeps only in-progress work on the tumbler", () => {
   );
 });
 
-test("lockJobToCrew releases the crew member from other active jobs", () => {
+test("lockJobToCrew keeps other locked jobs and numbers the new stop", () => {
   const withTwo: Job[] = [
     ...jobs,
     {
@@ -154,15 +164,19 @@ test("lockJobToCrew releases the crew member from other active jobs", () => {
       jobTitle: "Second stop",
       worker: "Mike Reyes",
       workerId: "e-mike",
+      routeOrder: 2,
     },
   ];
   const result = lockJobToCrew(withTwo, crew, "c-shah", "e-mike");
   assert.equal(
     result.jobs.find((job) => job.id === "c-northline")?.workerId,
-    null,
+    "e-mike",
   );
-  assert.equal(result.jobs.find((job) => job.id === "c-extra")?.workerId, null);
+  assert.equal(result.jobs.find((job) => job.id === "c-northline")?.routeOrder, 1);
+  assert.equal(result.jobs.find((job) => job.id === "c-extra")?.workerId, "e-mike");
+  assert.equal(result.jobs.find((job) => job.id === "c-extra")?.routeOrder, 2);
   assert.equal(result.jobs.find((job) => job.id === "c-shah")?.workerId, "e-mike");
+  assert.equal(result.jobs.find((job) => job.id === "c-shah")?.routeOrder, 3);
 });
 
 test("tumblerIndexForCrew snaps to the crew member's locked job", () => {
@@ -208,7 +222,8 @@ test("lockJobToCrew promotes a pending lead into an active job", () => {
   const result = lockJobToCrew(pending, crew, "c-chen", "e-dana");
   assert.equal(result.locked, true);
   assert.equal(result.jobs.find((job) => job.id === "c-chen")?.status, "in_progress");
-  assert.equal(result.crew.find((row) => row.id === "e-dana")?.currentJobId, "c-chen");
+  assert.equal(result.jobs.find((job) => job.id === "c-chen")?.routeOrder, 2);
+  assert.equal(result.crew.find((row) => row.id === "e-dana")?.currentJobId, "c-hale");
 });
 
 test("assignedJob prefers the crew member's locked property", () => {
@@ -249,6 +264,17 @@ test("employeeJobs lists open stops locked to that worker", () => {
     ["c-northline"],
   );
   assert.equal(employeeJobs(jobs, "e-mike").some((job) => job.id === "c-done"), false);
+});
+
+test("assignedJobs orders the day by stop number", () => {
+  const result = lockJobToCrew(jobs, crew, "c-shah", "e-mike");
+  assert.deepEqual(
+    assignedJobs(result.jobs, "e-mike").map((job) => [job.id, job.routeOrder]),
+    [
+      ["c-northline", 1],
+      ["c-shah", 2],
+    ],
+  );
 });
 
 test("onClockCrew hides people who are clocked out", () => {

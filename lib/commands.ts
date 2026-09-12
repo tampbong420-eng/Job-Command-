@@ -1,3 +1,4 @@
+import { lockJobToCrew, syncCrewToJobs, syncJobRoutes } from "./assign";
 import type {
   CrewMember,
   Estimate,
@@ -66,17 +67,6 @@ export function matchCrew(crew: CrewMember[], query: string): CrewMember | null 
   );
 }
 
-function syncCrew(crew: CrewMember[], jobs: Job[]): CrewMember[] {
-  return crew.map((member) => {
-    if (!member.currentJobId) return member;
-    const job = jobs.find((row) => row.id === member.currentJobId);
-    if (!job || job.status !== "in_progress") {
-      return { ...member, currentJobId: null, currentJob: "Unassigned" };
-    }
-    return { ...member, currentJob: job.jobTitle };
-  });
-}
-
 function money(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -100,10 +90,12 @@ export function applyCommand(
       state.jobs.find((row) => row.id === state.selectedJobId) ??
       null;
     if (!job) return { state, view: "jobs", notice: "Could not find that customer." };
-    const jobs = state.jobs.map((row) =>
-      row.id === job.id ? { ...row, status: command.status } : row,
+    const jobs = syncJobRoutes(
+      state.jobs.map((row) =>
+        row.id === job.id ? { ...row, status: command.status } : row,
+      ),
     );
-    const crew = syncCrew(state.crew, jobs);
+    const crew = syncCrewToJobs(state.crew, jobs);
     const label =
       command.status === "lead"
         ? "New lead"
@@ -122,10 +114,10 @@ export function applyCommand(
   if (command.type === "delete_job") {
     const job = matchJob(state.jobs, command.query);
     if (!job) return { state, view: "jobs", notice: "Could not find that customer." };
-    const jobs = state.jobs.filter((row) => row.id !== job.id);
+    const jobs = syncJobRoutes(state.jobs.filter((row) => row.id !== job.id));
     const estimates = state.estimates.filter((row) => row.jobId !== job.id);
     const timeCards = state.timeCards.filter((row) => row.jobId !== job.id);
-    const crew = syncCrew(state.crew, jobs);
+    const crew = syncCrewToJobs(state.crew, jobs);
     return {
       state: { ...state, jobs, estimates, timeCards, crew },
       view: "jobs",
@@ -188,31 +180,15 @@ export function applyCommand(
     if (!job || !employee) {
       return { state, view: "jobs", notice: "Need both a customer and a crew member." };
     }
-    const jobs = state.jobs.map((row) => {
-      if (row.id === job.id) {
-        return {
-          ...row,
-          worker: employee.name,
-          workerId: employee.id,
-          status: row.status === "lead" || row.status === "pending" ? "in_progress" : row.status,
-        };
-      }
-      if (row.workerId === employee.id && row.status === "in_progress") {
-        return { ...row, worker: "Unassigned", workerId: null };
-      }
-      return row;
-    });
-    const crew = state.crew.map((row) =>
-      row.id === employee.id
-        ? { ...row, currentJobId: job.id, currentJob: job.jobTitle }
-        : row.currentJobId === job.id
-          ? { ...row, currentJobId: null, currentJob: "Unassigned" }
-          : row,
-    );
+    const result = lockJobToCrew(state.jobs, state.crew, job.id, employee.id);
+    if (!result.locked) {
+      return { state, view: "jobs", notice: "Completed jobs stay closed." };
+    }
+    const stop = result.jobs.find((row) => row.id === job.id);
     return {
-      state: { ...state, jobs, crew: syncCrew(crew, jobs) },
+      state: { ...state, jobs: result.jobs, crew: result.crew },
       view: "command",
-      notice: `Assigned ${job.customerName} to ${employee.name}.`,
+      notice: `Assigned ${job.customerName} to ${employee.name} as stop ${stop?.routeOrder ?? 1}.`,
     };
   }
 
@@ -228,6 +204,7 @@ export function applyCommand(
       scheduledTime: "TBD",
       worker: "Unassigned",
       workerId: null,
+      routeOrder: null,
       priority: "medium",
       lat: null,
       lng: null,

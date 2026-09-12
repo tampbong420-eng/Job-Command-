@@ -30,7 +30,7 @@ export default function EditHoursCalendar({
     <section className="page hours-desk">
       <div className="hours-head">
         <button type="button" className="text-back" onClick={onCancel}>
-          ← Crew
+          ← Employees
         </button>
         <p className="section-kicker">Weekly schedule</p>
         <h1>Edit hours</h1>

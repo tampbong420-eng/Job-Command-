@@ -1,6 +1,7 @@
 "use client";
 
 import AddCustomerForm from "@/components/AddCustomerForm";
+import AssignedStops from "@/components/AssignedStops";
 import BossJobsBoard from "@/components/BossJobsBoard";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import CrewMap from "@/components/CrewMap";
@@ -22,6 +23,7 @@ import {
   lockJobToCrew,
   activeJobs,
   assignedJob,
+  assignedJobs,
   jobsByStatus,
   tumblerIndexForCrew,
   toggleCrewClock,
@@ -54,9 +56,9 @@ import { useLiveDate } from "@/lib/use-live-time";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 const TABS: { id: NavTab; label: string; icon: string }[] = [
-  { id: "command", label: "Command", icon: "▣" },
-  { id: "jobs", label: "Jobs", icon: "⚒" },
-  { id: "profile", label: "Profile", icon: "☺" },
+  { id: "command", label: "Main Command", icon: "▣" },
+  { id: "jobs", label: "All Jobs", icon: "⚒" },
+  { id: "profile", label: "Profiles", icon: "☺" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
@@ -76,7 +78,7 @@ export default function JobCommandApp() {
   const [role, setRole] = useState<Role>("boss");
   const [tab, setTab] = useState<NavTab>("command");
   const [paper, setPaper] = useState<"jobs" | "estimates" | "timecards">("jobs");
-  const [desk, setDesk] = useState<"crew" | "hours" | "lane">("crew");
+  const [desk, setDesk] = useState<"crew" | "hours" | "lane" | "stops">("crew");
   const [laneStatus, setLaneStatus] = useState<JobStatus | null>(null);
   const [laneJobId, setLaneJobId] = useState<string | null>(null);
   const [crewIndex, setCrewIndex] = useState(0);
@@ -262,10 +264,13 @@ export default function JobCommandApp() {
       ping("Completed jobs stay closed.");
       return;
     }
+    const stop = result.jobs.find((row) => row.id === selectedJob.id);
     patchShop({ jobs: result.jobs, crew: result.crew });
     setTicking(true);
     window.setTimeout(() => setTicking(false), 320);
-    ping(`Locked ${selectedJob.jobTitle} to ${member.name}.`);
+    ping(
+      `Locked ${selectedJob.jobTitle} to ${member.name} as stop ${stop?.routeOrder ?? 1}.`,
+    );
   }
 
   function selectCrew(nextIndex: number) {
@@ -308,13 +313,19 @@ export default function JobCommandApp() {
   }
 
   function openDirections(job?: Job) {
-    const target = job ?? assigned ?? (role === "boss" ? selectedJob : null);
-    if (!target) {
-      ping("No active property locked to this crew.");
+    const targetMember = role === "employee" ? employee : member;
+    if (!targetMember) {
+      ping("No employee selected.");
       return;
     }
-    setSheetJobId(target.id);
-    setPropertyOpen(true);
+    const stops = assignedJobs(jobs, targetMember.id);
+    if (stops.length === 0) {
+      ping("Lock a job first, then Get Directions opens the customer cards.");
+      return;
+    }
+    setSheetJobId(job?.id ?? stops[0].id);
+    setTab("command");
+    setDesk("stops");
   }
 
   function resetDemoShop() {
@@ -402,13 +413,51 @@ export default function JobCommandApp() {
         </div>
       </header>
 
-      {role === "employee" && tab === "command" && employee && (
+      {role === "employee" && tab === "command" && employee && desk === "crew" && (
         <EmployeeHome
           member={employee}
           crew={crew}
           jobs={jobs}
           onToggleClock={toggleEmployeeClock}
           onDirections={openDirections}
+        />
+      )}
+
+      {tab === "command" && actor && desk === "stops" && (
+        <AssignedStops
+          member={actor}
+          jobs={jobs}
+          estimates={estimates}
+          timeCards={timeCards}
+          crew={crew}
+          onBack={() => setDesk("crew")}
+          onStatus={(jobId, status) => setJobStatus(jobId, status, false)}
+          onDelete={(jobId) => {
+            applyTalk({ say: "", commands: [{ type: "delete_job", query: jobId }] }, false);
+          }}
+          onOpenEstimates={() => {
+            setTab("jobs");
+            setPaper("estimates");
+          }}
+          onOpenTimeCards={() => {
+            setTab("jobs");
+            setPaper("timecards");
+          }}
+          onPhoto={(jobId, kind, dataUrl) => {
+            patchShop({
+              jobs: getShopSnapshot().jobs.map((row) =>
+                row.id === jobId
+                  ? {
+                      ...row,
+                      photos: [
+                        ...(row.photos ?? []),
+                        { id: `ph-${Date.now()}`, kind, dataUrl },
+                      ],
+                    }
+                  : row,
+              ),
+            });
+          }}
         />
       )}
 
@@ -468,7 +517,7 @@ export default function JobCommandApp() {
         <section className="page crew-desk">
           <div className="crew-head">
             <p className="section-kicker">{fieldDate}</p>
-            <h1>CREW</h1>
+            <h1>Employees</h1>
           </div>
           <JobStatusRail jobs={jobs} onSelect={openLane} />
           <CrewRolodex
@@ -567,11 +616,16 @@ export default function JobCommandApp() {
           crew={crew}
           role={role}
           employeeId={employeeId}
-          onPickEmployee={(id) => {
-            patchShop({ employeeId: id });
-            ping(
-              `Field login is ${crew.find((row) => row.id === id)?.name ?? "crew"}.`,
-            );
+          onSelectEmployee={(id) => {
+            if (role === "employee") {
+              patchShop({ employeeId: id });
+              ping(
+                `Field login is ${crew.find((row) => row.id === id)?.name ?? "employee"}.`,
+              );
+              return;
+            }
+            const nextIndex = crew.findIndex((row) => row.id === id);
+            if (nextIndex >= 0) selectCrew(nextIndex);
           }}
           messages={messages}
           unread={unreadPage}
@@ -617,7 +671,11 @@ export default function JobCommandApp() {
             <span className="nav-icon" aria-hidden="true">
               {item.icon}
             </span>
-            {item.label}
+            <span className="nav-label">
+              {item.label.split(" ").map((word) => (
+                <span key={word}>{word}</span>
+              ))}
+            </span>
           </button>
         ))}
       </nav>

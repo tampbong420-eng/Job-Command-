@@ -1,5 +1,6 @@
 "use client";
 
+import StopBadge from "@/components/StopBadge";
 import { employeeJobs } from "@/lib/assign";
 import { jobStatusLabel, jobTone } from "@/lib/format";
 import { mapsDirectionsUrl, originQuery } from "@/lib/maps";
@@ -27,8 +28,8 @@ export default function EmployeeJobs({
         <strong>Stops.</strong>
       </h1>
       <p className="board-copy">
-        Only jobs locked to you. Get directions or send a stop to Job Archive
-        when the work is done.
+        Jobs locked to you in order for the day. Get directions to open every
+        customer card, or send a stop to Job Archive when the work is done.
       </p>
       {mine.length === 0 ? (
         <p className="empty-group">No active jobs on your card yet.</p>
@@ -43,9 +44,12 @@ export default function EmployeeJobs({
                   {job.customerName} · {job.address}
                 </span>
               </div>
-              <span className={`job-chip ${jobTone(job.status)}`}>
-                {jobStatusLabel(job.status)}
-              </span>
+              <div className="customer-card-end">
+                <span className={`job-chip ${jobTone(job.status)}`}>
+                  {jobStatusLabel(job.status)}
+                </span>
+                {job.routeOrder != null && <StopBadge n={job.routeOrder} />}
+              </div>
             </div>
             <div className="rolodex-actions">
               <a

@@ -1,6 +1,7 @@
 "use client";
 
-import { activeJobs } from "@/lib/assign";
+import StopBadge from "@/components/StopBadge";
+import { activeJobs, assignedJobs } from "@/lib/assign";
 import { jobStatusLabel, jobTone, wrapIndex } from "@/lib/format";
 import type { CrewMember, Job } from "@/lib/types";
 import { useSwipe } from "@/lib/use-swipe";
@@ -26,6 +27,7 @@ export default function JobTumbler({
   const swipe = useSwipe((delta) => {
     onIndexChange(wrapIndex(jobIndex, delta, stack.length));
   }, "y", 52);
+  const nextStop = assignedJobs(jobs, member.id).length + 1;
 
   if (!current) {
     return (
@@ -43,7 +45,7 @@ export default function JobTumbler({
       <div className="tumbler-head">
         <div>
           <p className="card-label">Job tumbler</p>
-          <p className="swipe-hint">Flick to cycle · lock to this crew</p>
+          <p className="swipe-hint">Flick to cycle · lock multiple jobs</p>
         </div>
         <span className="shift-tag shock">
           {jobIndex + 1} / {stack.length}
@@ -89,6 +91,9 @@ export default function JobTumbler({
                     {job.customerName} · {job.worker}
                   </span>
                 </div>
+                {job.workerId === member.id && job.routeOrder != null && (
+                  <StopBadge n={job.routeOrder} />
+                )}
               </article>
             );
           })}
@@ -105,8 +110,8 @@ export default function JobTumbler({
         <span>
           <small>
             {lockedToThis
-              ? "Locked to this crew"
-              : `Assign to ${member.name.split(" ")[0]}`}
+              ? `Locked to ${member.name.split(" ")[0]} · stop ${current.routeOrder}`
+              : `Assign to ${member.name.split(" ")[0]} as stop ${nextStop}`}
           </small>
           <b>{lockedToThis ? "LOCKED" : "LOCK JOB"}</b>
         </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import StatusButtons from "@/components/StatusButtons";
+import StopBadge from "@/components/StopBadge";
 import { jobStatusLabel, jobTone, money } from "@/lib/format";
 import {
   mapsDirectionsUrl,
@@ -56,7 +57,10 @@ export default function CustomerCard({
             {job.customerName} · {job.address}
           </span>
         </div>
-        <em>{job.worker}</em>
+        <div className="customer-card-end">
+          <em>{job.worker}</em>
+          {job.routeOrder != null && <StopBadge n={job.routeOrder} />}
+        </div>
       </div>
 
       <dl className="property-facts card-facts">
