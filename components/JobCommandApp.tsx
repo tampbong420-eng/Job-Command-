@@ -9,11 +9,14 @@ import EditHoursCalendar from "@/components/EditHoursCalendar";
 import EmployeeHome from "@/components/EmployeeHome";
 import EmployeeJobs from "@/components/EmployeeJobs";
 import EstimatesBoard, { TimeCardsBoard } from "@/components/EstimatesBoard";
+import InviteSheet from "@/components/InviteSheet";
 import JobStatusRail from "@/components/JobStatusRail";
 import JobTumbler from "@/components/JobTumbler";
 import PaperNav from "@/components/PaperNav";
 import ProfilePage from "@/components/ProfilePage";
 import PropertySheet from "@/components/PropertySheet";
+import ReceiptsBoard from "@/components/ReceiptsBoard";
+import ReceptionistPlate from "@/components/ReceptionistPlate";
 import SettingsPage from "@/components/SettingsPage";
 import TalkButton from "@/components/TalkButton";
 import {
@@ -26,6 +29,7 @@ import {
   updateWeeklySchedule,
 } from "@/lib/assign";
 import { applyCommands } from "@/lib/commands";
+import { buildExpense, quoteTotal, simulateInboundCall } from "@/lib/field";
 import {
   commitShop,
   getServerShopSnapshot,
@@ -39,6 +43,7 @@ import type {
   Job,
   JobStatus,
   NavTab,
+  PaperTab,
   Role,
   ShopSnapshot,
   ShopView,
@@ -60,11 +65,12 @@ export default function JobCommandApp() {
     getShopSnapshot,
     getServerShopSnapshot,
   );
-  const { jobs, crew, estimates, timeCards, employeeId, settings } = shop;
+  const { jobs, crew, estimates, timeCards, expenses, calls, messages, employeeId, settings } = shop;
   const [role, setRole] = useState<Role>("boss");
   const [tab, setTab] = useState<NavTab>("command");
-  const [paper, setPaper] = useState<"jobs" | "estimates" | "timecards">("jobs");
+  const [paper, setPaper] = useState<PaperTab>("jobs");
   const [desk, setDesk] = useState<"crew" | "hours">("crew");
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [crewIndex, setCrewIndex] = useState(0);
   const [jobIndex, setJobIndex] = useState(() =>
     tumblerIndexForCrew(
@@ -97,6 +103,9 @@ export default function JobCommandApp() {
     crew,
     estimates,
     timeCards,
+    expenses,
+    calls,
+    messages,
     selectedJobId: property?.id ?? selectedJob?.id ?? null,
     selectedCrewId: actor?.id ?? null,
   };
@@ -128,8 +137,13 @@ export default function JobCommandApp() {
       setDesk("crew");
       return;
     }
+    if (view === "receipts" || view === "estimates" || view === "timecards" || view === "jobs") {
+      setTab("jobs");
+      setPaper(view);
+      return;
+    }
     setTab("jobs");
-    setPaper(view);
+    setPaper("jobs");
   }
 
   function applyTalk(result: TalkResult) {
@@ -139,6 +153,9 @@ export default function JobCommandApp() {
       crew: next.state.crew,
       estimates: next.state.estimates,
       timeCards: next.state.timeCards,
+      expenses: next.state.expenses ?? getShopSnapshot().expenses,
+      calls: next.state.calls ?? getShopSnapshot().calls,
+      messages: next.state.messages ?? getShopSnapshot().messages,
     });
     goView(next.view);
     ping(result.say || next.notices.join(" "));
@@ -267,6 +284,7 @@ export default function JobCommandApp() {
     );
     setPaper("jobs");
     setDesk("crew");
+    setInviteOpen(false);
     setPropertyOpen(false);
     setSheetJobId(null);
     setNotice("Demo shop reset.");
@@ -354,6 +372,29 @@ export default function JobCommandApp() {
             <h1>CREW</h1>
           </div>
           <JobStatusRail jobs={jobs} />
+          <ReceptionistPlate
+            armed={settings.lineArmed}
+            greeting={settings.greeting}
+            calls={calls}
+            onArm={(lineArmed) =>
+              patchShop({ settings: { ...settings, lineArmed } })
+            }
+            onSimulate={() => {
+              if (!settings.lineArmed) {
+                ping("Arm the AI line first.");
+                return;
+              }
+              const call = simulateInboundCall();
+              patchShop({ calls: [call, ...getShopSnapshot().calls] });
+              ping(`${call.intent} from ${call.callerName}.`);
+            }}
+            onConvert={(callId) =>
+              applyTalk({
+                say: "",
+                commands: [{ type: "convert_call", callId }],
+              })
+            }
+          />
           <CrewRolodex
             crew={crew}
             index={crewIndex}
@@ -361,6 +402,7 @@ export default function JobCommandApp() {
             onIndexChange={selectCrew}
             onEditHours={() => setDesk("hours")}
             onGetDirections={() => openDirections()}
+            onInvite={() => setInviteOpen(true)}
           />
           <JobTumbler
             jobs={jobs}
@@ -400,6 +442,23 @@ export default function JobCommandApp() {
           jobs={jobs}
           estimates={estimates}
           onBack={() => setPaper("jobs")}
+          onQuote={(input) => {
+            const job = jobs.find((row) => row.id === input.jobId);
+            if (!job) return;
+            applyTalk({
+              say: `Quote filed for ${job.customerName}.`,
+              commands: [
+                {
+                  type: "create_estimate",
+                  query: job.id,
+                  amount: quoteTotal(input.labor, input.materials),
+                  labor: input.labor,
+                  materials: input.materials,
+                  notes: input.notes,
+                },
+              ],
+            });
+          }}
         >
           {paperTabs}
         </EstimatesBoard>
@@ -414,6 +473,29 @@ export default function JobCommandApp() {
         >
           {paperTabs}
         </TimeCardsBoard>
+      )}
+
+      {tab === "jobs" && role === "boss" && paper === "receipts" && (
+        <ReceiptsBoard
+          expenses={expenses}
+          jobs={jobs}
+          crew={crew}
+          defaultEmployeeId={actor?.id ?? employeeId}
+          onAdd={(input) => {
+            const expense = buildExpense({
+              vendor: input.vendor,
+              amount: input.amount,
+              category: input.category,
+              employeeId: actor?.id ?? employeeId,
+              jobId: input.jobId,
+              photoUrl: input.photoUrl,
+            });
+            patchShop({ expenses: [expense, ...getShopSnapshot().expenses] });
+            ping(`${input.vendor} ${input.category} filed.`);
+          }}
+        >
+          {paperTabs}
+        </ReceiptsBoard>
       )}
 
       {tab === "jobs" && role === "employee" && employee && (
@@ -440,6 +522,13 @@ export default function JobCommandApp() {
               `Field login is ${crew.find((row) => row.id === id)?.name ?? "crew"}.`,
             );
           }}
+          messages={messages}
+          onBroadcast={(body) =>
+            applyTalk({
+              say: "Crew paged.",
+              commands: [{ type: "send_message", body }],
+            })
+          }
         />
       )}
 
@@ -485,7 +574,32 @@ export default function JobCommandApp() {
           }}
           onStatus={(status) => setJobStatus(property.id, status)}
           onDelete={() => deleteJob(property.id)}
+          onPhoto={(kind, dataUrl) => {
+            patchShop({
+              jobs: getShopSnapshot().jobs.map((row) =>
+                row.id === property.id
+                  ? {
+                      ...row,
+                      photos: [
+                        ...(row.photos ?? []),
+                        { id: `ph-${Date.now()}`, kind, dataUrl },
+                      ],
+                    }
+                  : row,
+              ),
+            });
+          }}
+          onSign={(dataUrl) => {
+            patchShop({
+              jobs: getShopSnapshot().jobs.map((row) =>
+                row.id === property.id ? { ...row, signature: dataUrl } : row,
+              ),
+            });
+          }}
         />
+      )}
+      {inviteOpen && member && (
+        <InviteSheet member={member} onClose={() => setInviteOpen(false)} />
       )}
     </main>
   );

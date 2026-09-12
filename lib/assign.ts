@@ -1,14 +1,19 @@
+import { isClosedJob, isFieldJob } from "./field";
 import type { CrewMember, Job } from "./types";
 
 export function activeJobs(jobs: Job[]): Job[] {
-  return jobs.filter((job) => job.status === "in_progress");
+  return jobs.filter((job) => isFieldJob(job.status));
 }
 
 export function assignedJob(jobs: Job[], member: CrewMember): Job | null {
   if (member.currentJobId) {
     return jobs.find((job) => job.id === member.currentJobId) ?? null;
   }
-  return jobs.find((job) => job.workerId === member.id && job.status === "in_progress") ?? null;
+  return (
+    jobs.find(
+      (job) => job.workerId === member.id && isFieldJob(job.status),
+    ) ?? null
+  );
 }
 
 export function tumblerIndexForCrew(
@@ -33,20 +38,22 @@ export function lockJobToCrew(
 ): { jobs: Job[]; crew: CrewMember[]; locked: boolean } {
   const job = jobs.find((row) => row.id === jobId);
   const employee = crew.find((row) => row.id === employeeId);
-  if (!job || !employee || job.status === "completed") {
+  if (!job || !employee || isClosedJob(job.status)) {
     return { jobs, crew, locked: false };
   }
 
   const nextJobs = jobs.map((row) => {
     if (row.id === jobId) {
+      const open =
+        row.status === "lead" ||
+        row.status === "pending" ||
+        row.status === "scheduled" ||
+        row.status === "dispatched";
       return {
         ...row,
         worker: employee.name,
         workerId: employee.id,
-        status:
-          row.status === "lead" || row.status === "pending"
-            ? "in_progress"
-            : row.status,
+        status: open ? "in_progress" : row.status,
       };
     }
     if (row.workerId === employee.id && row.status !== "completed") {
@@ -121,7 +128,7 @@ export function updateWeeklySchedule(
 
 export function employeeJobs(jobs: Job[], employeeId: string): Job[] {
   return jobs.filter(
-    (job) => job.workerId === employeeId && job.status !== "completed",
+    (job) => job.workerId === employeeId && !isClosedJob(job.status),
   );
 }
 

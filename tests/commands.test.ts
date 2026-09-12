@@ -20,7 +20,7 @@ test("customer cards can move a lead to pending", () => {
     status: "pending",
   });
   assert.equal(result.state.jobs.find((job) => job.id === "c-shah")?.status, "pending");
-  assert.equal(result.notice.includes("Pending"), true);
+  assert.equal(result.notice.includes("Scheduled"), true);
 });
 
 test("finished and delete take a customer off the board", () => {
@@ -88,7 +88,7 @@ test("talk marks a customer pending from spoken copy", () => {
   assert.deepEqual(talk.commands[0], {
     type: "set_status",
     query: "Priya",
-    status: "pending",
+    status: "scheduled",
   });
   assert.equal(matchJob(JOBS, "Priya")?.id, "c-shah");
 });

@@ -1,10 +1,27 @@
 export type CrewStatus = "active" | "break" | "off";
-export type JobStatus = "lead" | "pending" | "in_progress" | "completed";
+export type JobStatus =
+  | "lead"
+  | "pending"
+  | "scheduled"
+  | "dispatched"
+  | "in_progress"
+  | "completed"
+  | "invoiced";
 export type JobPriority = "high" | "medium" | "low";
 export type Role = "employee" | "boss";
 export type NavTab = "command" | "jobs" | "profile" | "settings";
-export type ShopView = "command" | "hours" | "jobs" | "estimates" | "timecards";
+export type ShopView =
+  | "command"
+  | "hours"
+  | "jobs"
+  | "estimates"
+  | "timecards"
+  | "receipts";
+export type PaperTab = "jobs" | "estimates" | "timecards" | "receipts";
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type ExpenseCategory = "Materials" | "Fuel" | "Equipment" | "Permits" | "Other";
+export type CallIntent = "Estimate" | "Emergency" | "Schedule" | "General";
+export type PlanTier = "starter" | "pro" | "enterprise";
 
 export type DaySchedule = {
   day: Weekday;
@@ -29,6 +46,16 @@ export type CrewMember = {
   lat: number | null;
   lng: number | null;
   gpsLive: boolean;
+  battery?: number;
+  speedMph?: number;
+  lastCheckIn?: string | null;
+  inviteToken?: string;
+};
+
+export type JobPhoto = {
+  id: string;
+  kind: "before" | "after";
+  dataUrl: string;
 };
 
 export type Job = {
@@ -44,11 +71,20 @@ export type Job = {
   priority: JobPriority;
   lat: number | null;
   lng: number | null;
+  photos?: JobPhoto[];
+  signature?: string | null;
 };
 
 export type GeoPoint = {
   lat: number;
   lng: number;
+};
+
+export type EstimateLine = {
+  label: string;
+  kind: "labor" | "material";
+  qty: number;
+  rate: number;
 };
 
 export type Estimate = {
@@ -57,6 +93,11 @@ export type Estimate = {
   amount: number;
   notes: string;
   createdAt: string;
+  labor?: number;
+  materials?: number;
+  markup?: number;
+  taxRate?: number;
+  lines?: EstimateLine[];
 };
 
 export type TimeCard = {
@@ -68,11 +109,44 @@ export type TimeCard = {
   notes: string;
 };
 
+export type Expense = {
+  id: string;
+  employeeId: string;
+  jobId: string | null;
+  vendor: string;
+  amount: number;
+  category: ExpenseCategory;
+  photoUrl: string | null;
+  createdAt: string;
+};
+
+export type CallLog = {
+  id: string;
+  callerName: string;
+  phone: string;
+  transcript: string;
+  summary: string;
+  intent: CallIntent;
+  createdAt: string;
+  convertedJobId: string | null;
+};
+
+export type ShopMessage = {
+  id: string;
+  fromId: string;
+  body: string;
+  createdAt: string;
+  broadcast: boolean;
+};
+
 export type ShopSnapshot = {
   jobs: Job[];
   crew: CrewMember[];
   estimates: Estimate[];
   timeCards: TimeCard[];
+  expenses?: Expense[];
+  calls?: CallLog[];
+  messages?: ShopMessage[];
   selectedJobId: string | null;
   selectedCrewId: string | null;
 };
@@ -85,6 +159,8 @@ export type ShopCommand =
       query: string;
       amount: number;
       notes?: string;
+      labor?: number;
+      materials?: number;
     }
   | {
       type: "create_timecard";
@@ -102,7 +178,17 @@ export type ShopCommand =
       jobTitle?: string;
       phone?: string;
       status?: JobStatus;
-    };
+    }
+  | {
+      type: "create_expense";
+      vendor: string;
+      amount: number;
+      category: ExpenseCategory;
+      employee?: string;
+      query?: string;
+    }
+  | { type: "convert_call"; callId: string }
+  | { type: "send_message"; body: string; employee?: string };
 
 export type TalkResult = {
   say: string;

@@ -5,7 +5,14 @@ import { jobStatusLabel, jobTone } from "@/lib/format";
 import type { Estimate, Job, JobStatus, TimeCard } from "@/lib/types";
 import type { ReactNode } from "react";
 
-const GROUPS: JobStatus[] = ["lead", "pending", "in_progress", "completed"];
+const GROUPS: JobStatus[] = [
+  "lead",
+  "scheduled",
+  "dispatched",
+  "in_progress",
+  "completed",
+  "invoiced",
+];
 
 export default function BossJobsBoard({
   jobs,
@@ -35,12 +42,14 @@ export default function BossJobsBoard({
         <strong>Cards.</strong>
       </h1>
       <p className="board-copy">
-        Tap New lead, Pending, Active, Finished, or Delete on a card. Talk can
-        file estimates and time cards into the same customer.
+        Tap New lead → Scheduled → Dispatched → On job → Finished → Invoiced.
+        Receipts, quotes, and time cards stay on the same customer.
       </p>
       {children}
       {GROUPS.map((status) => {
-        const rows = jobs.filter((job) => job.status === status);
+        const rows = jobs.filter(
+          (job) => (job.status === "pending" ? "scheduled" : job.status) === status,
+        );
         return (
           <section key={status} className={`job-group ${jobTone(status)}`}>
             <header>

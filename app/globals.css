@@ -1004,6 +1004,110 @@ button.metric.toggle {
   padding: 0;
 }
 
+.status-rail.six {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.status-buttons.six {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.paper-nav.four {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.tone-dispatch {
+  --tone: var(--shock);
+  --tone-glow: #00bfff33;
+}
+
+.tone-invoice {
+  --tone: #fde047;
+  --tone-glow: #facc1533;
+}
+
+.status-chip.tone-dispatch {
+  background: #042033;
+}
+
+.status-chip.tone-invoice {
+  background: #2a2308;
+}
+
+.rolodex-actions.three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.receptionist-plate {
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.receipt-thumb,
+.invite-qr {
+  width: 100%;
+  border-radius: 14px;
+  max-height: 180px;
+  object-fit: cover;
+}
+
+.receipt-chip {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.photo-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.photo-strip img {
+  width: 100%;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.sign-pad {
+  margin: 12px 0;
+}
+
+.sign-canvas {
+  width: 100%;
+  height: 120px;
+  border-radius: 14px;
+  background: #09090b;
+  border: 1px dashed var(--boss-edge);
+  touch-action: none;
+}
+
+.plan-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.plan-row .ghost-action {
+  min-height: 52px;
+  display: grid;
+  gap: 2px;
+}
+
+.plan-row small {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+select.talk-input {
+  min-height: 42px;
+}
+
 .status-chip {
   display: flex;
   align-items: center;

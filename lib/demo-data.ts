@@ -1,4 +1,12 @@
-import type { CrewMember, Estimate, Job, TimeCard } from "./types";
+import type {
+  CallLog,
+  CrewMember,
+  Estimate,
+  Expense,
+  Job,
+  ShopMessage,
+  TimeCard,
+} from "./types";
 import { weekdayHours } from "./schedule";
 
 const thisMorning = "2026-09-10T11:29:00.000Z";
@@ -22,6 +30,10 @@ export const CREW: CrewMember[] = [
     lat: 47.62482,
     lng: -122.3629,
     gpsLive: true,
+    battery: 74,
+    speedMph: 22,
+    lastCheckIn: thisMorning,
+    inviteToken: "jc_mike_reyes",
   },
   {
     id: "e-dana",
@@ -39,6 +51,10 @@ export const CREW: CrewMember[] = [
     lat: 47.62572,
     lng: -122.3089,
     gpsLive: true,
+    battery: 88,
+    speedMph: 11,
+    lastCheckIn: danaStart,
+    inviteToken: "jc_dana_cole",
   },
   {
     id: "e-sam",
@@ -56,6 +72,10 @@ export const CREW: CrewMember[] = [
     lat: null,
     lng: null,
     gpsLive: false,
+    battery: 41,
+    speedMph: 0,
+    lastCheckIn: null,
+    inviteToken: "jc_sam_park",
   },
   {
     id: "e-liv",
@@ -73,6 +93,10 @@ export const CREW: CrewMember[] = [
     lat: 47.62435,
     lng: -122.3641,
     gpsLive: true,
+    battery: 19,
+    speedMph: 4,
+    lastCheckIn: livStart,
+    inviteToken: "jc_liv_turner",
   },
 ];
 
@@ -139,7 +163,7 @@ export const JOBS: Job[] = [
     phone: "(206) 555-0128",
     address: "1421 NW 61st St, Seattle, WA 98107",
     jobTitle: "Deck stain · Ballard",
-    status: "pending",
+    status: "scheduled",
     scheduledTime: "01:30 PM",
     worker: "Unassigned",
     workerId: null,
@@ -160,6 +184,35 @@ export const JOBS: Job[] = [
     priority: "high",
     lat: 47.61982222018,
     lng: -122.348868893303,
+    signature: null,
+  },
+  {
+    id: "c-owens",
+    customerName: "Pat Owens",
+    phone: "(501) 385-0160",
+    address: "112 Ridgeway St, Hot Springs, AR 71901",
+    jobTitle: "Cabinets + trim · downtown",
+    status: "dispatched",
+    scheduledTime: "02:00 PM",
+    worker: "Sam Park",
+    workerId: "e-sam",
+    priority: "medium",
+    lat: 34.5037,
+    lng: -93.0552,
+  },
+  {
+    id: "c-lakeside",
+    customerName: "Lakeside HOA",
+    phone: "(501) 385-0220",
+    address: "8 Lake Shore Dr, Hot Springs, AR 71913",
+    jobTitle: "Clubhouse exterior",
+    status: "invoiced",
+    scheduledTime: "Last Friday",
+    worker: "Dana Cole",
+    workerId: "e-dana",
+    priority: "high",
+    lat: 34.451,
+    lng: -93.081,
   },
 ];
 
@@ -169,9 +222,13 @@ export const ESTIMATES: Estimate[] = [
   {
     id: "est-hale",
     jobId: "c-hale",
-    amount: 4200,
+    amount: 5327.7,
     notes: "Cedar fence and gate package",
     createdAt: "2026-09-09T18:00:00.000Z",
+    labor: 2800,
+    materials: 1400,
+    markup: 0.18,
+    taxRate: 0.075,
   },
 ];
 
@@ -191,5 +248,52 @@ export const TIMECARDS: TimeCard[] = [
     hours: 8,
     date: "2026-09-10",
     notes: "Fence layout and posts",
+  },
+];
+
+export const EXPENSES: Expense[] = [
+  {
+    id: "exp-sherwin",
+    employeeId: "e-mike",
+    jobId: "c-northline",
+    vendor: "Sherwin-Williams",
+    amount: 187.44,
+    category: "Materials",
+    photoUrl: null,
+    createdAt: "2026-09-10T16:10:00.000Z",
+  },
+  {
+    id: "exp-fuel",
+    employeeId: "e-dana",
+    jobId: "c-hale",
+    vendor: "Pilot",
+    amount: 64.2,
+    category: "Fuel",
+    photoUrl: null,
+    createdAt: "2026-09-10T12:40:00.000Z",
+  },
+];
+
+export const CALLS: CallLog[] = [
+  {
+    id: "call-rosa",
+    callerName: "Rosa Bennett",
+    phone: "(501) 385-0194",
+    transcript:
+      "Hi, this is Rosa on Central. Can Top Gun come quote the south wall and fascia this week?",
+    summary: "Wants an exterior paint quote on Central Avenue.",
+    intent: "Estimate",
+    createdAt: "2026-09-11T14:22:00.000Z",
+    convertedJobId: null,
+  },
+];
+
+export const MESSAGES: ShopMessage[] = [
+  {
+    id: "msg-weather",
+    fromId: "e-mike",
+    body: "Storm cell after 3. Wrap exteriors by 2:30.",
+    createdAt: "2026-09-11T13:05:00.000Z",
+    broadcast: true,
   },
 ];

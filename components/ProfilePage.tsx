@@ -2,7 +2,8 @@
 
 import { initials } from "@/lib/format";
 import { scheduleOverview, scheduledHours, WEEKDAY_SHORT } from "@/lib/schedule";
-import type { CrewMember, Estimate, Job, TimeCard } from "@/lib/types";
+import type { CrewMember, Estimate, Job, ShopMessage, TimeCard } from "@/lib/types";
+import { useState } from "react";
 
 export default function ProfilePage({
   member,
@@ -13,6 +14,8 @@ export default function ProfilePage({
   role,
   employeeId,
   onPickEmployee,
+  messages,
+  onBroadcast,
 }: {
   member: CrewMember;
   jobs: Job[];
@@ -22,6 +25,8 @@ export default function ProfilePage({
   role: "employee" | "boss";
   employeeId: string;
   onPickEmployee: (id: string) => void;
+  messages?: ShopMessage[];
+  onBroadcast?: (body: string) => void;
 }) {
   const assigned = jobs.filter((job) => job.workerId === member.id && job.status === "in_progress");
   const hours = timeCards
@@ -94,6 +99,56 @@ export default function ProfilePage({
           </div>
         </>
       )}
+      {onBroadcast && (
+        <RadioBox
+          messages={messages ?? []}
+          crew={crew}
+          onBroadcast={onBroadcast}
+        />
+      )}
     </section>
+  );
+}
+
+function RadioBox({
+  messages,
+  crew,
+  onBroadcast,
+}: {
+  messages: ShopMessage[];
+  crew: CrewMember[];
+  onBroadcast: (body: string) => void;
+}) {
+  const [body, setBody] = useState("");
+  return (
+    <article className="plate settings-card">
+      <p className="card-label">Crew radio</p>
+      <textarea
+        className="talk-input"
+        rows={2}
+        value={body}
+        placeholder="Weather delay, gate code, wrap exteriors…"
+        onChange={(event) => setBody(event.target.value)}
+      />
+      <button
+        type="button"
+        className="lock-button locked"
+        disabled={!body.trim()}
+        onClick={() => {
+          onBroadcast(body.trim());
+          setBody("");
+        }}
+      >
+        <span>
+          <small>All phones</small>
+          <b>PAGE CREW</b>
+        </span>
+      </button>
+      {messages.slice(0, 4).map((row) => (
+        <p key={row.id} className="board-copy tight">
+          {crew.find((item) => item.id === row.fromId)?.name.split(" ")[0] ?? "Desk"}: {row.body}
+        </p>
+      ))}
+    </article>
   );
 }
