@@ -824,9 +824,17 @@ h1 strong {
   font-family: var(--font-display), Oswald, sans-serif;
   font-size: 16px;
   font-weight: 700;
+  line-height: 1;
   display: grid;
   place-items: center;
   box-shadow: 0 0 12px var(--employee-glow);
+}
+
+.customer-card-top .stop-badge,
+.gps-line.stop-line .stop-badge {
+  color: #1c1008;
+  font-size: 16px;
+  display: grid;
 }
 
 .customer-card-end {
