@@ -2122,7 +2122,7 @@ label.ghost-action {
 .pay-rate-field span {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--ink);
   letter-spacing: 0;
   text-transform: none;
@@ -2131,17 +2131,34 @@ label.ghost-action {
 }
 
 .pay-rate-field input {
-  width: 96px;
+  width: 7ch;
+  min-height: 44px;
   background: #09090b;
   border: 1px solid var(--line-soft);
   border-radius: 10px;
   padding: 8px 10px;
   color: var(--ink);
-  font-size: 18px;
+  color-scheme: dark;
+  font-size: 22px;
+  appearance: textfield;
+}
+
+.pay-rate-field input::-webkit-outer-spin-button,
+.pay-rate-field input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
 }
 
 .pay-week {
   margin: 0;
+}
+
+.pay-week .day-card {
+  padding: 10px;
+}
+
+.pay-week .day-card-top b {
+  font-size: 15px;
 }
 
 button.profile-card {
