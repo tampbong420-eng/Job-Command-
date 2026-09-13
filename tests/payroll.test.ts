@@ -10,6 +10,7 @@ import {
   splitRegularOvertime,
   togglePunch,
   weekStartMonday,
+  refreshStaleShifts,
 } from "../lib/payroll";
 import { weekdayHours } from "../lib/schedule";
 import type { CrewMember, TimeCard } from "../lib/types";
@@ -192,4 +193,34 @@ test("approve then lock a timesheet, and block later edits", () => {
     { hours: 9 },
   );
   assert.equal(edited, null);
+});
+
+test("refreshStaleShifts closes yesterday's open punches and starts today", () => {
+  const now = new Date(2026, 8, 14, 12, 0, 0);
+  const today = `${now.getFullYear()}-09-14`;
+  const result = refreshStaleShifts(
+    [{ ...mike, status: "active", startedAt: "2026-09-12T14:05:00.000Z" }],
+    [
+      {
+        id: "tc-mike-live",
+        employeeId: "e-mike",
+        jobId: "c-northline",
+        hours: 0,
+        date: "2026-09-12",
+        notes: "Clock-in",
+        clockIn: "2026-09-12T14:05:00.000Z",
+        clockOut: null,
+        breakMinutes: null,
+        costCode: "HVAC-LABOR",
+        flagged: false,
+      },
+    ],
+    now,
+  );
+  const closed = result.timeCards.find((row) => row.id === "tc-mike-live");
+  const live = result.timeCards.find((row) => row.id === `tc-e-mike-${today}-live`);
+  assert.equal(closed?.clockOut, "2026-09-12T23:00:00.000Z");
+  assert.ok((closed?.hours ?? 0) > 0);
+  assert.equal(live?.clockOut, null);
+  assert.equal(result.crew[0]?.startedAt?.slice(0, 10), today);
 });

@@ -51,7 +51,7 @@ export default function JobTumbler({
       <div className="tumbler-head">
         <div>
           <p className="card-label">Job tumbler</p>
-          <p className="swipe-hint">Flick or tap the jobs above and below</p>
+          <p className="swipe-hint">Use ▲ ▼ or tap a job above / below</p>
         </div>
         <div className="tumbler-stepper">
           <button
@@ -106,13 +106,23 @@ export default function JobTumbler({
             return (
               <article
                 key={`${job.id}-${offset}`}
-                className={`tumbler-slot${offset === 0 ? " is-center" : ""}${
+                role={offset === 0 ? "group" : "button"}
+                tabIndex={offset === 0 ? undefined : 0}
+                className={`tumbler-slot${offset === 0 ? " is-center" : " is-tap"}${
                   offset === 0 && ticking ? " is-ticking" : ""
                 }${swipe.dragging ? " is-dragging" : ""}`}
                 style={{
                   transform: `translateY(${y}px)`,
                   opacity: abs === 0 ? 1 : abs === 1 ? 0.5 : 0.18,
                   filter: abs === 0 ? "none" : "blur(0.35px)",
+                }}
+                onPointerDown={(event) => {
+                  if (offset === 0) return;
+                  event.stopPropagation();
+                }}
+                onClick={() => {
+                  if (offset === 0 || stack.length < 2) return;
+                  step(offset > 0 ? 1 : -1);
                 }}
               >
                 <div className={`slot-copy ${jobTone(job.status)}`}>

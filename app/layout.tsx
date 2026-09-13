@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   title: "JOB COMMAND",
   description:
     "Boss employees desk with weekly hour editing, live Google Maps tracking, and color-coded job status.",
+  other: {
+    "job-command-build": "2026.09.13-desk",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

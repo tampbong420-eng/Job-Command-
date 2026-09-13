@@ -697,13 +697,13 @@ h1 strong {
 }
 
 .tumbler-step {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   border: 1px solid #00bfff66;
   background: #0b1220;
   color: var(--shock);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -821,6 +821,11 @@ h1 strong {
 
 .tumbler-slot.is-center {
   z-index: 2;
+}
+
+.tumbler-slot.is-tap {
+  z-index: 4;
+  cursor: pointer;
 }
 
 .tumbler-slot.is-ticking {
@@ -1508,8 +1513,10 @@ label.ghost-action {
   background: #09090b;
   border: 1px solid var(--line-soft);
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 10px 10px;
   color-scheme: dark;
+  font-size: 16px;
+  min-height: 44px;
 }
 
 .day-times input:disabled {
@@ -2058,12 +2065,13 @@ label.ghost-action {
   background: #09090b;
   border: 1px solid var(--line-soft);
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   color: var(--ink);
   letter-spacing: 0;
   text-transform: none;
   font-family: var(--font-sans), "IBM Plex Sans", system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
+  min-height: 44px;
 }
 
 .settings-card,
@@ -2234,4 +2242,81 @@ button.profile-card.selected {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.rolodex-step {
+  flex: none;
+}
+
+.field-gate {
+  padding-bottom: 24px;
+}
+
+.gate-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.gate-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line-soft);
+  background: #18181b;
+}
+
+.gate-card.on {
+  border-color: var(--employee);
+  box-shadow: 0 0 16px var(--employee-glow);
+}
+
+.gate-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.gate-copy b {
+  font-size: 16px;
+}
+
+.gate-copy small {
+  color: var(--muted);
+}
+
+.gate-error {
+  color: #ff8a80;
+  margin: 8px 0 0;
+}
+
+.pin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.pin-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 8px;
+}
+
+.pin-list small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.pin-list b {
+  font-family: var(--font-mono), "IBM Plex Mono", monospace;
+  letter-spacing: 0.16em;
+  color: var(--shock);
 }

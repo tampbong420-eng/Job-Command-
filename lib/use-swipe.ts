@@ -18,14 +18,10 @@ export function useSwipe(
   }, [onStep]);
 
   const onPointerDown = useCallback((event: React.PointerEvent) => {
-    event.preventDefault();
     start.current = { x: event.clientX, y: event.clientY, at: Date.now() };
     last.current = 0;
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // Android Chrome can throw if the node is already gone.
-    }
+    // Do not preventDefault or capture yet. Android treats that as a dead
+    // control, so arrows / tap zones never fire.
   }, []);
 
   const onPointerMove = useCallback(
@@ -35,9 +31,21 @@ export function useSwipe(
       const dy = event.clientY - start.current.y;
       const primary = axis === "x" ? dx : dy;
       const secondary = axis === "x" ? dy : dx;
-      if (Math.abs(secondary) > Math.abs(primary) + 12) return;
+      if (Math.abs(primary) < 10) return;
+      if (Math.abs(secondary) > Math.abs(primary) + 12) {
+        start.current = null;
+        last.current = 0;
+        setDrag(0);
+        return;
+      }
       last.current = primary;
       setDrag(primary);
+      if (event.cancelable) event.preventDefault();
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Android Chrome can throw if the node is already gone.
+      }
     },
     [axis],
   );
