@@ -2233,6 +2233,47 @@ label.ghost-action {
   gap: 10px;
 }
 
+.crew-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.crew-pick {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 6px 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: #09090b;
+  color: inherit;
+  text-align: center;
+}
+
+.crew-pick.on {
+  border-color: var(--accent);
+  box-shadow: inset 0 1px #ffffff14, 0 0 14px var(--accent-glow);
+}
+
+.crew-pick .crew-photo {
+  width: 52px;
+  height: 52px;
+}
+
+.crew-pick b {
+  font-family: var(--font-display), Oswald, sans-serif;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.crew-pick small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
 .record-list {
   display: grid;
   gap: 8px;

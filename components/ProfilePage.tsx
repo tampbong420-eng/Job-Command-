@@ -95,46 +95,56 @@ export default function ProfilePage({
         <strong>Pay.</strong>
       </h1>
       <p className="board-copy">
-        One person at a time. Use the menus to schedule, keep pay history, read the log, or extract a record.
+        {role === "employee"
+          ? "Your rate, posted week, paycheck, history, log, and extract."
+          : `${roster.length} employees on this shop. Tap a name, then a tool.`}
       </p>
 
-      <div className="desk-picks">
-        <label className="pay-rate-field">
-          Employee
-          <select
-            className="pay-cadence"
-            value={selected.id}
-            disabled={role === "employee"}
-            aria-label="Select employee"
-            onChange={(event) => {
-              onSelectEmployee(event.target.value);
-              setTool("pay");
-            }}
-          >
-            {roster.map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.name} · {row.role}
-              </option>
-            ))}
-          </select>
-        </label>
+      {role === "boss" && (
+        <div className="crew-picker" role="listbox" aria-label="Employees">
+          {roster.map((row) => (
+            <button
+              key={row.id}
+              type="button"
+              role="option"
+              className={`crew-pick${row.id === selected.id ? " on" : ""}`}
+              aria-selected={row.id === selected.id}
+              aria-label={`${row.name}, ${row.role}`}
+              onClick={() => {
+                onSelectEmployee(row.id);
+                setTool("pay");
+              }}
+            >
+              <span className={`crew-photo duty-${row.status}`}>
+                {row.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={row.photoUrl} alt="" />
+                ) : (
+                  <span className="initials">{initials(row.name)}</span>
+                )}
+              </span>
+              <b>{row.name.split(" ")[0]}</b>
+              <small>{row.role}</small>
+            </button>
+          ))}
+        </div>
+      )}
 
-        <label className="pay-rate-field">
-          Desk tool
-          <select
-            className="pay-cadence"
-            value={tool}
-            aria-label="Pay desk tool"
-            onChange={(event) => setTool(event.target.value as DeskTool)}
-          >
-            {TOOLS.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <label className="pay-rate-field">
+        Desk tool
+        <select
+          className="pay-cadence"
+          value={tool}
+          aria-label="Pay desk tool"
+          onChange={(event) => setTool(event.target.value as DeskTool)}
+        >
+          {TOOLS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <EmployeeDesk
         key={selected.id}
