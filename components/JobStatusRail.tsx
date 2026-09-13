@@ -1,6 +1,6 @@
 "use client";
 
-import { jobStatusLabel, jobTone } from "@/lib/format";
+import { jobStatusAction, jobStatusLabel, jobTone } from "@/lib/format";
 import { jobsByStatus } from "@/lib/assign";
 import type { Job, JobStatus } from "@/lib/types";
 
@@ -17,6 +17,7 @@ export default function JobStatusRail({
     <ul className="status-rail" aria-label="Job status lanes">
       {ORDER.map((status) => {
         const count = jobsByStatus(jobs, status).length;
+        const { action, hint } = jobStatusAction(status);
         return (
           <li key={status}>
             <button
@@ -27,7 +28,10 @@ export default function JobStatusRail({
             >
               <i />
               <span>
-                {jobStatusLabel(status)}
+                <span className="status-chip-copy">
+                  <strong>{action}</strong>
+                  <em>{hint}</em>
+                </span>
                 <b>{count}</b>
               </span>
             </button>
