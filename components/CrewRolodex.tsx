@@ -51,6 +51,16 @@ export default function CrewRolodex({
       }}
     >
       <div className="rolodex-person">
+        <button
+          type="button"
+          className="tumbler-step rolodex-step"
+          aria-label="Previous employee"
+          disabled={crew.length < 2}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => onIndexChange(wrapIndex(index, -1, crew.length))}
+        >
+          ◀
+        </button>
         <div className={`crew-photo duty-${member.status}`}>
           {member.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -68,6 +78,16 @@ export default function CrewRolodex({
           <span className="status-dot" />
           {clockLabel(member.status)}
         </span>
+        <button
+          type="button"
+          className="tumbler-step rolodex-step"
+          aria-label="Next employee"
+          disabled={crew.length < 2}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => onIndexChange(wrapIndex(index, 1, crew.length))}
+        >
+          ▶
+        </button>
       </div>
 
       <div className="crew-card-meta">
@@ -112,7 +132,7 @@ export default function CrewRolodex({
         </button>
       </div>
 
-      <p className="swipe-hint">Swipe employees</p>
+      <p className="swipe-hint">Tap arrows or swipe to change employee</p>
       <div className="rolodex-dots">
         {crew.map((row, i) => (
           <button

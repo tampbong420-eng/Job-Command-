@@ -51,25 +51,28 @@ export default function ProfilePage({
   const selectedId = role === "employee" ? employeeId : member.id;
   const canEdit = role === "boss" && Boolean(onHourlyRate && onPaySchedule);
   const payroll = shopPayroll(crew, timeCards).grossPay;
+  const roster = role === "employee" ? crew.filter((row) => row.id === selectedId) : crew;
 
   return (
     <section className="page jobs-board">
-      <p className="section-kicker">Shop roster</p>
+      <p className="section-kicker">{role === "employee" ? "My card" : "Shop roster"}</p>
       <h1>
-        Employee
+        {role === "employee" ? "My" : "Employee"}
         <br />
-        <strong>Profiles.</strong>
+        <strong>{role === "employee" ? "Hours." : "Profiles."}</strong>
       </h1>
       <p className="board-copy">
         {role === "employee"
-          ? "Tap a card to clock in as that employee."
+          ? "Your pay rate, week schedule, and locked stops. Switch people from Settings."
           : "Tap a card to open pay rate and the week schedule. Logged hours × rate is what you owe this week."}
       </p>
-      <p className="payroll-total">
-        <span>This week’s payroll</span>
-        <b>{money(payroll)}</b>
-      </p>
-      {crew.map((row) => (
+      {role === "boss" && (
+        <p className="payroll-total">
+          <span>This week’s payroll</span>
+          <b>{money(payroll)}</b>
+        </p>
+      )}
+      {roster.map((row) => (
         <EmployeeProfileCard
           key={row.id}
           member={row}

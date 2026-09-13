@@ -87,6 +87,10 @@ export function todayYmd(now = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
+export function localYmd(now = new Date()): string {
+  return ymd(now.getFullYear(), now.getMonth() + 1, now.getDate());
+}
+
 export function weekStartMonday(date: string): string {
   const { y, m, d } = parseYmd(date);
   const dt = new Date(Date.UTC(y, m - 1, d));
@@ -475,7 +479,7 @@ export function togglePunch(
   const date = now.slice(0, 10);
   const { start, end } = payPeriodFor(member.payCadence ?? "weekly", date);
   const sheetId = timesheetId(employeeId, start);
-  let timesheets = ensureTimesheet(sheets, employeeId, start, end);
+  const timesheets = ensureTimesheet(sheets, employeeId, start, end);
   const sheet = findSheet(timesheets, employeeId, start);
   if (isLocked(sheet)) {
     return { crew, timeCards: cards, timesheets, payAudits: audits };
@@ -705,4 +709,92 @@ export function syncLoggedHours(
     );
     return { ...member, weeklyHoursLogged: roundHours(hours) };
   });
+}
+
+function shiftStartIso(today: string, start: string): string {
+  const [hours, minutes] = start.split(":").map(Number);
+  const h = Number.isFinite(hours) ? hours : 7;
+  const m = Number.isFinite(minutes) ? minutes : 0;
+  return `${today}T${pad(Math.min(23, h + 7))}:${pad(m)}:00.000Z`;
+}
+
+export function refreshStaleShifts(
+  crew: CrewMember[],
+  cards: TimeCard[],
+  now = new Date(),
+): { crew: CrewMember[]; timeCards: TimeCard[] } {
+  const today = localYmd(now);
+  let timeCards = cards.map((row) => hydrateTimeCard(row));
+
+  timeCards = timeCards.map((row) => {
+    if (!row.clockIn || row.clockOut) return row;
+    const punchDay = row.date || row.clockIn.slice(0, 10);
+    if (punchDay >= today) return row;
+    const member = crew.find((item) => item.id === row.employeeId);
+    const closeAt = `${punchDay}T23:00:00.000Z`;
+    const closed: TimeCard = { ...row, clockOut: closeAt };
+    const hours = netEntryHours(
+      closed,
+      member?.unpaidBreakMinutes ?? 30,
+      Date.parse(closeAt),
+    );
+    closed.hours = hours.netHours;
+    closed.breakMinutes =
+      closed.breakMinutes ?? Math.round(hours.breakHours * 60);
+    return closed;
+  });
+
+  const nextCrew = crew.map((member) => {
+    if (member.status === "off") return member;
+    const startedDay = member.startedAt?.slice(0, 10);
+    if (startedDay && startedDay >= today) return member;
+    const day = member.weeklySchedule.find((row) => {
+      const { y, m, d } = parseYmd(today);
+      const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+      const map = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+      return row.day === map[dow];
+    });
+    const start = day && !day.off ? day.start : "07:00";
+    const startedAt = shiftStartIso(today, start);
+    const startMs = Date.parse(startedAt);
+    return {
+      ...member,
+      startedAt:
+        Number.isFinite(startMs) && startMs > now.getTime()
+          ? new Date(Math.max(0, now.getTime() - 2 * 3_600_000)).toISOString()
+          : startedAt,
+    };
+  });
+
+  for (const member of nextCrew) {
+    if (member.status === "off") continue;
+    const hasOpenToday = timeCards.some(
+      (row) =>
+        row.employeeId === member.id &&
+        !row.clockOut &&
+        (row.date === today || row.clockIn?.slice(0, 10) === today),
+    );
+    if (hasOpenToday) continue;
+    timeCards = [
+      {
+        id: `tc-${member.id}-${today}-live`,
+        employeeId: member.id,
+        jobId: member.currentJobId,
+        hours: 0,
+        date: today,
+        notes: "Clock-in",
+        clockIn: member.startedAt,
+        clockOut: null,
+        breakMinutes: null,
+        costCode: member.costCode || defaultCostCode(member.role),
+        flagged: false,
+      },
+      ...timeCards,
+    ];
+  }
+
+  return {
+    crew: syncLoggedHours(nextCrew, timeCards, today, now.getTime()),
+    timeCards,
+  };
 }

@@ -1,19 +1,20 @@
 import { CREW, ESTIMATES, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
 import { syncJobRoutes } from "./assign";
-import { defaultCostCode, hydrateTimeCard } from "./payroll";
+import { defaultCostCode, hydrateTimeCard, refreshStaleShifts } from "./payroll";
 import { weekdayHours } from "./schedule";
 import type {
   CrewMember,
   Estimate,
   Job,
   PayAudit,
+  Role,
   ShopMessage,
   TimeCard,
   Timesheet,
 } from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
-export const SHOP_VERSION = 5;
+export const SHOP_VERSION = 6;
 
 export type ShopSettings = {
   shopName: string;
@@ -30,6 +31,7 @@ export type PersistedShop = {
   payAudits: PayAudit[];
   messages: ShopMessage[];
   employeeId: string;
+  role: Role;
   settings: ShopSettings;
   shopVersion?: number;
 };
@@ -109,17 +111,20 @@ function mergeJobs(saved: Job[], fresh: Job[]): Job[] {
 
 export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
   const base = defaultShop();
+  const crew = mergeCrew(parsed.crew ?? [], base.crew);
+  const timeCards = mergeById(
+    (parsed.timeCards ?? []).map((row) => hydrateTimeCard(row)),
+    base.timeCards,
+  );
+  const fresh = refreshStaleShifts(crew, timeCards);
   return {
     ...base,
     ...parsed,
     shopVersion: SHOP_VERSION,
     jobs: syncJobRoutes(mergeJobs(parsed.jobs ?? [], base.jobs)),
-    crew: mergeCrew(parsed.crew ?? [], base.crew),
+    crew: fresh.crew,
     estimates: mergeById(parsed.estimates ?? [], base.estimates),
-    timeCards: mergeById(
-      (parsed.timeCards ?? []).map((row) => hydrateTimeCard(row)),
-      base.timeCards,
-    ),
+    timeCards: fresh.timeCards,
     timesheets: mergeById(parsed.timesheets ?? [], base.timesheets),
     payAudits: mergeById(parsed.payAudits ?? [], base.payAudits),
     messages: mergeById(
@@ -127,8 +132,19 @@ export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
       base.messages,
     ),
     employeeId: parsed.employeeId ?? base.employeeId,
+    role: parsed.role === "employee" ? "employee" : "boss",
     settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
   };
+}
+
+export function parseShopBackup(raw: string): PersistedShop | null {
+  try {
+    const parsed = JSON.parse(raw) as Partial<PersistedShop>;
+    if (!Array.isArray(parsed.jobs) || !Array.isArray(parsed.crew)) return null;
+    return upgradeShop(parsed);
+  } catch {
+    return null;
+  }
 }
 
 export function defaultShop(): PersistedShop {
@@ -141,6 +157,7 @@ export function defaultShop(): PersistedShop {
     payAudits: [],
     messages: MESSAGES.map(hydrateMessage),
     employeeId: CREW[0]?.id ?? "e-mike",
+    role: "boss",
     settings: DEFAULT_SETTINGS,
     shopVersion: SHOP_VERSION,
   };

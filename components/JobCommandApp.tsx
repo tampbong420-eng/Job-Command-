@@ -8,6 +8,7 @@ import CrewMap from "@/components/CrewMap";
 import CrewMetrics from "@/components/CrewMetrics";
 import CrewRolodex from "@/components/CrewRolodex";
 import EditHoursCalendar from "@/components/EditHoursCalendar";
+import EmployeeGate from "@/components/EmployeeGate";
 import EmployeeHome from "@/components/EmployeeHome";
 import EmployeeJobs from "@/components/EmployeeJobs";
 import EstimatesBoard from "@/components/EstimatesBoard";
@@ -47,6 +48,7 @@ import {
   commitShop,
   getServerShopSnapshot,
   getShopSnapshot,
+  parseShopBackup,
   resetShop,
   SHOP_VERSION,
   subscribeShop,
@@ -65,12 +67,23 @@ import type {
   TalkResult,
 } from "@/lib/types";
 import { useLiveDate } from "@/lib/use-live-time";
+import {
+  saveFieldLogin,
+  clearFieldLogin,
+} from "@/lib/access";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-const TABS: { id: NavTab; label: string; icon: string }[] = [
+const BOSS_TABS: { id: NavTab; label: string; icon: string }[] = [
   { id: "command", label: "Main Command", icon: "▣" },
   { id: "jobs", label: "All Jobs", icon: "⚒" },
   { id: "profile", label: "Employee Profiles", icon: "☺" },
+  { id: "settings", label: "Settings", icon: "⚙" },
+];
+
+const FIELD_TABS: { id: NavTab; label: string; icon: string }[] = [
+  { id: "command", label: "Command", icon: "▣" },
+  { id: "jobs", label: "My Jobs", icon: "⚒" },
+  { id: "profile", label: "My Card", icon: "☺" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
@@ -80,14 +93,15 @@ export default function JobCommandApp() {
     getShopSnapshot,
     getServerShopSnapshot,
   );
-  const { jobs, crew, estimates, timeCards, timesheets, payAudits, messages, employeeId, settings } = shop;
+  const { jobs, crew, estimates, timeCards, timesheets, payAudits, messages, employeeId, role: shopRole, settings } = shop;
   useEffect(() => {
     const current = getShopSnapshot();
     if ((current.shopVersion ?? 0) < SHOP_VERSION) {
       commitShop(upgradeShop(current));
     }
   }, []);
-  const [role, setRole] = useState<Role>("boss");
+  const role: Role = shopRole === "employee" ? "employee" : "boss";
+  const [gateOpen, setGateOpen] = useState(false);
   const [tab, setTab] = useState<NavTab>("command");
   const [paper, setPaper] = useState<"jobs" | "estimates" | "timecards">("jobs");
   const [desk, setDesk] = useState<"crew" | "hours" | "lane" | "stops">("crew");
@@ -124,9 +138,6 @@ export default function JobCommandApp() {
   const tumblerIndex = clampIndex(jobIndex, stack.length);
   const selectedJob = stack[tumblerIndex] ?? null;
 
-  useEffect(() => {
-    if (jobIndex !== tumblerIndex) setJobIndex(tumblerIndex);
-  }, [jobIndex, tumblerIndex]);
   const assigned =
     actor ? assignedJob(jobs, actor) : null;
   const property =
@@ -406,6 +417,39 @@ export default function JobCommandApp() {
     });
   }
 
+  function enterEmployee(id: string) {
+    const nextIndex = crew.findIndex((row) => row.id === id);
+    patchShop({ employeeId: id, role: "employee" });
+    saveFieldLogin(id);
+    if (nextIndex >= 0) selectCrew(nextIndex);
+    setGateOpen(false);
+    setTab("command");
+    setDesk("crew");
+    setNotice(`Signed in as ${crew.find((row) => row.id === id)?.name ?? "employee"}.`);
+  }
+
+  function enterBoss() {
+    clearFieldLogin();
+    patchShop({ role: "boss" });
+    setGateOpen(false);
+    setTab("command");
+    setDesk("crew");
+    setNotice("Boss command is open.");
+  }
+
+  async function reloadLatestApp() {
+    try {
+      if ("caches" in window) {
+        const keys = await window.caches.keys();
+        await Promise.all(keys.map((key) => window.caches.delete(key)));
+      }
+    } catch {
+      // Phone browsers can deny cache access; a hard reload still helps.
+    }
+    window.location.reload();
+  }
+
+  const tabs = role === "employee" ? FIELD_TABS : BOSS_TABS;
   const paperTabs = (
     <PaperNav paper={paper} onPaper={setPaper} />
   );
@@ -437,11 +481,7 @@ export default function JobCommandApp() {
               role="tab"
               aria-selected={role === "employee"}
               onClick={() => {
-                setRole("employee");
-                setTab("command");
-                setDesk("crew");
-                setPropertyOpen(false);
-                setSheetJobId(null);
+                setGateOpen(true);
               }}
             >
               EMPLOYEE
@@ -452,7 +492,11 @@ export default function JobCommandApp() {
               role="tab"
               aria-selected={role === "boss"}
               onClick={() => {
-                setRole("boss");
+                if (role === "employee") {
+                  setGateOpen(true);
+                  return;
+                }
+                patchShop({ role: "boss" });
                 setTab("command");
               }}
             >
@@ -463,7 +507,17 @@ export default function JobCommandApp() {
         </div>
       </header>
 
-      {role === "employee" && tab === "command" && employee && desk === "crew" && (
+      {gateOpen && (
+        <EmployeeGate
+          crew={crew}
+          bossCode={settings.account}
+          onEmployee={enterEmployee}
+          onBoss={enterBoss}
+          onCancel={() => setGateOpen(false)}
+        />
+      )}
+
+      {!gateOpen && role === "employee" && tab === "command" && employee && desk === "crew" && (
         <EmployeeHome
           member={employee}
           crew={crew}
@@ -473,7 +527,7 @@ export default function JobCommandApp() {
         />
       )}
 
-      {tab === "command" && actor && desk === "stops" && (
+      {!gateOpen && tab === "command" && actor && desk === "stops" && (
         <AssignedStops
           member={actor}
           jobs={jobs}
@@ -511,7 +565,7 @@ export default function JobCommandApp() {
         />
       )}
 
-      {role === "boss" && tab === "command" && member && desk === "hours" && (
+      {!gateOpen && role === "boss" && tab === "command" && member && desk === "hours" && (
         <EditHoursCalendar
           member={member}
           onSave={saveHours}
@@ -519,7 +573,7 @@ export default function JobCommandApp() {
         />
       )}
 
-      {role === "boss" && tab === "command" && member && desk === "lane" && laneStatus && (
+      {!gateOpen && role === "boss" && tab === "command" && member && desk === "lane" && laneStatus && (
         <LaneJobsDeck
           status={laneStatus}
           jobs={jobs}
@@ -563,7 +617,7 @@ export default function JobCommandApp() {
         />
       )}
 
-      {role === "boss" && tab === "command" && member && desk === "crew" && (
+      {!gateOpen && role === "boss" && tab === "command" && member && desk === "crew" && (
         <section className="page crew-desk">
           <div className="crew-head">
             <p className="section-kicker">{fieldDate}</p>
@@ -596,7 +650,7 @@ export default function JobCommandApp() {
         </section>
       )}
 
-      {tab === "jobs" && role === "boss" && paper === "jobs" && (
+      {!gateOpen && tab === "jobs" && role === "boss" && paper === "jobs" && (
         <BossJobsBoard
           jobs={jobs}
           estimates={estimates}
@@ -627,7 +681,7 @@ export default function JobCommandApp() {
         </BossJobsBoard>
       )}
 
-      {tab === "jobs" && role === "boss" && paper === "estimates" && (
+      {!gateOpen && tab === "jobs" && role === "boss" && paper === "estimates" && (
         <EstimatesBoard
           jobs={jobs}
           estimates={estimates}
@@ -637,7 +691,7 @@ export default function JobCommandApp() {
         </EstimatesBoard>
       )}
 
-      {tab === "jobs" && role === "boss" && paper === "timecards" && (
+      {!gateOpen && tab === "jobs" && role === "boss" && paper === "timecards" && (
         <PayrollBoard
           crew={crew}
           jobs={jobs}
@@ -712,7 +766,7 @@ export default function JobCommandApp() {
         </PayrollBoard>
       )}
 
-      {tab === "jobs" && role === "employee" && employee && (
+      {!gateOpen && tab === "jobs" && role === "employee" && employee && (
         <EmployeeJobs
           member={employee}
           jobs={jobs}
@@ -721,7 +775,7 @@ export default function JobCommandApp() {
         />
       )}
 
-      {tab === "profile" && actor && (
+      {!gateOpen && tab === "profile" && actor && (
         <ProfilePage
           member={actor}
           jobs={jobs}
@@ -762,19 +816,45 @@ export default function JobCommandApp() {
         />
       )}
 
-      {tab === "settings" && (
+      {!gateOpen && tab === "settings" && (
         <SettingsPage
           role={role}
           settings={settings}
+          crew={crew}
+          signedIn={
+            role === "employee"
+              ? (employee?.name ?? "Employee")
+              : "Boss command"
+          }
           onSettings={(next) => patchShop({ settings: next })}
           onReset={resetDemoShop}
+          onReloadApp={() => void reloadLatestApp()}
+          onSignOut={() => setGateOpen(true)}
+          onExportShop={() => JSON.stringify(getShopSnapshot())}
+          onImportShop={(raw) => {
+            const next = parseShopBackup(raw);
+            if (!next) return false;
+            commitShop(next);
+            setCrewIndex(0);
+            setJobIndex(
+              tumblerIndexForCrew(
+                next.jobs,
+                next.crew[0]?.id ?? "",
+                next.crew[0]?.currentJobId ?? null,
+              ),
+            );
+            return true;
+          }}
         />
       )}
 
-      <TalkButton snapshot={snapshot} onResult={applyTalk} />
+      {!gateOpen && role === "boss" && (
+        <TalkButton snapshot={snapshot} onResult={applyTalk} />
+      )}
 
+      {!gateOpen && (
       <nav className="bottom-nav" aria-label="Primary">
-        {TABS.map((item) => (
+        {tabs.map((item) => (
           <button
             key={item.id}
             type="button"
@@ -803,6 +883,7 @@ export default function JobCommandApp() {
           </button>
         ))}
       </nav>
+      )}
 
       {notice && <div className="toast">{notice}</div>}
       {propertyOpen && property && actor && (

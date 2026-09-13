@@ -9,6 +9,7 @@ import {
   loadShop,
   resetShop,
   saveShop,
+  parseShopBackup,
 } from "../lib/session";
 
 describe("shop session", { concurrency: false }, () => {
@@ -102,5 +103,15 @@ describe("shop session", { concurrency: false }, () => {
     assert.equal(loaded?.crew.find((row) => row.id === "e-mike")?.hourlyRate, 48);
     const persisted = JSON.parse(data.get(SHOP_KEY) ?? "{}") as { shopVersion?: number };
     assert.equal(persisted.shopVersion, SHOP_VERSION);
+  });
+
+  test("parseShopBackup upgrades a copied shop JSON", () => {
+    const raw = JSON.stringify(defaultShop());
+    const parsed = parseShopBackup(raw);
+    assert.equal(parsed?.shopVersion, SHOP_VERSION);
+    assert.equal(parsed?.role, "boss");
+    assert.ok((parsed?.crew.length ?? 0) > 0);
+    assert.equal(parseShopBackup("not-json"), null);
+    assert.equal(parseShopBackup("{}"), null);
   });
 });
