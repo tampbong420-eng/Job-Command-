@@ -1,4 +1,5 @@
 import { lockJobToCrew, syncCrewToJobs, syncJobRoutes } from "./assign";
+import { jobStatusLabel } from "./format";
 import type {
   CrewMember,
   Estimate,
@@ -13,12 +14,20 @@ import type {
 } from "./types";
 
 const STATUS_WORDS: { status: JobStatus; words: string[] }[] = [
-  { status: "lead", words: ["new lead", "new leads", "lead"] },
-  { status: "pending", words: ["pending"] },
-  { status: "in_progress", words: ["active", "in progress"] },
+  { status: "lead", words: ["new call", "new calls", "new lead", "new leads", "lead"] },
+  { status: "pending", words: ["estimate", "pending estimate", "pending"] },
+  { status: "in_progress", words: ["on job", "working", "active", "in progress"] },
   {
     status: "completed",
-    words: ["job archive", "archived", "finished", "complete", "completed", "done"],
+    words: [
+      "finished",
+      "archive",
+      "job archive",
+      "archived",
+      "complete",
+      "completed",
+      "done",
+    ],
   },
 ];
 
@@ -96,14 +105,7 @@ export function applyCommand(
       ),
     );
     const crew = syncCrewToJobs(state.crew, jobs);
-    const label =
-      command.status === "lead"
-        ? "New lead"
-        : command.status === "pending"
-          ? "Pending"
-          : command.status === "in_progress"
-            ? "Active"
-            : "Job Archive";
+    const label = jobStatusLabel(command.status);
     return {
       state: { ...state, jobs, crew },
       view: "jobs",
@@ -219,7 +221,7 @@ export function applyCommand(
     return {
       state: { ...state, jobs: [job, ...state.jobs] },
       view: "jobs",
-      notice: `Added ${job.customerName} as ${status === "lead" ? "a new lead" : jobTitleStatus(status)}.`,
+      notice: `Added ${job.customerName} as ${status === "lead" ? "a new call" : jobTitleStatus(status)}.`,
     };
   }
 
@@ -244,10 +246,10 @@ export function applyCommand(
 }
 
 function jobTitleStatus(status: JobStatus): string {
-  if (status === "pending") return "pending";
-  if (status === "in_progress") return "active";
-  if (status === "completed") return "job archive";
-  return "a new lead";
+  if (status === "pending") return "an estimate";
+  if (status === "in_progress") return "on job";
+  if (status === "completed") return "finished";
+  return "a new call";
 }
 
 export function applyCommands(

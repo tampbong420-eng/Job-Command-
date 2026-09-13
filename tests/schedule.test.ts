@@ -9,7 +9,7 @@ import {
   weekPayDue,
   weekdayHours,
 } from "../lib/schedule";
-import { jobStatusLabel, jobTone } from "../lib/format";
+import { jobStatusAction, jobStatusLabel, jobTone } from "../lib/format";
 
 test("weekdayHours marks weekend off by default", () => {
   const week = weekdayHours("07:00", "16:00");
@@ -44,8 +44,12 @@ test("job tones follow the boss status hierarchy", () => {
   assert.equal(jobTone("pending"), "tone-pending");
   assert.equal(jobTone("in_progress"), "tone-active");
   assert.equal(jobTone("completed"), "tone-done");
-  assert.equal(jobStatusLabel("lead"), "New lead");
-  assert.equal(jobStatusLabel("pending"), "Pending");
-  assert.equal(jobStatusLabel("in_progress"), "Active");
-  assert.equal(jobStatusLabel("completed"), "Job Archive");
+  assert.equal(jobStatusLabel("lead"), "New call");
+  assert.equal(jobStatusLabel("pending"), "Estimate");
+  assert.equal(jobStatusLabel("in_progress"), "On job");
+  assert.equal(jobStatusLabel("completed"), "Finished");
+  assert.deepEqual(jobStatusAction("lead"), { action: "Call", hint: "New" });
+  assert.deepEqual(jobStatusAction("pending"), { action: "Estimate", hint: "Pending" });
+  assert.deepEqual(jobStatusAction("in_progress"), { action: "On job", hint: "Working" });
+  assert.deepEqual(jobStatusAction("completed"), { action: "Finished", hint: "Archive" });
 });
