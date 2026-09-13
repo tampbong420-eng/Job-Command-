@@ -37,6 +37,7 @@ import { applyCommands, jobsMarkedForDelete } from "@/lib/commands";
 import { clampIndex } from "@/lib/format";
 import { hasUnreadMessage, markMessagesSeen } from "@/lib/messages";
 import {
+  appendPayAudit,
   editTimeCard,
   flagTimeCard,
   setTimesheetStatus,
@@ -781,6 +782,8 @@ export default function JobCommandApp() {
           jobs={jobs}
           estimates={estimates}
           timeCards={timeCards}
+          timesheets={timesheets ?? []}
+          payAudits={payAudits ?? []}
           crew={crew}
           role={role}
           employeeId={employeeId}
@@ -801,8 +804,41 @@ export default function JobCommandApp() {
             });
           }}
           onPaySchedule={(id, schedule) => {
+            const shopNow = getShopSnapshot();
+            const person = shopNow.crew.find((row) => row.id === id);
             patchShop({
-              crew: updateWeeklySchedule(getShopSnapshot().crew, id, schedule),
+              crew: updateWeeklySchedule(shopNow.crew, id, schedule),
+              payAudits: person
+                ? appendPayAudit(
+                    shopNow.payAudits ?? [],
+                    person,
+                    "schedule",
+                    `Updated ${person.name.split(" ")[0]}'s posted week`,
+                  )
+                : shopNow.payAudits,
+            });
+          }}
+          onPayCadence={(id, cadence) => {
+            const shopNow = getShopSnapshot();
+            const person = shopNow.crew.find((row) => row.id === id);
+            patchShop({
+              crew: updatePayConfig(shopNow.crew, id, { payCadence: cadence }),
+              payAudits: person
+                ? appendPayAudit(
+                    shopNow.payAudits ?? [],
+                    { ...person, payCadence: cadence },
+                    "schedule",
+                    `Pay cadence set to ${cadence}`,
+                  )
+                : shopNow.payAudits,
+            });
+          }}
+          onPayNote={(id, action, detail) => {
+            const shopNow = getShopSnapshot();
+            const person = shopNow.crew.find((row) => row.id === id);
+            if (!person) return;
+            patchShop({
+              payAudits: appendPayAudit(shopNow.payAudits ?? [], person, action, detail),
             });
           }}
           messages={messages}
@@ -848,7 +884,7 @@ export default function JobCommandApp() {
         />
       )}
 
-      {!gateOpen && role === "boss" && (
+      {!gateOpen && role === "boss" && tab !== "profile" && (
         <TalkButton snapshot={snapshot} onResult={applyTalk} />
       )}
 

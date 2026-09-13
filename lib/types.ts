@@ -16,7 +16,9 @@ export type PayAuditAction =
   | "unapprove"
   | "lock"
   | "punch_in"
-  | "punch_out";
+  | "punch_out"
+  | "rate"
+  | "schedule";
 
 export type DaySchedule = {
   day: Weekday;

@@ -2193,7 +2193,99 @@ label.ghost-action {
   text-transform: none;
   letter-spacing: 0;
   font-family: var(--font-sans), "IBM Plex Sans", system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
+}
+
+.paycheck-box {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--boss-edge);
+  background: #4ade8014;
+}
+
+.paycheck-box b {
+  color: var(--lime);
+  font-family: var(--font-display), Oswald, sans-serif;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.paycheck-box span,
+.paycheck-box small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pay-tools {
+  display: grid;
+  gap: 10px;
+}
+
+.pay-card .ghost-action.hours {
+  width: 100%;
+}
+
+.desk-picks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.record-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.record-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: #09090b;
+}
+
+.record-row span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.record-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.record-row b {
+  font-family: var(--font-display), Oswald, sans-serif;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.record-row.punch b {
+  color: var(--yellow);
+  font-size: 16px;
+}
+
+.extract-box {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: #09090b;
+  color: var(--muted);
+  font-family: var(--font-mono), "IBM Plex Mono", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-x: auto;
 }
 
 .pay-entry {

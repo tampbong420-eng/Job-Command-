@@ -1,4 +1,5 @@
 import { money } from "./format";
+import { scheduledHours } from "./schedule";
 import type {
   CrewMember,
   PayAudit,
@@ -419,8 +420,99 @@ export function paySummaryLine(row: EmployeePeriodPay): string {
   return `${formatHours(row.netHours)} · ${money(row.grossPay)}`;
 }
 
+export function scheduledPaycheck(member: CrewMember) {
+  const planned = scheduledHours(member.weeklySchedule);
+  const split = splitRegularOvertime(planned, DEFAULT_OT_AFTER);
+  return {
+    plannedHours: planned,
+    ...split,
+    ...grossPay(
+      split.regularHours,
+      split.overtimeHours,
+      member.hourlyRate,
+      member.overtimeMultiplier || DEFAULT_OT_MULTIPLIER,
+    ),
+  };
+}
+
 export function periodLabel(start: string, end: string): string {
   return `${start} → ${end}`;
+}
+
+export function appendPayAudit(
+  audits: PayAudit[],
+  member: CrewMember,
+  action: PayAuditAction,
+  detail: string,
+  onDate = localYmd(),
+  at = new Date().toISOString(),
+): PayAudit[] {
+  const { start } = payPeriodFor(member.payCadence ?? "weekly", onDate);
+  return [audit(timesheetId(member.id, start), action, detail, null, at), ...audits];
+}
+
+export function paycheckHistory(
+  member: CrewMember,
+  cards: TimeCard[],
+  onDate = localYmd(),
+  limit = 8,
+): EmployeePeriodPay[] {
+  const dates = [
+    onDate,
+    ...cards.filter((row) => row.employeeId === member.id).map((row) => row.date),
+  ]
+    .filter(Boolean)
+    .sort()
+    .reverse();
+  const seen = new Set<string>();
+  const rows: EmployeePeriodPay[] = [];
+  for (const date of dates) {
+    const { start } = payPeriodFor(member.payCadence ?? "weekly", date);
+    if (seen.has(start)) continue;
+    seen.add(start);
+    rows.push(calculateEmployeePeriod(member, cards, date));
+    if (rows.length >= limit) break;
+  }
+  return rows;
+}
+
+export function extractPayRecords(
+  member: CrewMember,
+  cards: TimeCard[],
+  jobs: { id: string; jobTitle: string }[],
+  onDate = localYmd(),
+  sheets: Timesheet[] = [],
+): string {
+  const history = paycheckHistory(member, cards, onDate);
+  const punches = cards
+    .filter((row) => row.employeeId === member.id)
+    .slice()
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.clockIn ?? "").localeCompare(a.clockIn ?? ""));
+  const lines = [
+    `JOB COMMAND PAY EXTRACT`,
+    `${member.name} · ${member.role} · ${money(member.hourlyRate)}/hr · ${CADENCE_LABEL[member.payCadence ?? "weekly"]}`,
+    `Extracted ${onDate}`,
+    "",
+    "PERIOD START,PERIOD END,STATUS,REGULAR H,OT H,GROSS",
+    ...history.map((row) => {
+      const status = findSheet(sheets, member.id, row.periodStart)?.status ?? "open";
+      return `${row.periodStart},${row.periodEnd},${status},${row.regularHours},${row.overtimeHours},${row.grossPay.toFixed(2)}`;
+    }),
+    "",
+    "DATE,IN,OUT,HOURS,JOB,NOTES",
+    ...punches.map((row) => {
+      const job = jobs.find((item) => item.id === row.jobId);
+      return [
+        row.date,
+        row.clockIn ?? "",
+        row.clockOut ?? "LIVE",
+        row.hours,
+        job?.jobTitle ?? "",
+        (row.notes ?? "").replaceAll(",", " "),
+      ].join(",");
+    }),
+  ];
+  return lines.join("\n");
 }
 
 function audit(
