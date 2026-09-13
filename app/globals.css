@@ -287,6 +287,20 @@ img {
   display: flex;
 }
 
+.greeting-row > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.greeting-row h1 {
+  overflow-wrap: anywhere;
+}
+
+.greeting-row .status-pill {
+  flex: none;
+  max-width: 46%;
+}
+
 .crew-head {
   margin-bottom: 10px;
 }
@@ -628,6 +642,7 @@ h1 strong {
   font-size: 26px;
   line-height: 1;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .rolodex-copy p {
@@ -636,10 +651,13 @@ h1 strong {
   font-size: 12px;
 }
 
+.rolodex-copy .status-pill {
+  margin-top: 8px;
+}
+
 .rolodex-person .status-pill {
-  margin-left: auto;
-  flex: none;
-  max-width: 42%;
+  margin-left: 0;
+  max-width: none;
 }
 
 .rolodex-dots {

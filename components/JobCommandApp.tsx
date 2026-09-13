@@ -780,7 +780,6 @@ export default function JobCommandApp() {
         <ProfilePage
           member={actor}
           jobs={jobs}
-          estimates={estimates}
           timeCards={timeCards}
           timesheets={timesheets ?? []}
           payAudits={payAudits ?? []}
