@@ -884,7 +884,7 @@ export default function JobCommandApp() {
         />
       )}
 
-      {!gateOpen && role === "boss" && (
+      {!gateOpen && role === "boss" && tab !== "profile" && (
         <TalkButton snapshot={snapshot} onResult={applyTalk} />
       )}
 
