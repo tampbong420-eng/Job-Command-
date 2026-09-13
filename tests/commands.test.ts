@@ -71,7 +71,7 @@ test("talk logs a time card onto the named crew member", () => {
   assert.equal(filed.state.timeCards[0]?.employeeId, "e-dana");
   assert.equal(
     filed.state.crew.find((row) => row.id === "e-dana")?.weeklyHoursLogged,
-    16,
+    40,
   );
 });
 

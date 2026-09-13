@@ -2,7 +2,7 @@
 
 import StopBadge from "@/components/StopBadge";
 import { activeJobs, assignedJobs } from "@/lib/assign";
-import { jobStatusLabel, jobTone, wrapIndex } from "@/lib/format";
+import { clampIndex, jobStatusLabel, jobTone, wrapIndex } from "@/lib/format";
 import type { CrewMember, Job } from "@/lib/types";
 import { useSwipe } from "@/lib/use-swipe";
 import { useMemo } from "react";
@@ -23,11 +23,17 @@ export default function JobTumbler({
   onLock: () => void;
 }) {
   const stack = useMemo(() => activeJobs(jobs), [jobs]);
-  const current = stack[jobIndex] ?? null;
+  const index = clampIndex(jobIndex, stack.length);
+  const current = stack[index] ?? null;
   const swipe = useSwipe((delta) => {
-    onIndexChange(wrapIndex(jobIndex, delta, stack.length));
+    onIndexChange(wrapIndex(index, delta, stack.length));
   }, "y", 52);
   const nextStop = assignedJobs(jobs, member.id).length + 1;
+
+  function step(delta: number) {
+    if (stack.length < 2) return;
+    onIndexChange(wrapIndex(index, delta, stack.length));
+  }
 
   if (!current) {
     return (
@@ -45,18 +51,45 @@ export default function JobTumbler({
       <div className="tumbler-head">
         <div>
           <p className="card-label">Job tumbler</p>
-          <p className="swipe-hint">Flick to cycle · lock multiple jobs</p>
+          <p className="swipe-hint">Flick or tap the jobs above and below</p>
         </div>
-        <span className="shift-tag shock">
-          {jobIndex + 1} / {stack.length}
-        </span>
+        <div className="tumbler-stepper">
+          <button
+            type="button"
+            className="tumbler-step"
+            aria-label="Previous job"
+            disabled={stack.length < 2}
+            onClick={() => step(-1)}
+          >
+            ▲
+          </button>
+          <span className="shift-tag shock">
+            {index + 1} / {stack.length}
+          </span>
+          <button
+            type="button"
+            className="tumbler-step"
+            aria-label="Next job"
+            disabled={stack.length < 2}
+            onClick={() => step(1)}
+          >
+            ▼
+          </button>
+        </div>
       </div>
       <div
         className="tumbler-body"
         aria-label="Active jobs tumbler"
         onPointerDown={swipe.onPointerDown}
         onPointerMove={swipe.onPointerMove}
-        onPointerUp={swipe.onPointerUp}
+        onPointerUp={(event) => {
+          const stepped = swipe.onPointerUp();
+          if (stepped || stack.length < 2) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const y = event.clientY - rect.top;
+          if (y < rect.height * 0.35) step(-1);
+          else if (y > rect.height * 0.65) step(1);
+        }}
         onPointerCancel={swipe.onPointerUp}
       >
         <span className="tumbler-knurl left" aria-hidden="true" />
@@ -65,7 +98,7 @@ export default function JobTumbler({
         <span className="tumbler-window" aria-hidden="true" />
         <div className="tumbler-track">
           {[-2, -1, 0, 1, 2].map((offset) => {
-            const slotIndex = wrapIndex(jobIndex, offset, stack.length);
+            const slotIndex = wrapIndex(index, offset, stack.length);
             const job = stack[slotIndex];
             if (!job) return null;
             const y = offset * 56 + swipe.drag * 0.42;
@@ -110,7 +143,7 @@ export default function JobTumbler({
         <span>
           <small>
             {lockedToThis
-              ? `Locked to ${member.name.split(" ")[0]} · stop ${current.routeOrder} · tap to unlock`
+              ? `Stop ${current.routeOrder} · tap to unlock`
               : `Assign to ${member.name.split(" ")[0]} as stop ${nextStop}`}
           </small>
           <b>{lockedToThis ? "UNLOCK JOB" : "LOCK JOB"}</b>

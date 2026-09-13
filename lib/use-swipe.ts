@@ -18,9 +18,14 @@ export function useSwipe(
   }, [onStep]);
 
   const onPointerDown = useCallback((event: React.PointerEvent) => {
+    event.preventDefault();
     start.current = { x: event.clientX, y: event.clientY, at: Date.now() };
     last.current = 0;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Android Chrome can throw if the node is already gone.
+    }
   }, []);
 
   const onPointerMove = useCallback(
@@ -44,9 +49,10 @@ export function useSwipe(
     last.current = 0;
     setDrag(0);
     const speed = value / elapsed;
-    if (Math.abs(value) < DISTANCE && Math.abs(speed) < VELOCITY) return;
+    if (Math.abs(value) < DISTANCE && Math.abs(speed) < VELOCITY) return false;
     const steps = Math.max(1, Math.min(3, Math.round(Math.abs(value) / slotSize) || 1));
     onStepRef.current((value < 0 ? 1 : -1) * steps);
+    return true;
   }, [slotSize]);
 
   useEffect(() => {

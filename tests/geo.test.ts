@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { etaFromMiles, formatMiles, milesBetween } from "../lib/geo";
-import { wrapIndex, clockLabel, formatLiveHours } from "../lib/format";
+import { wrapIndex, clampIndex, clockLabel, formatLiveHours } from "../lib/format";
 
 test("milesBetween is about 2.8 miles Queen Anne to Queen Anne HVAC", () => {
   const miles = milesBetween(
@@ -24,6 +24,13 @@ test("etaFromMiles uses a 22 mph field average", () => {
 test("wrapIndex cycles the rolodex", () => {
   assert.equal(wrapIndex(0, -1, 4), 3);
   assert.equal(wrapIndex(3, 1, 4), 0);
+});
+
+test("clampIndex keeps the tumbler on a real job", () => {
+  assert.equal(clampIndex(2, 3), 2);
+  assert.equal(clampIndex(9, 3), 2);
+  assert.equal(clampIndex(-1, 3), 0);
+  assert.equal(clampIndex(0, 0), 0);
 });
 
 test("clockLabel maps crew status to dispatch copy", () => {

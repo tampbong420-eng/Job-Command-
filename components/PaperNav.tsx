@@ -11,7 +11,7 @@ export default function PaperNav({
         [
           ["jobs", "Cards"],
           ["estimates", "Estimates"],
-          ["timecards", "Time cards"],
+          ["timecards", "Hours"],
         ] as const
       ).map(([id, label]) => (
         <button

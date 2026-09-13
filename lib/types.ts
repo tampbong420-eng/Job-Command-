@@ -5,6 +5,18 @@ export type Role = "employee" | "boss";
 export type NavTab = "command" | "jobs" | "profile" | "settings";
 export type ShopView = "command" | "hours" | "jobs" | "estimates" | "timecards";
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type PayCadence = "weekly" | "biweekly" | "semimonthly";
+export type TimesheetStatus = "open" | "flagged" | "approved" | "locked";
+export type PayAuditAction =
+  | "create"
+  | "edit"
+  | "flag"
+  | "unflag"
+  | "approve"
+  | "unapprove"
+  | "lock"
+  | "punch_in"
+  | "punch_out";
 
 export type DaySchedule = {
   day: Weekday;
@@ -26,6 +38,10 @@ export type CrewMember = {
   weeklyHoursTarget: number;
   weeklyHoursLogged: number;
   hourlyRate: number;
+  overtimeMultiplier: number;
+  payCadence: PayCadence;
+  unpaidBreakMinutes: number;
+  costCode: string;
   weeklySchedule: DaySchedule[];
   lat: number | null;
   lng: number | null;
@@ -78,6 +94,35 @@ export type TimeCard = {
   hours: number;
   date: string;
   notes: string;
+  clockIn?: string | null;
+  clockOut?: string | null;
+  breakMinutes?: number | null;
+  costCode?: string;
+  flagged?: boolean;
+};
+
+export type Timesheet = {
+  id: string;
+  employeeId: string;
+  periodStart: string;
+  periodEnd: string;
+  status: TimesheetStatus;
+  approvedAt: string | null;
+  lockedAt: string | null;
+};
+
+export type PayAudit = {
+  id: string;
+  timesheetId: string;
+  entryId: string | null;
+  at: string;
+  action: PayAuditAction;
+  detail: string;
+};
+
+export type CostCode = {
+  id: string;
+  label: string;
 };
 
 export type ShopMessage = {
