@@ -755,7 +755,15 @@ export function refreshStaleShifts(
       return row.day === map[dow];
     });
     const start = day && !day.off ? day.start : "07:00";
-    return { ...member, startedAt: shiftStartIso(today, start) };
+    const startedAt = shiftStartIso(today, start);
+    const startMs = Date.parse(startedAt);
+    return {
+      ...member,
+      startedAt:
+        Number.isFinite(startMs) && startMs > now.getTime()
+          ? new Date(Math.max(0, now.getTime() - 2 * 3_600_000)).toISOString()
+          : startedAt,
+    };
   });
 
   for (const member of nextCrew) {
