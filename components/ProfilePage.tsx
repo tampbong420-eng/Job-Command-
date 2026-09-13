@@ -1,7 +1,6 @@
 "use client";
 
 import PayScheduleEditor from "@/components/PayScheduleEditor";
-import { assignedJobs } from "@/lib/assign";
 import { clockLabel, formatClockTime, initials, money } from "@/lib/format";
 import {
   CADENCE_LABEL,
@@ -19,7 +18,6 @@ import { WEEKDAY_SHORT } from "@/lib/schedule";
 import type {
   CrewMember,
   DaySchedule,
-  Estimate,
   Job,
   PayAudit,
   PayAuditAction,
@@ -43,7 +41,6 @@ const TOOLS: { id: DeskTool; label: string }[] = [
 export default function ProfilePage({
   member,
   jobs,
-  estimates,
   timeCards,
   timesheets = [],
   payAudits = [],
@@ -61,7 +58,6 @@ export default function ProfilePage({
 }: {
   member: CrewMember;
   jobs: Job[];
-  estimates: Estimate[];
   timeCards: TimeCard[];
   timesheets?: Timesheet[];
   payAudits?: PayAudit[];
@@ -95,52 +91,61 @@ export default function ProfilePage({
         <strong>Pay.</strong>
       </h1>
       <p className="board-copy">
-        One person at a time. Use the menus to schedule, keep pay history, read the log, or extract a record.
+        {role === "employee"
+          ? "Your rate, posted week, paycheck, history, log, and extract."
+          : `${roster.length} employees on this shop. Tap a name, then a tool.`}
       </p>
 
-      <div className="desk-picks">
-        <label className="pay-rate-field">
-          Employee
-          <select
-            className="pay-cadence"
-            value={selected.id}
-            disabled={role === "employee"}
-            aria-label="Select employee"
-            onChange={(event) => {
-              onSelectEmployee(event.target.value);
-              setTool("pay");
-            }}
-          >
-            {roster.map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.name} · {row.role}
-              </option>
-            ))}
-          </select>
-        </label>
+      {role === "boss" && (
+        <div className="crew-picker" role="listbox" aria-label="Employees">
+          {roster.map((row) => (
+            <button
+              key={row.id}
+              type="button"
+              role="option"
+              className={`crew-pick${row.id === selected.id ? " on" : ""}`}
+              aria-selected={row.id === selected.id}
+              aria-label={`${row.name}, ${row.role}`}
+              onClick={() => {
+                onSelectEmployee(row.id);
+                setTool("pay");
+              }}
+            >
+              <span className={`crew-photo duty-${row.status}`}>
+                {row.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={row.photoUrl} alt="" />
+                ) : (
+                  <span className="initials">{initials(row.name)}</span>
+                )}
+              </span>
+              <b>{row.name.split(" ")[0]}</b>
+              <small>{row.role}</small>
+            </button>
+          ))}
+        </div>
+      )}
 
-        <label className="pay-rate-field">
-          Desk tool
-          <select
-            className="pay-cadence"
-            value={tool}
-            aria-label="Pay desk tool"
-            onChange={(event) => setTool(event.target.value as DeskTool)}
-          >
-            {TOOLS.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <label className="pay-rate-field">
+        Desk tool
+        <select
+          className="pay-cadence"
+          value={tool}
+          aria-label="Pay desk tool"
+          onChange={(event) => setTool(event.target.value as DeskTool)}
+        >
+          {TOOLS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <EmployeeDesk
         key={selected.id}
         member={selected}
         jobs={jobs}
-        estimates={estimates}
         timeCards={timeCards}
         timesheets={timesheets}
         payAudits={payAudits}
@@ -170,7 +175,6 @@ export default function ProfilePage({
 function EmployeeDesk({
   member,
   jobs,
-  estimates,
   timeCards,
   timesheets,
   payAudits,
@@ -184,7 +188,6 @@ function EmployeeDesk({
 }: {
   member: CrewMember;
   jobs: Job[];
-  estimates: Estimate[];
   timeCards: TimeCard[];
   timesheets: Timesheet[];
   payAudits: PayAudit[];
@@ -214,13 +217,32 @@ function EmployeeDesk({
   const log = payAudits
     .filter((row) => row.timesheetId.startsWith(`${member.id}:`))
     .slice(0, 16);
-  const stops = assignedJobs(jobs, member.id);
-  const quotes = estimates.filter((row) => {
-    const job = jobs.find((item) => item.id === row.jobId);
-    return job?.workerId === member.id;
-  }).length;
-  const [copied, setCopied] = useState(false);
+  const [fileNote, setFileNote] = useState<string | null>(null);
   const extract = extractPayRecords(member, timeCards, jobs, onDate, timesheets);
+  const fileName = `${member.name.toLowerCase().replaceAll(" ", "-")}-hours-${onDate}.csv`;
+
+  async function downloadHours() {
+    const file = new File([extract], fileName, { type: "text/csv" });
+    try {
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `${member.name} hours`,
+        });
+        setFileNote("Hours file sent");
+        return;
+      }
+    } catch {
+      // Fall through to a local download if share is cancelled or missing.
+    }
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+    setFileNote("Hours file downloaded");
+  }
 
   return (
     <article className="plate profile-card pay-card">
@@ -236,12 +258,12 @@ function EmployeeDesk({
         <div className="rolodex-copy">
           <p className="card-label">{member.role}</p>
           <h2>{member.name}</h2>
+          <span className={`status-pill ${member.status}`}>
+            <span className="status-dot" />
+            {clockLabel(member.status)}
+          </span>
           <p>{member.phone}</p>
         </div>
-        <span className={`status-pill ${member.status}`}>
-          <span className="status-dot" />
-          {clockLabel(member.status)}
-        </span>
       </div>
 
       {tool === "pay" && (
@@ -313,15 +335,6 @@ function EmployeeDesk({
               : ""}{" "}
             = <strong>{money(pay.grossPay)}</strong>
           </p>
-          <p className="board-copy">
-            {stops.length === 0
-              ? "No active jobs locked"
-              : stops
-                  .map((job) => `#${job.routeOrder ?? "—"} ${job.customerName}`)
-                  .join(" · ")}
-            {" · "}
-            {quotes} estimate{quotes === 1 ? "" : "s"}
-          </p>
         </>
       )}
 
@@ -350,6 +363,9 @@ function EmployeeDesk({
 
       {tool === "history" && (
         <>
+          <button type="button" className="ghost-action hours" onClick={downloadHours}>
+            {fileNote ?? "Download hours file"}
+          </button>
           <p className="metric-label">Paychecks</p>
           <ol className="record-list">
             {history.map((row) => {
@@ -417,21 +433,10 @@ function EmployeeDesk({
       {tool === "extract" && (
         <>
           <p className="board-copy">
-            A keep-file for this person: pay periods, timesheet status, and punches. Copy it off the phone when you need a record.
+            Same hours file payroll apps download: periods, regular, OT, gross, and punches.
           </p>
-          <button
-            type="button"
-            className="ghost-action hours"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(extract);
-                setCopied(true);
-              } catch {
-                setCopied(false);
-              }
-            }}
-          >
-            {copied ? "Copied pay extract" : "Copy pay extract"}
+          <button type="button" className="ghost-action hours" onClick={downloadHours}>
+            {fileNote ?? "Download hours file"}
           </button>
           <pre className="extract-box">{extract}</pre>
         </>

@@ -72,12 +72,12 @@ export default function CrewRolodex({
         <div className="rolodex-copy">
           <p className="card-label">{member.role}</p>
           <h2>{member.name}</h2>
+          <span className={`status-pill ${member.status}`} aria-live="polite">
+            <span className="status-dot" />
+            {clockLabel(member.status)}
+          </span>
           <p>{member.id.toUpperCase()}</p>
         </div>
-        <span className={`status-pill ${member.status}`} aria-live="polite">
-          <span className="status-dot" />
-          {clockLabel(member.status)}
-        </span>
         <button
           type="button"
           className="tumbler-step rolodex-step"
