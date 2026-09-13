@@ -1,11 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  appendPayAudit,
   calculateEmployeePeriod,
   editTimeCard,
+  extractPayRecords,
   grossPay,
   netEntryHours,
   payPeriodFor,
+  paycheckHistory,
   setTimesheetStatus,
   splitRegularOvertime,
   togglePunch,
@@ -237,4 +240,83 @@ test("scheduledPaycheck pays the posted week at that employee's rate", () => {
   assert.equal(check.regularHours, 32);
   assert.equal(check.overtimeHours, 0);
   assert.equal(check.grossPay, 1344);
+});
+
+test("appendPayAudit keeps a rate change on that employee's timesheet", () => {
+  const next = appendPayAudit(
+    [],
+    mike,
+    "rate",
+    "Hourly rate set to 50",
+    "2026-09-12",
+    "2026-09-12T18:00:00.000Z",
+  );
+  assert.equal(next[0].action, "rate");
+  assert.equal(next[0].timesheetId, "e-mike:2026-09-07");
+  assert.match(next[0].detail, /50/);
+});
+
+test("paycheckHistory lists this check plus earlier punch weeks", () => {
+  const cards: TimeCard[] = [
+    {
+      id: "this",
+      employeeId: "e-mike",
+      jobId: "c-northline",
+      hours: 8,
+      date: "2026-09-08",
+      notes: "",
+    },
+    {
+      id: "prior",
+      employeeId: "e-mike",
+      jobId: "c-northline",
+      hours: 40,
+      date: "2026-08-31",
+      notes: "",
+    },
+  ];
+  const history = paycheckHistory(mike, cards, "2026-09-12");
+  assert.ok(history.length >= 2);
+  assert.equal(history[0].periodStart, "2026-09-07");
+  assert.equal(history[1].periodStart, "2026-08-31");
+  assert.equal(history[0].netHours, 8);
+  assert.equal(history[1].netHours, 40);
+});
+
+test("extractPayRecords writes a keep file with periods and punches", () => {
+  const cards: TimeCard[] = [
+    {
+      id: "this",
+      employeeId: "e-mike",
+      jobId: "c-northline",
+      hours: 8,
+      date: "2026-09-08",
+      notes: "Unit 4B coil",
+      clockIn: "2026-09-08T14:00:00.000Z",
+      clockOut: "2026-09-08T22:00:00.000Z",
+    },
+  ];
+  const raw = extractPayRecords(
+    mike,
+    cards,
+    [{ id: "c-northline", jobTitle: "Northline coil" }],
+    "2026-09-12",
+    [
+      {
+        id: "e-mike:2026-09-07",
+        employeeId: "e-mike",
+        periodStart: "2026-09-07",
+        periodEnd: "2026-09-13",
+        status: "locked",
+        approvedAt: "2026-09-12T18:00:00.000Z",
+        lockedAt: "2026-09-12T18:05:00.000Z",
+      },
+    ],
+  );
+  assert.match(raw, /JOB COMMAND PAY EXTRACT/);
+  assert.match(raw, /Mike Reyes/);
+  assert.match(raw, /PERIOD START,PERIOD END,STATUS/);
+  assert.match(raw, /locked/);
+  assert.match(raw, /Northline coil/);
+  assert.match(raw, /Unit 4B coil/);
 });

@@ -2,15 +2,18 @@
 
 import PayScheduleEditor from "@/components/PayScheduleEditor";
 import { assignedJobs } from "@/lib/assign";
-import { clockLabel, initials, money } from "@/lib/format";
+import { clockLabel, formatClockTime, initials, money } from "@/lib/format";
 import {
   CADENCE_LABEL,
   calculateEmployeePeriod,
+  extractPayRecords,
+  findSheet,
   formatHours,
   localYmd,
   paySummaryLine,
+  paycheckHistory,
+  periodLabel,
   scheduledPaycheck,
-  shopPayroll,
 } from "@/lib/payroll";
 import { WEEKDAY_SHORT } from "@/lib/schedule";
 import type {
@@ -18,16 +21,32 @@ import type {
   DaySchedule,
   Estimate,
   Job,
+  PayAudit,
+  PayAuditAction,
   PayCadence,
   ShopMessage,
   TimeCard,
+  Timesheet,
 } from "@/lib/types";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+
+type DeskTool = "pay" | "schedule" | "history" | "log" | "extract";
+
+const TOOLS: { id: DeskTool; label: string }[] = [
+  { id: "pay", label: "Paycheck" },
+  { id: "schedule", label: "Schedule" },
+  { id: "history", label: "History" },
+  { id: "log", label: "Log" },
+  { id: "extract", label: "Extract" },
+];
 
 export default function ProfilePage({
+  member,
   jobs,
   estimates,
   timeCards,
+  timesheets = [],
+  payAudits = [],
   crew,
   role,
   employeeId,
@@ -35,6 +54,7 @@ export default function ProfilePage({
   onHourlyRate,
   onPaySchedule,
   onPayCadence,
+  onPayNote,
   messages,
   unread,
   onBroadcast,
@@ -43,6 +63,8 @@ export default function ProfilePage({
   jobs: Job[];
   estimates: Estimate[];
   timeCards: TimeCard[];
+  timesheets?: Timesheet[];
+  payAudits?: PayAudit[];
   crew: CrewMember[];
   role: "employee" | "boss";
   employeeId: string;
@@ -50,17 +72,19 @@ export default function ProfilePage({
   onHourlyRate?: (id: string, rate: number) => void;
   onPaySchedule?: (id: string, schedule: DaySchedule[]) => void;
   onPayCadence?: (id: string, cadence: PayCadence) => void;
+  onPayNote?: (id: string, action: PayAuditAction, detail: string) => void;
   messages?: ShopMessage[];
   unread?: boolean;
   onBroadcast?: (body: string) => void;
 }) {
   const canEdit = role === "boss" && Boolean(onHourlyRate && onPaySchedule);
-  const onDate = localYmd();
-  const payroll = useMemo(
-    () => shopPayroll(crew, timeCards, onDate),
-    [crew, timeCards, onDate],
-  );
   const roster = role === "employee" ? crew.filter((row) => row.id === employeeId) : crew;
+  const selectedId = role === "employee" ? employeeId : member.id;
+  const selected = roster.find((row) => row.id === selectedId) ?? roster[0];
+  const [tool, setTool] = useState<DeskTool>("pay");
+  const onDate = localYmd();
+
+  if (!selected) return null;
 
   return (
     <section className="page jobs-board">
@@ -68,34 +92,69 @@ export default function ProfilePage({
       <h1>
         {role === "employee" ? "My" : "Employee"}
         <br />
-        <strong>{role === "employee" ? "Pay." : "Pay cards."}</strong>
+        <strong>Pay.</strong>
       </h1>
       <p className="board-copy">
-        {role === "employee"
-          ? "Your rate, posted week, and this period’s paycheck."
-          : "Every card is that person’s rate, week, and paycheck. Change Dana, Sam, Liv, or Mike on their own card — not just the one on Main Command."}
+        One person at a time. Use the menus to schedule, keep pay history, read the log, or extract a record.
       </p>
-      {role === "boss" && (
-        <p className="payroll-total">
-          <span>Shop paycheck this period</span>
-          <b>{money(payroll.grossPay)}</b>
-        </p>
-      )}
-      {roster.map((row) => (
-        <EmployeePayCard
-          key={row.id}
-          member={row}
-          jobs={jobs}
-          estimates={estimates}
-          timeCards={timeCards}
-          onDate={onDate}
-          canEdit={canEdit}
-          onFocus={() => onSelectEmployee(row.id)}
-          onHourlyRate={(rate) => onHourlyRate?.(row.id, rate)}
-          onPaySchedule={(schedule) => onPaySchedule?.(row.id, schedule)}
-          onPayCadence={(cadence) => onPayCadence?.(row.id, cadence)}
-        />
-      ))}
+
+      <div className="desk-picks">
+        <label className="pay-rate-field">
+          Employee
+          <select
+            className="pay-cadence"
+            value={selected.id}
+            disabled={role === "employee"}
+            aria-label="Select employee"
+            onChange={(event) => {
+              onSelectEmployee(event.target.value);
+              setTool("pay");
+            }}
+          >
+            {roster.map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.name} · {row.role}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="pay-rate-field">
+          Desk tool
+          <select
+            className="pay-cadence"
+            value={tool}
+            aria-label="Pay desk tool"
+            onChange={(event) => setTool(event.target.value as DeskTool)}
+          >
+            {TOOLS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <EmployeeDesk
+        key={selected.id}
+        member={selected}
+        jobs={jobs}
+        estimates={estimates}
+        timeCards={timeCards}
+        timesheets={timesheets}
+        payAudits={payAudits}
+        onDate={onDate}
+        tool={tool}
+        canEdit={canEdit}
+        onHourlyRate={(rate) => onHourlyRate?.(selected.id, rate)}
+        onPaySchedule={(schedule) => onPaySchedule?.(selected.id, schedule)}
+        onPayCadence={(cadence) => onPayCadence?.(selected.id, cadence)}
+        onRateLogged={(rate) =>
+          onPayNote?.(selected.id, "rate", `Hourly rate set to ${rate}`)
+        }
+      />
+
       {onBroadcast && (
         <RadioBox
           messages={messages ?? []}
@@ -108,37 +167,60 @@ export default function ProfilePage({
   );
 }
 
-function EmployeePayCard({
+function EmployeeDesk({
   member,
   jobs,
   estimates,
   timeCards,
+  timesheets,
+  payAudits,
   onDate,
+  tool,
   canEdit,
-  onFocus,
   onHourlyRate,
   onPaySchedule,
   onPayCadence,
+  onRateLogged,
 }: {
   member: CrewMember;
   jobs: Job[];
   estimates: Estimate[];
   timeCards: TimeCard[];
+  timesheets: Timesheet[];
+  payAudits: PayAudit[];
   onDate: string;
+  tool: DeskTool;
   canEdit: boolean;
-  onFocus: () => void;
   onHourlyRate: (rate: number) => void;
   onPaySchedule: (schedule: DaySchedule[]) => void;
   onPayCadence: (cadence: PayCadence) => void;
+  onRateLogged: (rate: number) => void;
 }) {
-  const [open, setOpen] = useState(true);
   const pay = calculateEmployeePeriod(member, timeCards, onDate);
   const posted = scheduledPaycheck(member);
+  const lastLoggedRate = useRef(member.hourlyRate);
+  const history = useMemo(
+    () => paycheckHistory(member, timeCards, onDate),
+    [member, timeCards, onDate],
+  );
+  const punches = useMemo(
+    () =>
+      timeCards
+        .filter((row) => row.employeeId === member.id)
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 10),
+    [member.id, timeCards],
+  );
+  const log = payAudits
+    .filter((row) => row.timesheetId.startsWith(`${member.id}:`))
+    .slice(0, 16);
   const stops = assignedJobs(jobs, member.id);
   const quotes = estimates.filter((row) => {
     const job = jobs.find((item) => item.id === row.jobId);
     return job?.workerId === member.id;
   }).length;
+  const [copied, setCopied] = useState(false);
+  const extract = extractPayRecords(member, timeCards, jobs, onDate, timesheets);
 
   return (
     <article className="plate profile-card pay-card">
@@ -162,118 +244,198 @@ function EmployeePayCard({
         </span>
       </div>
 
-      <div className="paycheck-box">
-        <p className="metric-label">{CADENCE_LABEL[pay.cadence]} paycheck</p>
-        <b>{money(pay.grossPay)}</b>
-        <span>{paySummaryLine(pay)}</span>
-        {pay.openPunch && (
-          <small>Live clock-in is still counting on this check.</small>
-        )}
-      </div>
+      {tool === "pay" && (
+        <>
+          <div className="paycheck-box">
+            <p className="metric-label">{CADENCE_LABEL[pay.cadence]} paycheck</p>
+            <b>{money(pay.grossPay)}</b>
+            <span>{paySummaryLine(pay)}</span>
+            <small>
+              {periodLabel(pay.periodStart, pay.periodEnd)}
+              {pay.openPunch ? " · live clock-in still counting" : ""}
+            </small>
+          </div>
+          <div className="pay-strip">
+            <div className="live-chip">
+              <p className="metric-label">Worked</p>
+              <b>
+                {formatHours(pay.netHours)} / {formatHours(posted.plannedHours)}
+              </b>
+            </div>
+            <div className="live-chip">
+              <p className="metric-label">If posted week</p>
+              <b>{money(posted.grossPay)}</b>
+            </div>
+          </div>
+          <div className="pay-tools">
+            <label className="pay-rate-field">
+              Hourly rate
+              <span>
+                $
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.25"
+                  value={Number.isFinite(member.hourlyRate) ? member.hourlyRate : 0}
+                  disabled={!canEdit}
+                  aria-label={`${member.name} hourly rate`}
+                  onChange={(event) => onHourlyRate(Number(event.target.value))}
+                  onBlur={(event) => {
+                    const rate = Number(event.target.value);
+                    if (!Number.isFinite(rate) || rate === lastLoggedRate.current) return;
+                    lastLoggedRate.current = rate;
+                    onRateLogged(rate);
+                  }}
+                />
+                /hr
+              </span>
+            </label>
+            <label className="pay-rate-field">
+              How they get paid
+              <select
+                className="pay-cadence"
+                value={member.payCadence ?? "weekly"}
+                disabled={!canEdit}
+                aria-label={`${member.name} pay cadence`}
+                onChange={(event) => onPayCadence(event.target.value as PayCadence)}
+              >
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-weekly</option>
+                <option value="semimonthly">Semi-monthly</option>
+              </select>
+            </label>
+          </div>
+          <p className="board-copy tight">
+            {formatHours(pay.regularHours)} × {money(member.hourlyRate)}
+            {pay.overtimeHours > 0
+              ? ` + ${formatHours(pay.overtimeHours)} OT at ${member.overtimeMultiplier || 1.5}×`
+              : ""}{" "}
+            = <strong>{money(pay.grossPay)}</strong>
+          </p>
+          <p className="board-copy">
+            {stops.length === 0
+              ? "No active jobs locked"
+              : stops
+                  .map((job) => `#${job.routeOrder ?? "—"} ${job.customerName}`)
+                  .join(" · ")}
+            {" · "}
+            {quotes} estimate{quotes === 1 ? "" : "s"}
+          </p>
+        </>
+      )}
 
-      <div className="pay-strip">
-        <div className="live-chip">
-          <p className="metric-label">Worked</p>
-          <b>
-            {formatHours(pay.netHours)} / {formatHours(posted.plannedHours)}
-          </b>
-        </div>
-        <div className="live-chip">
-          <p className="metric-label">If they work the posted week</p>
-          <b>{money(posted.grossPay)}</b>
-        </div>
-      </div>
-
-      <div className="schedule-overview">
-        <p className="metric-label">Posted week</p>
-        <div className="week-strip" aria-hidden="true">
-          {member.weeklySchedule.map((day) => (
-            <span key={day.day} className={day.off ? "off" : "on"}>
-              {WEEKDAY_SHORT[day.day]}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="pay-tools">
-        <label className="pay-rate-field">
-          {member.name.split(" ")[0]}’s hourly rate
-          <span>
-            $
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.25"
-              value={Number.isFinite(member.hourlyRate) ? member.hourlyRate : 0}
-              disabled={!canEdit}
-              aria-label={`${member.name} hourly rate`}
-              onFocus={onFocus}
-              onChange={(event) => onHourlyRate(Number(event.target.value))}
-            />
-            /hr
-          </span>
-        </label>
-        <label className="pay-rate-field">
-          Pay schedule
-          <select
-            className="pay-cadence"
-            value={member.payCadence ?? "weekly"}
-            disabled={!canEdit}
-            aria-label={`${member.name} pay schedule`}
-            onFocus={onFocus}
-            onChange={(event) => onPayCadence(event.target.value as PayCadence)}
-          >
-            <option value="weekly">Weekly</option>
-            <option value="biweekly">Bi-weekly</option>
-            <option value="semimonthly">Semi-monthly</option>
-          </select>
-        </label>
-      </div>
-
-      <button
-        type="button"
-        className="ghost-action hours"
-        aria-expanded={open}
-        onClick={() => {
-          onFocus();
-          setOpen((value) => !value);
-        }}
-      >
-        {open ? "Hide" : "Edit"} {member.name.split(" ")[0]}’s week
-      </button>
-
-      {open && (
-        <div className="pay-editor">
+      {tool === "schedule" && (
+        <>
+          <div className="schedule-overview">
+            <p className="metric-label">Posted week</p>
+            <div className="week-strip" aria-hidden="true">
+              {member.weeklySchedule.map((day) => (
+                <span key={day.day} className={day.off ? "off" : "on"}>
+                  {WEEKDAY_SHORT[day.day]}
+                </span>
+              ))}
+            </div>
+          </div>
           <p className="metric-label">
-            {canEdit
-              ? `Change ${member.name.split(" ")[0]}’s days and hours`
-              : "Posted days and hours"}
+            {canEdit ? `Change ${member.name.split(" ")[0]}’s days` : "Posted days"}
           </p>
           <PayScheduleEditor
             schedule={member.weeklySchedule}
             readOnly={!canEdit}
             onChange={onPaySchedule}
           />
-        </div>
+        </>
       )}
 
-      <p className="board-copy tight">
-        {formatHours(pay.regularHours)} × {money(member.hourlyRate)}
-        {pay.overtimeHours > 0
-          ? ` + ${formatHours(pay.overtimeHours)} OT × ${money(member.hourlyRate)} × ${member.overtimeMultiplier || 1.5}`
-          : ""}{" "}
-        = <strong>{money(pay.grossPay)}</strong>
-      </p>
-      <p className="board-copy">
-        {stops.length === 0
-          ? "No active jobs locked"
-          : stops
-              .map((job) => `#${job.routeOrder ?? "—"} ${job.customerName}`)
-              .join(" · ")}
-        {" · "}
-        {quotes} estimate{quotes === 1 ? "" : "s"}
-      </p>
+      {tool === "history" && (
+        <>
+          <p className="metric-label">Paychecks</p>
+          <ol className="record-list">
+            {history.map((row) => {
+              const status =
+                findSheet(timesheets, member.id, row.periodStart)?.status ?? "open";
+              return (
+                <li key={row.periodStart} className="record-row">
+                  <span>
+                    {periodLabel(row.periodStart, row.periodEnd)}
+                    <small>
+                      {status.toUpperCase()} · {paySummaryLine(row)}
+                    </small>
+                  </span>
+                  <b>{money(row.grossPay)}</b>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="metric-label">Punches</p>
+          <ol className="record-list">
+            {punches.length === 0 ? (
+              <li className="board-copy">No punches kept for {member.name.split(" ")[0]} yet.</li>
+            ) : (
+              punches.map((row) => {
+                const job = jobs.find((item) => item.id === row.jobId);
+                return (
+                  <li key={row.id} className="record-row punch">
+                    <span>
+                      {row.date}
+                      <small>
+                        {row.clockIn
+                          ? `${formatClockTime(row.clockIn)}–${row.clockOut ? formatClockTime(row.clockOut) : "LIVE"}`
+                          : `${row.hours}h entry`}
+                        {job ? ` · ${job.jobTitle}` : ""}
+                      </small>
+                    </span>
+                    <b>{formatHours(row.hours || 0)}</b>
+                  </li>
+                );
+              })
+            )}
+          </ol>
+        </>
+      )}
+
+      {tool === "log" && (
+        <ol className="record-list">
+          {log.length === 0 ? (
+            <li className="board-copy">No pay log yet for {member.name.split(" ")[0]}.</li>
+          ) : (
+            log.map((row) => (
+              <li key={row.id} className="record-row">
+                <span>
+                  {row.action.replaceAll("_", " ")}
+                  <small>
+                    {new Date(row.at).toLocaleString()} · {row.detail}
+                  </small>
+                </span>
+              </li>
+            ))
+          )}
+        </ol>
+      )}
+
+      {tool === "extract" && (
+        <>
+          <p className="board-copy">
+            A keep-file for this person: pay periods, timesheet status, and punches. Copy it off the phone when you need a record.
+          </p>
+          <button
+            type="button"
+            className="ghost-action hours"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(extract);
+                setCopied(true);
+              } catch {
+                setCopied(false);
+              }
+            }}
+          >
+            {copied ? "Copied pay extract" : "Copy pay extract"}
+          </button>
+          <pre className="extract-box">{extract}</pre>
+        </>
+      )}
     </article>
   );
 }
@@ -290,6 +452,14 @@ function RadioBox({
   onBroadcast: (body: string) => void;
 }) {
   const [body, setBody] = useState("");
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button type="button" className="ghost-action" onClick={() => setOpen(true)}>
+        Crew radio
+      </button>
+    );
+  }
   return (
     <article className="plate settings-card">
       <p className="card-label">Crew radio</p>
