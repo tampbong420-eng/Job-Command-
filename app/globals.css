@@ -2193,7 +2193,38 @@ label.ghost-action {
   text-transform: none;
   letter-spacing: 0;
   font-family: var(--font-sans), "IBM Plex Sans", system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
+}
+
+.paycheck-box {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--boss-edge);
+  background: #4ade8014;
+}
+
+.paycheck-box b {
+  color: var(--lime);
+  font-family: var(--font-display), Oswald, sans-serif;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.paycheck-box span,
+.paycheck-box small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pay-tools {
+  display: grid;
+  gap: 10px;
+}
+
+.pay-card .ghost-action.hours {
+  width: 100%;
 }
 
 .pay-entry {

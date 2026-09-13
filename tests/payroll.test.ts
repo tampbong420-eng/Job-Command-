@@ -11,6 +11,7 @@ import {
   togglePunch,
   weekStartMonday,
   refreshStaleShifts,
+  scheduledPaycheck,
 } from "../lib/payroll";
 import { weekdayHours } from "../lib/schedule";
 import type { CrewMember, TimeCard } from "../lib/types";
@@ -223,4 +224,17 @@ test("refreshStaleShifts closes yesterday's open punches and starts today", () =
   assert.ok((closed?.hours ?? 0) > 0);
   assert.equal(live?.clockOut, null);
   assert.equal(result.crew[0]?.startedAt?.slice(0, 10), today);
+});
+
+test("scheduledPaycheck pays the posted week at that employee's rate", () => {
+  const dana: CrewMember = {
+    ...mike,
+    hourlyRate: 42,
+    weeklySchedule: weekdayHours("08:00", "16:00", ["mon", "tue", "wed", "thu"]),
+  };
+  const check = scheduledPaycheck(dana);
+  assert.equal(check.plannedHours, 32);
+  assert.equal(check.regularHours, 32);
+  assert.equal(check.overtimeHours, 0);
+  assert.equal(check.grossPay, 1344);
 });

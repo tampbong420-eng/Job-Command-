@@ -805,6 +805,11 @@ export default function JobCommandApp() {
               crew: updateWeeklySchedule(getShopSnapshot().crew, id, schedule),
             });
           }}
+          onPayCadence={(id, cadence) => {
+            patchShop({
+              crew: updatePayConfig(getShopSnapshot().crew, id, { payCadence: cadence }),
+            });
+          }}
           messages={messages}
           unread={unreadPage}
           onBroadcast={(body) =>

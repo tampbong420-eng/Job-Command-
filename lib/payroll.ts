@@ -1,4 +1,5 @@
 import { money } from "./format";
+import { scheduledHours } from "./schedule";
 import type {
   CrewMember,
   PayAudit,
@@ -417,6 +418,21 @@ export function paySummaryLine(row: EmployeePeriodPay): string {
     return `${formatHours(row.regularHours)} reg + ${formatHours(row.overtimeHours)} OT · ${money(row.grossPay)}`;
   }
   return `${formatHours(row.netHours)} · ${money(row.grossPay)}`;
+}
+
+export function scheduledPaycheck(member: CrewMember) {
+  const planned = scheduledHours(member.weeklySchedule);
+  const split = splitRegularOvertime(planned, DEFAULT_OT_AFTER);
+  return {
+    plannedHours: planned,
+    ...split,
+    ...grossPay(
+      split.regularHours,
+      split.overtimeHours,
+      member.hourlyRate,
+      member.overtimeMultiplier || DEFAULT_OT_MULTIPLIER,
+    ),
+  };
 }
 
 export function periodLabel(start: string, end: string): string {
