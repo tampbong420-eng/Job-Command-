@@ -2,9 +2,12 @@ import { ActiveJobsCrew } from "@/components/active-jobs-crew";
 import { CommandDeck } from "@/components/command-deck";
 import { getReadyDb } from "@/db";
 import { requireUser } from "@/lib/auth";
+import { PRIMARY_SCREENS } from "@/lib/primary-screens";
 import { listActiveCrewJobs } from "@/lib/services/crew";
 
-export const metadata = { title: "Active jobs & crew" };
+const crewScreen = PRIMARY_SCREENS.find((item) => item.id === "crew");
+
+export const metadata = { title: crewScreen?.label ?? "Active Jobs" };
 
 export default async function ActiveCrewPage() {
   const user = await requireUser();
@@ -14,8 +17,8 @@ export default async function ActiveCrewPage() {
   return (
     <CommandDeck
       kicker="01"
-      title="Active jobs & crew"
-      hint="Staffed work, maps, and live crew"
+      title={crewScreen?.label ?? "Active Jobs"}
+      hint={crewScreen?.hint}
     >
       <ActiveJobsCrew initial={jobs} />
     </CommandDeck>

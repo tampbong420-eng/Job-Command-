@@ -67,6 +67,7 @@ describe("home pad screens", () => {
     expect(PRIMARY_SCREENS).toHaveLength(6);
     expect(PRIMARY_SCREENS.filter((item) => item.ready)).toHaveLength(1);
     expect(PRIMARY_SCREENS[0]?.href).toBe("/command/crew");
+    expect(PRIMARY_SCREENS[0]?.label).toBe("Active Jobs");
   });
 
   it("gives active jobs the logo lime and keeps each box on the gold-orange theme", () => {

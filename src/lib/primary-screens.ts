@@ -65,9 +65,9 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
   {
     id: "crew",
     href: "/command/crew",
-    label: "Active jobs & crew",
+    label: "Active Jobs",
     short: "Jobs",
-    hint: "Staffed work, maps, and live crew",
+    hint: "On-site work, maps, and live crew",
     ready: true,
     tone: "lime",
   },
