@@ -105,29 +105,29 @@ async function seedCoreDemo(db: AppDb) {
   await db.insert(customers).values([
     {
       id: northId,
-      name: "Northwind Logistics",
-      email: "ops@northwind.example",
-      phone: "555-2001",
-      address: "410 Dockside Ave, Oakland, CA",
-      notes: "Preferred window 07:00–11:00. Badge required at gate.",
+      name: "Kim Rhodes",
+      email: "kim@rhodes.example",
+      phone: "501-555-2001",
+      address: "410 Spring St, Hot Springs, AR",
+      notes: "Dogs in the backyard. Park on the street.",
       createdByUserId: dispatcherId,
     },
     {
       id: harborId,
-      name: "Harbor Medical Group",
-      email: "facilities@harbor.example",
-      phone: "555-2002",
-      address: "88 Embarcadero, San Francisco, CA",
-      notes: "HIPAA site. Sign in at security desk.",
+      name: "Cedar Glade Church",
+      email: "office@cedarglade.example",
+      phone: "501-555-2002",
+      address: "88 Central Ave, Hot Springs, AR",
+      notes: "Side door by the fellowship hall.",
       createdByUserId: dispatcherId,
     },
     {
       id: loftId,
-      name: "Loft & Beam Interiors",
-      email: "studio@loftbeam.example",
-      phone: "555-2003",
-      address: "19 Valencia St, San Francisco, CA",
-      notes: "After-hours access code in job notes.",
+      name: "Jordan Ellis",
+      email: "jordan@ellis.example",
+      phone: "501-555-2003",
+      address: "1821 Central Ave, Hot Springs, AR",
+      notes: "Storefront. After-hours key in the job notes.",
       createdByUserId: adminId,
     },
   ]);
@@ -139,76 +139,76 @@ async function seedCoreDemo(db: AppDb) {
     {
       id: "job_dock_cooler",
       jobNumber: 1001,
-      title: "Replace dock cooler compressor",
-      description: "Unit 3 is cycling off. Swap compressor and log refrigerant recovery.",
+      title: "House exterior and soffits",
+      description: "Duration on siding, trim, and soffits. Accessible Beige.",
       status: "in_progress",
       priority: "high",
       customerId: northId,
       assignedToUserId: techId,
       scheduledAt: laterToday,
-      location: "Dock 3 mechanical room",
-      trade: "Service",
+      location: "410 Spring St, Hot Springs, AR",
+      trade: "Exterior",
       contractCents: 1840000,
       createdByUserId: dispatcherId,
     },
     {
       id: "job_clinic_hvac",
       jobNumber: 1002,
-      title: "HVAC filter and intake inspection",
-      description: "Quarterly PM for clinic wing B. Photograph filter condition.",
+      title: "Sanctuary walls and trim",
+      description: "Eggshell in the sanctuary. Tape the pews.",
       status: "assigned",
       priority: "medium",
       customerId: harborId,
       assignedToUserId: techId,
       scheduledAt: tomorrow,
-      location: "Wing B roof penthouse",
-      trade: "Service",
+      location: "88 Central Ave, Hot Springs, AR",
+      trade: "Interior",
       contractCents: 420000,
       createdByUserId: dispatcherId,
     },
     {
       id: "job_showroom_lights",
       jobNumber: 1003,
-      title: "Showroom lighting retrofit",
-      description: "Install 14 LED pendants. Confirm dimmer compatibility first.",
+      title: "Storefront cabinets",
+      description: "Refinish the front cabinets before Friday open.",
       status: "queued",
       priority: "urgent",
       customerId: loftId,
       assignedToUserId: null,
       scheduledAt: tomorrow,
-      location: "Street-level showroom",
-      trade: "Interior paint",
+      location: "1821 Central Ave, Hot Springs, AR",
+      trade: "Cabinets",
       contractCents: 960000,
       createdByUserId: dispatcherId,
     },
     {
       id: "job_gate_reader",
       jobNumber: 1004,
-      title: "Repair yard gate badge reader",
-      description: "Intermittent denies. Check power supply and re-seat controller.",
+      title: "Kitchen cabinets — waiting on stain",
+      description: "Stain sample not approved. Do not spray until Kim signs off.",
       status: "blocked",
       priority: "high",
       customerId: northId,
       assignedToUserId: techId,
       scheduledAt: now,
-      location: "North gate house",
-      trade: "Service",
+      location: "410 Spring St, Hot Springs, AR",
+      trade: "Cabinets",
       contractCents: 275000,
       createdByUserId: adminId,
     },
     {
       id: "job_completed_pump",
       jobNumber: 1005,
-      title: "Sump pump replacement",
-      description: "Completed overnight. Customer signed off digitally.",
+      title: "Nursery repaint",
+      description: "Two coats. Customer signed off.",
       status: "completed",
       priority: "medium",
       customerId: harborId,
       assignedToUserId: techId,
       scheduledAt: new Date(Date.now() - 26 * 60 * 60 * 1000),
       completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      location: "Basement mechanical",
-      trade: "Service",
+      location: "88 Central Ave, Hot Springs, AR",
+      trade: "Interior",
       contractCents: 610000,
       createdByUserId: dispatcherId,
     },
@@ -454,23 +454,117 @@ async function seedDeskModules(db: AppDb) {
         id: "chat_crews_1",
         channel: "hot-springs-crews",
         authorUserId: "user_dispatcher",
-        body: "Dana and Riley are on the dock cooler. Liv is off-shift, on deck tomorrow at Oaklawn.",
+        body: "Dana and Riley are on Kim's house. Liv is off-shift, Oaklawn tomorrow.",
         createdAt: new Date(now - 50 * 60 * 1000),
       },
       {
         id: "chat_dispatch_1",
         channel: "office-dispatch",
         authorUserId: "user_dana",
-        body: "Stopping at Sherwin on Central for Duration. Receipt goes on the dock job.",
+        body: "Stopping at Sherwin on Central for Duration. Receipt goes on Kim's house.",
         createdAt: new Date(now - 18 * 60 * 1000),
       },
       {
         id: "chat_job_dock_1",
         channel: "job:job_dock_cooler",
         authorUserId: "user_tech",
-        body: "Compressor is isolated. Need Dana on the recovery tank before we pull it.",
+        body: "South wall is rolling. Need Dana on the trim before we cut in.",
         createdAt: new Date(now - 12 * 60 * 1000),
       },
     ]);
   }
+
+  await retargetDemoShop(db);
+}
+
+async function retargetDemoShop(db: AppDb) {
+  await db
+    .update(customers)
+    .set({
+      name: "Kim Rhodes",
+      email: "kim@rhodes.example",
+      phone: "501-555-2001",
+      address: "410 Spring St, Hot Springs, AR",
+      notes: "Dogs in the backyard. Park on the street.",
+    })
+    .where(eq(customers.id, "cust_northwind"));
+  await db
+    .update(customers)
+    .set({
+      name: "Cedar Glade Church",
+      email: "office@cedarglade.example",
+      phone: "501-555-2002",
+      address: "88 Central Ave, Hot Springs, AR",
+      notes: "Side door by the fellowship hall.",
+    })
+    .where(eq(customers.id, "cust_harbor"));
+  await db
+    .update(customers)
+    .set({
+      name: "Jordan Ellis",
+      email: "jordan@ellis.example",
+      phone: "501-555-2003",
+      address: "1821 Central Ave, Hot Springs, AR",
+      notes: "Storefront. After-hours key in the job notes.",
+    })
+    .where(eq(customers.id, "cust_loft"));
+
+  await db
+    .update(jobs)
+    .set({
+      title: "House exterior and soffits",
+      description: "Duration on siding, trim, and soffits. Accessible Beige.",
+      location: "410 Spring St, Hot Springs, AR",
+      trade: "Exterior",
+    })
+    .where(eq(jobs.id, "job_dock_cooler"));
+  await db
+    .update(jobs)
+    .set({
+      title: "Sanctuary walls and trim",
+      description: "Eggshell in the sanctuary. Tape the pews.",
+      location: "88 Central Ave, Hot Springs, AR",
+      trade: "Interior",
+    })
+    .where(eq(jobs.id, "job_clinic_hvac"));
+  await db
+    .update(jobs)
+    .set({
+      title: "Storefront cabinets",
+      description: "Refinish the front cabinets before Friday open.",
+      location: "1821 Central Ave, Hot Springs, AR",
+      trade: "Cabinets",
+    })
+    .where(eq(jobs.id, "job_showroom_lights"));
+  await db
+    .update(jobs)
+    .set({
+      title: "Kitchen cabinets — waiting on stain",
+      description: "Stain sample not approved. Do not spray until Kim signs off.",
+      location: "410 Spring St, Hot Springs, AR",
+      trade: "Cabinets",
+    })
+    .where(eq(jobs.id, "job_gate_reader"));
+  await db
+    .update(jobs)
+    .set({
+      title: "Nursery repaint",
+      description: "Two coats. Customer signed off.",
+      location: "88 Central Ave, Hot Springs, AR",
+      trade: "Interior",
+    })
+    .where(eq(jobs.id, "job_completed_pump"));
+
+  await db
+    .update(chatMessages)
+    .set({ body: "Dana and Riley are on Kim's house. Liv is off-shift, Oaklawn tomorrow." })
+    .where(eq(chatMessages.id, "chat_crews_1"));
+  await db
+    .update(chatMessages)
+    .set({ body: "Stopping at Sherwin on Central for Duration. Receipt goes on Kim's house." })
+    .where(eq(chatMessages.id, "chat_dispatch_1"));
+  await db
+    .update(chatMessages)
+    .set({ body: "South wall is rolling. Need Dana on the trim before we cut in." })
+    .where(eq(chatMessages.id, "chat_job_dock_1"));
 }

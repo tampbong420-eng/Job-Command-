@@ -141,9 +141,9 @@ describe("Job Command core workflows", () => {
     expect(crewJobs.length).toBeGreaterThan(0);
     const dock = crewJobs.find((job) => job.jobNumber === 1001);
     expect(dock).toBeTruthy();
-    expect(dock?.customerName).toBe("Northwind Logistics");
-    expect(dock?.customerAddress).toContain("Dockside");
-    expect(dock?.destination).toContain("Dockside");
+    expect(dock?.customerName).toBe("Kim Rhodes");
+    expect(dock?.customerAddress).toContain("Hot Springs");
+    expect(dock?.destination).toContain("Hot Springs");
     expect(dock?.crew.map((member) => member.name)).toEqual(
       expect.arrayContaining(["Riley Okonkwo", "Dana Cole"]),
     );

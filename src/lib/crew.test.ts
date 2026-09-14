@@ -82,7 +82,7 @@ describe("home pad screens", () => {
     expect(PRIMARY_SCREENS.map((item) => item.label)).toEqual([
       "Fleet",
       "Phone",
-      "Pipeline",
+      "Jobs",
       "Expenses",
       "Chat",
       "Company",
@@ -101,7 +101,7 @@ describe("home pad screens", () => {
     const copy = PRIMARY_SCREENS.flatMap((screen) => [screen.hint, ...screen.opens]).join(" ");
     expect(copy).toMatch(/Live crew/);
     expect(copy).toMatch(/AI receptionist/);
-    expect(copy).toMatch(/Lead to invoice/);
+    expect(copy).toMatch(/painting/i);
     expect(copy).toMatch(/receipt/);
     expect(copy).toMatch(/job threads/);
     expect(copy).toMatch(/Invite a tech/);

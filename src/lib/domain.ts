@@ -46,24 +46,24 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export const PIPELINE_COLUMNS = [
-  { status: "queued", title: "Lead Intake" },
-  { status: "estimate_sent", title: "Estimate Sent" },
-  { status: "estimate_approved", title: "Estimate Approved" },
-  { status: "assigned", title: "Scheduled" },
-  { status: "in_progress", title: "In Progress" },
-  { status: "completed", title: "Invoiced" },
+  { status: "queued", title: "New" },
+  { status: "estimate_sent", title: "Estimate out" },
+  { status: "estimate_approved", title: "Approved" },
+  { status: "assigned", title: "Booked" },
+  { status: "in_progress", title: "Painting" },
+  { status: "completed", title: "Paid" },
 ] as const;
 
 export type PipelineStatus = (typeof PIPELINE_COLUMNS)[number]["status"];
 
 export const STATUS_LABELS: Record<JobStatus, string> = {
-  queued: "Lead Intake",
-  estimate_sent: "Estimate Sent",
-  estimate_approved: "Estimate Approved",
-  assigned: "Scheduled",
-  in_progress: "In Progress",
-  blocked: "Blocked",
-  completed: "Invoiced",
+  queued: "New",
+  estimate_sent: "Estimate out",
+  estimate_approved: "Approved",
+  assigned: "Booked",
+  in_progress: "Painting",
+  blocked: "Stuck",
+  completed: "Paid",
   cancelled: "Cancelled",
 };
 

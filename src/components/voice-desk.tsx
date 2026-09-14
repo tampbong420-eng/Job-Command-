@@ -26,7 +26,7 @@ export function VoiceDesk({ initial }: { initial: Call[] }) {
     try {
       const result = await api<{ job?: { id: string } }>(`/api/voice/${active.id}/convert`, { method: "POST" });
       tapHaptic("success");
-      toast.success("Lead dropped on Pipeline");
+      toast.success("Lead dropped on Jobs");
       setCalls((current) =>
         current.map((call) => (call.id === active.id ? { ...call, status: "converted" } : call)),
       );
@@ -119,7 +119,7 @@ export function VoiceDesk({ initial }: { initial: Call[] }) {
           <p className="text-sm leading-relaxed text-foreground/90">{active.transcript}</p>
           <div className="grid grid-cols-3 gap-2">
             <Button type="button" disabled={pending || active.status === "converted"} onClick={() => void convert()}>
-              To pipeline
+              To Jobs
             </Button>
             <Button type="button" variant="outline" onClick={play}>
               Play

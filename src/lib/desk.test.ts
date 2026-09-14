@@ -13,14 +13,14 @@ async function freshDb() {
 }
 
 describe("pipeline and desk modules", () => {
-  it("exposes six kanban columns from lead to invoice", () => {
+  it("names the six job stages a painter actually uses", () => {
     expect(PIPELINE_COLUMNS.map((column) => column.title)).toEqual([
-      "Lead Intake",
-      "Estimate Sent",
-      "Estimate Approved",
-      "Scheduled",
-      "In Progress",
-      "Invoiced",
+      "New",
+      "Estimate out",
+      "Approved",
+      "Booked",
+      "Painting",
+      "Paid",
     ]);
   });
 

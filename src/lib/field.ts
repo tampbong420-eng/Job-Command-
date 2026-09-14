@@ -28,7 +28,16 @@ export function preferredNextStatus(status: JobStatus): JobStatus | null {
   return null;
 }
 
+export function nextActionLabel(status: JobStatus) {
+  if (status === "queued") return "Send estimate";
+  if (status === "estimate_sent") return "They said yes";
+  if (status === "estimate_approved") return "Book it";
+  if (status === "assigned") return "Start job";
+  if (status === "in_progress") return "Mark paid";
+  if (status === "blocked") return "Back on it";
+  return null;
+}
+
 export function nextStatusLabel(status: JobStatus) {
-  const next = preferredNextStatus(status);
-  return next ? `Mark ${STATUS_LABELS[next].toLowerCase()}` : null;
+  return nextActionLabel(status) ?? (preferredNextStatus(status) ? `Mark ${STATUS_LABELS[preferredNextStatus(status)!].toLowerCase()}` : null);
 }

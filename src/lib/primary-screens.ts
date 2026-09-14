@@ -88,20 +88,20 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     opens: [
       "Missed and answered calls",
       "Transcripts and a short lead summary",
-      "Send the lead to Pipeline",
+      "Send the lead to Jobs",
     ],
   },
   {
     id: "pipeline",
     href: "/command/board",
-    label: "Pipeline",
+    label: "Jobs",
     short: "Jobs",
-    hint: "Lead to invoice on one board",
+    hint: "Who you are painting, and what is next",
     ready: true,
     tone: "orange",
     opens: [
-      "Lead, estimate, schedule, on job, invoice",
-      "Move a job by tapping the next stage",
+      "New call, estimate, booked, painting, paid",
+      "Green button is the next step",
     ],
   },
   {
