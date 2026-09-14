@@ -1,14 +1,9 @@
 "use client";
 
-import { jobTone } from "@/lib/format";
+import { jobStatusLabel, jobTone } from "@/lib/format";
 import type { Job, JobStatus } from "@/lib/types";
 
-const BUTTONS: { status: JobStatus; label: string }[] = [
-  { status: "lead", label: "New lead" },
-  { status: "pending", label: "Pending" },
-  { status: "in_progress", label: "Active" },
-  { status: "completed", label: "Job Archive" },
-];
+const BUTTONS: JobStatus[] = ["lead", "pending", "in_progress", "completed"];
 
 export default function StatusButtons({
   job,
@@ -21,15 +16,15 @@ export default function StatusButtons({
 }) {
   return (
     <div className="status-buttons" role="group" aria-label="Customer status">
-      {BUTTONS.map((button) => (
+      {BUTTONS.map((status) => (
         <button
-          key={button.status}
+          key={status}
           type="button"
-          className={`lane-button ${jobTone(button.status)}${job.status === button.status ? " is-on" : ""}`}
-          aria-pressed={job.status === button.status}
-          onClick={() => onStatus(button.status)}
+          className={`lane-button ${jobTone(status)}${job.status === status ? " is-on" : ""}`}
+          aria-pressed={job.status === status}
+          onClick={() => onStatus(status)}
         >
-          {button.label}
+          {jobStatusLabel(status)}
         </button>
       ))}
       <button type="button" className="lane-button tone-delete" onClick={onDelete}>

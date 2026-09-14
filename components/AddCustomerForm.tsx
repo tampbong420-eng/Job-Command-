@@ -49,7 +49,7 @@ export default function AddCustomerForm({
         submit();
       }}
     >
-      <p className="card-label">New lead</p>
+      <p className="card-label">New call</p>
       <label>
         Customer
         <input

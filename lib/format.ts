@@ -52,11 +52,21 @@ export function formatLiveHours(startedAt: string | null, now = Date.now()): str
   return `${hours}h ${String(minutes).padStart(2, "0")}m`;
 }
 
+export function jobStatusAction(status: "lead" | "pending" | "in_progress" | "completed"): {
+  action: string;
+  hint: string;
+} {
+  if (status === "lead") return { action: "Call", hint: "New" };
+  if (status === "pending") return { action: "Estimate", hint: "Pending" };
+  if (status === "in_progress") return { action: "On job", hint: "Working" };
+  return { action: "Finished", hint: "Archive" };
+}
+
 export function jobStatusLabel(status: "lead" | "pending" | "in_progress" | "completed"): string {
-  if (status === "lead") return "New lead";
-  if (status === "pending") return "Pending";
-  if (status === "in_progress") return "Active";
-  return "Job Archive";
+  if (status === "lead") return "New call";
+  if (status === "pending") return "Estimate";
+  if (status === "in_progress") return "On job";
+  return "Finished";
 }
 
 export function money(amount: number): string {

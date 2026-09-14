@@ -32,7 +32,7 @@ test("customer cards can move a lead to pending", () => {
     status: "pending",
   });
   assert.equal(result.state.jobs.find((job) => job.id === "c-shah")?.status, "pending");
-  assert.equal(result.notice.includes("Pending"), true);
+  assert.equal(result.notice.includes("Estimate"), true);
 });
 
 test("finished and delete take a customer off the board", () => {
@@ -45,7 +45,7 @@ test("finished and delete take a customer off the board", () => {
     finished.state.jobs.find((job) => job.id === "c-northline")?.status,
     "completed",
   );
-  assert.equal(finished.notice.includes("Job Archive"), true);
+  assert.equal(finished.notice.includes("Finished"), true);
   const gone = applyCommand(snapshot, { type: "delete_job", query: "Maya Chen" });
   assert.equal(gone.state.jobs.some((job) => job.id === "c-chen"), false);
 });

@@ -39,7 +39,7 @@ export default function BossJobsBoard({
         <strong>Cards.</strong>
       </h1>
       <p className="board-copy">
-        Tap New lead, Pending, Active, Job Archive, or Delete on a card. Invoice,
+        Tap New call, Estimate, On job, Finished, or Delete on a card. Invoice,
         scope, street view, photos, and hours stay on the same customer.
       </p>
       {children}

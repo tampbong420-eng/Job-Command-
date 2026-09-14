@@ -87,7 +87,7 @@ Selected crew: ${snapshot.selectedCrewId ?? "none"}
 Request: ${text}
 
 Rules:
-- New lead / pending / active / finished / job archive map to statuses lead, pending, in_progress, completed.
+- New call / estimate / on job / finished (also new lead, pending, active, job archive) map to statuses lead, pending, in_progress, completed.
 - Delete removes the customer card.
 - Estimates and time cards must include the customer or crew name in query/employee.
 - Prefer one or two commands. Keep say short.`,
