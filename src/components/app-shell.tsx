@@ -16,6 +16,8 @@ import {
 import type { PublicUser } from "@/lib/domain";
 import { initials } from "@/lib/format";
 import { api } from "@/lib/api";
+import { PAD_TONE_CLASS, screenForPath } from "@/lib/primary-screens";
+import { cn } from "@/lib/utils";
 
 export function AppShell({
   user,
@@ -27,6 +29,8 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const atHome = pathname === "/command";
+  const screen = screenForPath(pathname);
+  const accent = PAD_TONE_CLASS[screen?.tone ?? "gold"];
 
   async function signOut() {
     await api("/api/auth/logout", { method: "POST" });
@@ -38,70 +42,73 @@ export function AppShell({
     <div className="min-h-svh bg-[#090a0d]">
       <div className="mx-auto flex min-h-svh w-full max-w-[430px] flex-col bg-background shadow-[0_0_80px_rgba(0,0,0,0.55)]">
         <header
-          className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/80 bg-background/90 px-3 backdrop-blur"
+          className="sticky top-0 z-30 border-b border-border/80 bg-background/90 px-3 backdrop-blur"
           style={{ paddingTop: "max(0.7rem, env(safe-area-inset-top))" }}
         >
-          <div className="flex min-w-0 items-center gap-1 py-2">
-            {!atHome ? (
-              <Link
-                href="/command"
-                aria-label="Home"
-                className="mr-1 flex size-9 items-center justify-center rounded-full text-primary"
-              >
-                <ChevronLeft className="size-6" />
-              </Link>
-            ) : null}
-            <Link href="/command" className="flex min-w-0 items-center gap-2">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Radio className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold leading-none tracking-tight">JOB COMMAND</p>
-                <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.22em] text-primary">
-                  Field ops
-                </p>
-              </div>
-            </Link>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="size-8">
-                  {user.avatarUrl ? (
-                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                  ) : null}
-                  <AvatarFallback className="bg-primary/20 text-xs text-primary">
-                    {initials(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col">
-                  <span>{user.name}</span>
-                  <span className="font-normal text-muted-foreground">{user.email}</span>
+          <div className="flex items-center justify-between gap-3 py-2">
+            <div className="flex min-w-0 items-center gap-1">
+              {!atHome ? (
+                <Link
+                  href="/command"
+                  aria-label="Home"
+                  className="mr-1 flex size-9 items-center justify-center rounded-full text-primary"
+                >
+                  <ChevronLeft className="size-6" />
+                </Link>
+              ) : null}
+              <Link href="/command" className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Radio className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-none tracking-tight">JOB COMMAND</p>
+                  <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.22em] text-primary">
+                    Field ops
+                  </p>
                 </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/settings">
-                  <Settings className="size-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/team">
-                  <Users className="size-4" />
-                  Team
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => void signOut()}>
-                <LogOut className="size-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </Link>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar className="size-8">
+                    {user.avatarUrl ? (
+                      <AvatarImage src={user.avatarUrl} alt={user.name} />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/20 text-xs text-primary">
+                      {initials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span>{user.name}</span>
+                    <span className="font-normal text-muted-foreground">{user.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">
+                    <Settings className="size-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/team">
+                    <Users className="size-4" />
+                    Team
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void signOut()}>
+                  <LogOut className="size-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className={cn("-mx-3 h-0.5", accent.bar)} />
         </header>
         <main
           className="flex-1 overflow-y-auto px-3 py-3"

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PRIMARY_SCREENS } from "@/lib/primary-screens";
+import { PAD_TONE_CLASS, PRIMARY_SCREENS } from "@/lib/primary-screens";
 import { cn } from "@/lib/utils";
 
 export function HomePad() {
@@ -16,16 +16,21 @@ export function HomePad() {
       <div className="grid flex-1 grid-cols-2 grid-rows-3 gap-3">
         {PRIMARY_SCREENS.map((item, index) => {
           const n = String(index + 1).padStart(2, "0");
+          const tone = PAD_TONE_CLASS[item.tone];
           const className = cn(
-            "flex h-full min-h-[7.5rem] flex-col items-start justify-between rounded-2xl p-4 text-left ring-1",
-            item.ready
-              ? "bg-primary text-primary-foreground ring-primary"
-              : "bg-card text-muted-foreground ring-primary/25",
+            "relative flex h-full min-h-[7.5rem] flex-col items-start justify-between overflow-hidden rounded-2xl p-4 text-left ring-1",
+            item.ready ? tone.ready : tone.wait,
           );
 
           const body = (
             <>
-              <span className="font-mono text-[11px] uppercase tracking-[0.22em] opacity-80">
+              <span className={cn("absolute inset-x-0 top-0 h-1", tone.bar, !item.ready && "opacity-70")} />
+              <span
+                className={cn(
+                  "font-mono text-[11px] uppercase tracking-[0.22em]",
+                  item.ready ? "opacity-80" : tone.mark,
+                )}
+              >
                 {n}
               </span>
               <span className="text-[15px] font-semibold leading-tight text-balance">
