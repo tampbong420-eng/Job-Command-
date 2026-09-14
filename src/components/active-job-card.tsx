@@ -41,7 +41,7 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
       <PropertyPreview destination={job.destination} />
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             Assigned crew
           </h3>
@@ -53,7 +53,7 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
               key={member.id}
               className="rounded-lg bg-background/70 p-3 ring-1 ring-foreground/8"
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar size="lg">
                     <AvatarImage src={member.avatarUrl} alt={member.name} />

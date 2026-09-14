@@ -99,7 +99,7 @@ export async function listActiveCrewJobs(db: AppDb, actor: PublicUser): Promise<
     result.push({
       ...job,
       scope: job.description?.trim() || "Scope not written yet.",
-      destination: job.location?.trim() || job.customerAddress?.trim() || "",
+      destination: job.customerAddress?.trim() || job.location?.trim() || "",
       crew,
     });
   }
