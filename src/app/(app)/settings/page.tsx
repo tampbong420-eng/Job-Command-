@@ -63,6 +63,20 @@ export default async function SettingsPage() {
             </p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Company logo</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Job Command stays on the left. When we build this setting, the company using
+              the desk can put their own logo next to it.
+            </p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
+              Coming with settings
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

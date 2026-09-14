@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Radio } from "lucide-react";
+import { BrandLockup } from "@/components/brand-lockup";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/login-form";
 import { getReadyDb, usesEphemeralDatabase } from "@/db";
@@ -16,16 +16,8 @@ export default async function LoginPage() {
   return (
     <div className="flex min-h-svh items-center justify-center bg-[#090a0d] px-4 py-8">
       <div className="w-full max-w-[430px]">
-        <div className="mb-5 flex items-center gap-2">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Radio className="size-4" />
-          </span>
-          <div>
-            <p className="text-sm font-semibold leading-none">JOB COMMAND</p>
-            <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.22em] text-primary">
-              Field ops
-            </p>
-          </div>
+        <div className="mb-5">
+          <BrandLockup href="/login" />
         </div>
         <Card className="ring-1 ring-primary/20">
           <CardHeader>

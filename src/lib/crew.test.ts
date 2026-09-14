@@ -12,6 +12,7 @@ import {
   OT_WARNING_MS,
 } from "@/lib/crew";
 
+import { getWorkspaceBrand, PRODUCT_LOGO } from "@/lib/brand";
 import { PRIMARY_SCREENS } from "@/lib/primary-screens";
 
 describe("crew tracking and shift meter", () => {
@@ -78,5 +79,11 @@ describe("home pad screens", () => {
       "yellow",
       "ember",
     ]);
+  });
+
+  it("keeps the Job Command mark on the left and leaves company logo for settings", () => {
+    const brand = getWorkspaceBrand();
+    expect(brand.productLogo).toBe(PRODUCT_LOGO);
+    expect(brand.companyLogo).toBeNull();
   });
 });

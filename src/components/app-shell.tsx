@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, LogOut, Radio, Settings, Users } from "lucide-react";
+import { ChevronLeft, LogOut, Settings, Users } from "lucide-react";
+import { BrandLockup } from "@/components/brand-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,17 +57,7 @@ export function AppShell({
                   <ChevronLeft className="size-6" />
                 </Link>
               ) : null}
-              <Link href="/command" className="flex min-w-0 items-center gap-2">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Radio className="size-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold leading-none tracking-tight">JOB COMMAND</p>
-                  <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.22em] text-primary">
-                    Field ops
-                  </p>
-                </div>
-              </Link>
+              <BrandLockup />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
