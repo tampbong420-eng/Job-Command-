@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { PublicUser } from "@/lib/domain";
+import { canManageTeam, type PublicUser } from "@/lib/domain";
 import { initials } from "@/lib/format";
 import { api } from "@/lib/api";
 import { PAD_TONE_CLASS, screenForPath } from "@/lib/primary-screens";
@@ -86,12 +86,14 @@ export function AppShell({
                     Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/team">
-                    <Users className="size-4" />
-                    Team
-                  </Link>
-                </DropdownMenuItem>
+                {canManageTeam(user.role) ? (
+                  <DropdownMenuItem asChild>
+                    <Link href="/team">
+                      <Users className="size-4" />
+                      Team
+                    </Link>
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem onClick={() => void signOut()}>
                   <LogOut className="size-4" />
                   Sign out

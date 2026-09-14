@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getReadyDb, usesEphemeralDatabase } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/domain";
+import { OFFICE_ITEMS } from "@/lib/primary-screens";
 
 export const metadata = { title: "Settings" };
 
@@ -65,15 +66,19 @@ export default async function SettingsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Company logo</CardTitle>
+            <CardTitle>Office</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>
-              Job Command stays on the left. When we build this setting, the company using
-              the desk can put their own logo next to it.
+          <CardContent className="space-y-2 text-sm">
+            <p className="text-muted-foreground">
+              Not a home box. Lives under the photo so the six boxes stay the daily desk.
             </p>
+            <ul className="space-y-1.5">
+              {OFFICE_ITEMS.map((item) => (
+                <li key={item.label}>{item.label}</li>
+              ))}
+            </ul>
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-              Coming with settings
+              Named. Not built yet.
             </p>
           </CardContent>
         </Card>

@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { PAD_TONE_CLASS, PRIMARY_SCREENS } from "@/lib/primary-screens";
+import { PAD_TONE_CLASS, type PrimaryScreen } from "@/lib/primary-screens";
 import { cn } from "@/lib/utils";
 
-export function HomePad() {
+export function HomePad({ screens }: { screens: PrimaryScreen[] }) {
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-3 gap-2.5">
-      {PRIMARY_SCREENS.map((item, index) => {
+    <div
+      className={cn(
+        "grid min-h-0 flex-1 grid-cols-2 gap-2.5",
+        screens.length <= 4 ? "grid-rows-2" : "grid-rows-3",
+      )}
+    >
+      {screens.map((item, index) => {
         const n = String(index + 1).padStart(2, "0");
         const tone = PAD_TONE_CLASS[item.tone];
 

@@ -14,7 +14,12 @@ import {
 
 import { getWorkspaceBrand, PRODUCT_LOGO } from "@/lib/brand";
 import { polishScope } from "@/lib/scope";
-import { PRIMARY_SCREENS } from "@/lib/primary-screens";
+import {
+  PRIMARY_SCREENS,
+  canOpenScreen,
+  groupsForRole,
+  screensForRole,
+} from "@/lib/primary-screens";
 
 describe("crew tracking and shift meter", () => {
   it("marks the last hour before overtime in red", () => {
@@ -84,6 +89,39 @@ describe("home pad screens", () => {
       "/command/hours",
     ]);
     expect(PRIMARY_SCREENS[0]?.ready).toBe(true);
+  });
+
+  it("puts the phone, payroll, and plans in one box each", () => {
+    const labels = PRIMARY_SCREENS.flatMap((screen) =>
+      screen.groups.flatMap((group) => group.items.map((item) => item.label)),
+    );
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "AI answering",
+        "Pick who goes",
+        "Estimates",
+        "Invoices",
+        "Memberships and subscriptions",
+        "Time cards",
+        "Run payroll",
+        "Photos in the job chat",
+      ]),
+    );
+  });
+
+  it("gives crew four boxes and keeps money off their home", () => {
+    expect(screensForRole("technician").map((item) => item.id)).toEqual([
+      "crew",
+      "schedule",
+      "shop",
+      "hours",
+    ]);
+    expect(screensForRole("admin")).toHaveLength(6);
+    expect(screensForRole("dispatcher")).toHaveLength(6);
+    expect(canOpenScreen("technician", "money")).toBe(false);
+    expect(groupsForRole(PRIMARY_SCREENS[5]!, "technician").some((group) => group.title === "Pay")).toBe(
+      false,
+    );
   });
 
   it("gives active jobs the logo lime and keeps each box on the gold-orange theme", () => {
