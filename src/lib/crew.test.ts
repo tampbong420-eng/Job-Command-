@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   broadcastSmsUrl,
+  clockStateLabel,
   crewTracking,
   formatElapsed,
   mapEmbedUrl,
@@ -44,6 +45,11 @@ describe("crew tracking and shift meter", () => {
     expect(enRoute.status).toBe("en_route");
     expect(enRoute.miles).toBeGreaterThan(0);
     expect(enRoute.minutes).toBeGreaterThan(0);
+  });
+
+  it("labels clocked-in crew IN and clocked-out crew OUT", () => {
+    expect(clockStateLabel(true)).toBe("IN");
+    expect(clockStateLabel(false)).toBe("OUT");
   });
 
   it("builds street view, map, and sms links", () => {

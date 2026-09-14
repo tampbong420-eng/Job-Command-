@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: text("role").$type<UserRole>().notNull().default("technician"),
   phone: text("phone"),
+  avatarUrl: text("avatar_url"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -71,7 +72,8 @@ export const jobNotes = pgTable("job_notes", {
     .notNull()
     .references(() => jobs.id, { onDelete: "cascade" }),
   authorUserId: text("author_user_id").references(() => users.id),
-  body: text("body").notNull(),
+  body: text("body").notNull().default(""),
+  imageUrl: text("image_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

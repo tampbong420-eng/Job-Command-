@@ -1,6 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 import type { AppDb } from "@/db/types";
 import { customers, jobAssignments, jobs, timeEntries, users } from "@/db/schema";
+import { portraitUrl } from "@/lib/avatars";
 import { DEMO_PASSWORD } from "@/lib/domain";
 import { hashPassword } from "@/lib/password";
 
@@ -258,7 +259,6 @@ async function seedCrewDemo(db: AppDb) {
   const clocks: Array<{ id: string; userId: string; jobId: string; hoursAgo: number }> = [
     { id: "clock_tech", userId: "user_tech", jobId: "job_dock_cooler", hoursAgo: 6.15 },
     { id: "clock_dana", userId: "user_dana", jobId: "job_dock_cooler", hoursAgo: 7.25 },
-    { id: "clock_liv", userId: "user_liv", jobId: "job_clinic_hvac", hoursAgo: 2.1 },
   ];
   for (const clock of clocks) {
     const [open] = await db
@@ -273,5 +273,18 @@ async function seedCrewDemo(db: AppDb) {
       jobId: clock.jobId,
       startedAt: new Date(Date.now() - clock.hoursAgo * 60 * 60 * 1000),
     });
+  }
+
+  await db
+    .update(timeEntries)
+    .set({ endedAt: new Date() })
+    .where(and(eq(timeEntries.userId, "user_liv"), isNull(timeEntries.endedAt)));
+
+  const portraits = await db.select({ id: users.id, name: users.name }).from(users);
+  for (const person of portraits) {
+    await db
+      .update(users)
+      .set({ avatarUrl: portraitUrl(person.id, person.name) })
+      .where(eq(users.id, person.id));
   }
 }

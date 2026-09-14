@@ -31,6 +31,7 @@ export type PublicUser = {
   name: string;
   role: UserRole;
   phone: string | null;
+  avatarUrl: string | null;
   active: boolean;
   createdAt: Date;
 };

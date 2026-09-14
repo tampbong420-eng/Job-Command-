@@ -110,13 +110,18 @@ describe("Job Command core workflows", () => {
     const dock = crewJobs.find((job) => job.jobNumber === 1001);
     expect(dock).toBeTruthy();
     expect(dock?.customerName).toBe("Northwind Logistics");
+    expect(dock?.customerAddress).toContain("Dockside");
     expect(dock?.destination).toContain("Dockside");
     expect(dock?.crew.map((member) => member.name)).toEqual(
       expect.arrayContaining(["Riley Okonkwo", "Dana Cole"]),
     );
     const dana = dock?.crew.find((member) => member.name === "Dana Cole");
+    expect(dana?.shift.clockedIn).toBe(true);
     expect(dana?.shift.overtimeWarning).toBe(true);
     expect(dana?.phone).toBe("555-0104");
+    const livJob = crewJobs.find((job) => job.crew.some((member) => member.name === "Liv Park"));
+    const liv = livJob?.crew.find((member) => member.name === "Liv Park");
+    expect(liv?.shift.clockedIn).toBe(false);
   });
 
   it("returns dashboard metrics for the command board", async () => {

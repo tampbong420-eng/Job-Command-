@@ -41,6 +41,7 @@ export async function listActiveCrewJobs(db: AppDb, actor: PublicUser): Promise<
       userId: jobAssignments.userId,
       name: users.name,
       phone: users.phone,
+      avatarUrl: users.avatarUrl,
     })
     .from(jobAssignments)
     .innerJoin(users, eq(jobAssignments.userId, users.id))
@@ -65,7 +66,7 @@ export async function listActiveCrewJobs(db: AppDb, actor: PublicUser): Promise<
       id: row.userId,
       name: row.name,
       phone: row.phone,
-      avatarUrl: avatarUrl(row.name),
+      avatarUrl: row.avatarUrl || avatarUrl(row.name, row.userId),
       tracking: crewTracking(row.userId, row.jobId, job.status),
       shift: shiftMeter(clock?.startedAt ?? null),
       clockedInAt: clock?.startedAt ? clock.startedAt.toISOString() : null,
@@ -85,7 +86,7 @@ export async function listActiveCrewJobs(db: AppDb, actor: PublicUser): Promise<
           id: job.assignedToUserId,
           name: job.assigneeName,
           phone: null,
-          avatarUrl: avatarUrl(job.assigneeName),
+          avatarUrl: avatarUrl(job.assigneeName, job.assignedToUserId),
           tracking: crewTracking(job.assignedToUserId, job.id, job.status),
           shift: shiftMeter(clock?.startedAt ?? null),
           clockedInAt: clock?.startedAt ? clock.startedAt.toISOString() : null,

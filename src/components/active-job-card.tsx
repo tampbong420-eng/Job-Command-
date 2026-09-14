@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ClockInOut } from "@/components/clock-in-out";
 import { BroadcastCrew, CrewComms } from "@/components/crew-comms";
 import { PropertyPreview } from "@/components/property-preview";
 import { ShiftMeterBar } from "@/components/shift-meter";
@@ -17,7 +18,16 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
 
   return (
     <article className="space-y-4 rounded-2xl bg-card p-4 ring-1 ring-primary/15">
-      <header className="space-y-2">
+      <header className="space-y-3">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">Owner</p>
+          <h2 className="text-[1.55rem] font-semibold leading-tight tracking-tight">
+            <Link href={`/customers/${job.customerId}`}>{job.customerName}</Link>
+          </h2>
+          <p className="mt-1 text-sm leading-snug text-foreground/90">
+            {job.customerAddress?.trim() || job.destination || "No address on file"}
+          </p>
+        </div>
         <div className="flex items-center justify-between gap-2">
           <p className="font-mono text-[11px] text-muted-foreground">
             {formatJobNumber(job.jobNumber)}
@@ -27,13 +37,12 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
             <PriorityBadge priority={job.priority} />
           </div>
         </div>
-        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
-          {job.customerName}
-        </p>
-        <h2 className="text-xl font-semibold leading-tight">
-          <Link href={`/jobs/${job.id}`}>{job.title}</Link>
-        </h2>
-        <p className="text-sm leading-snug text-muted-foreground">{job.scope}</p>
+        <div>
+          <h3 className="text-base font-semibold leading-tight">
+            <Link href={`/jobs/${job.id}`}>{job.title}</Link>
+          </h3>
+          <p className="mt-1 text-sm leading-snug text-muted-foreground">{job.scope}</p>
+        </div>
       </header>
 
       <PropertyPreview destination={job.destination} />
@@ -46,14 +55,24 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
           {job.crew.map((member) => (
             <li key={member.id} className="space-y-3 rounded-2xl bg-background p-3 ring-1 ring-border">
               <div className="flex items-center gap-3">
-                <Avatar className="size-12">
+                <Avatar
+                  className={cn(
+                    "size-12",
+                    member.shift.clockedIn
+                      ? "clock-in-move ring-2 ring-emerald-400"
+                      : "ring-2 ring-red-600",
+                  )}
+                >
                   <AvatarImage src={member.avatarUrl} alt={member.name} />
                   <AvatarFallback className="bg-primary text-sm font-semibold text-primary-foreground">
                     {initials(member.name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="min-w-0">
-                  <p className="truncate text-base font-semibold">{member.name}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="min-w-0 truncate text-base font-semibold">{member.name}</p>
+                    <ClockInOut clockedIn={member.shift.clockedIn} />
+                  </div>
                   <p
                     className={cn(
                       "font-mono text-[11px] uppercase tracking-[0.14em]",

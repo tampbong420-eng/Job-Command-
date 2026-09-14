@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash text NOT NULL,
   role text NOT NULL DEFAULT 'technician',
   phone text,
+  avatar_url text,
   active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -50,7 +51,8 @@ CREATE TABLE IF NOT EXISTS job_notes (
   id text PRIMARY KEY,
   job_id text NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
   author_user_id text REFERENCES users(id),
-  body text NOT NULL,
+  body text NOT NULL DEFAULT '',
+  image_url text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -86,4 +88,7 @@ CREATE TABLE IF NOT EXISTS time_entries (
 );
 
 CREATE INDEX IF NOT EXISTS time_entries_user_idx ON time_entries (user_id);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text;
+ALTER TABLE job_notes ADD COLUMN IF NOT EXISTS image_url text;
 `;

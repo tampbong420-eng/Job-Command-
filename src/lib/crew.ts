@@ -1,3 +1,4 @@
+import { portraitUrl } from "@/lib/avatars";
 import type { JobStatus } from "@/lib/domain";
 
 export const SHIFT_LENGTH_MS = 8 * 60 * 60 * 1000;
@@ -114,6 +115,13 @@ export function broadcastSmsUrl(phones: string[], body?: string) {
   return `sms:/open?addresses=${addresses}${suffix}`;
 }
 
-export function avatarUrl(name: string) {
-  return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=e8b84a&textColor=12141a`;
+export function clockStateLabel(clockedIn: boolean) {
+  return clockedIn ? "IN" : "OUT";
+}
+
+export function avatarUrl(name: string, userId?: string) {
+  if (userId) {
+    return portraitUrl(userId, name);
+  }
+  return `https://api.dicebear.com/9.x/adventurer/png?seed=${encodeURIComponent(name)}&size=160`;
 }
