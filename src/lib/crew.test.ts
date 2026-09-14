@@ -68,8 +68,15 @@ describe("home pad screens", () => {
     expect(PRIMARY_SCREENS[0]?.href).toBe("/command/crew");
   });
 
-  it("gives active jobs a green tile and a unique color to each box", () => {
-    expect(PRIMARY_SCREENS[0]?.tone).toBe("green");
-    expect(new Set(PRIMARY_SCREENS.map((item) => item.tone)).size).toBe(6);
+  it("gives active jobs the logo lime and keeps each box on the gold-orange theme", () => {
+    expect(PRIMARY_SCREENS[0]?.tone).toBe("lime");
+    expect(PRIMARY_SCREENS.map((item) => item.tone)).toEqual([
+      "lime",
+      "gold",
+      "orange",
+      "pending",
+      "yellow",
+      "ember",
+    ]);
   });
 });

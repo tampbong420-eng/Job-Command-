@@ -19,14 +19,14 @@ export function ShiftMeterBar({ clockedInAt }: { clockedInAt: string | null }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className={cn("font-medium", hot ? "text-red-400" : "text-primary")}>
+        <span className={cn("font-medium", hot ? "text-duty" : "text-boss")}>
           {meter.clockedIn
             ? meter.overtime
               ? `OT ${formatElapsed(meter.elapsedMs)}`
               : `On clock ${formatElapsed(meter.elapsedMs)}`
             : "Off clock"}
         </span>
-        <span className={cn("font-mono text-[11px]", hot ? "text-red-400" : "text-muted-foreground")}>
+        <span className={cn("font-mono text-[11px]", hot ? "text-duty" : "text-muted-foreground")}>
           {meter.clockedIn
             ? meter.overtime
               ? "Past 8h"
@@ -38,7 +38,7 @@ export function ShiftMeterBar({ clockedInAt }: { clockedInAt: string | null }) {
         <div
           className={cn(
             "h-full rounded-full transition-[width,background-color] duration-500",
-            hot ? "bg-red-500" : "bg-primary",
+            hot ? "bg-duty" : "bg-boss",
           )}
           style={{ width }}
         />

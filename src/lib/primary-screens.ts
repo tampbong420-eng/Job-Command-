@@ -9,7 +9,7 @@ export const PRIMARY_SCREEN_IDS = [
 
 export type PrimaryScreenId = (typeof PRIMARY_SCREEN_IDS)[number];
 
-export const PAD_TONES = ["green", "gold", "sky", "amber", "orange", "rose"] as const;
+export const PAD_TONES = ["lime", "gold", "orange", "pending", "yellow", "ember"] as const;
 export type PadTone = (typeof PAD_TONES)[number];
 
 export type PrimaryScreen = {
@@ -23,41 +23,41 @@ export type PrimaryScreen = {
 };
 
 export const PAD_TONE_CLASS = {
-  green: {
-    ready: "bg-emerald-500 text-emerald-950 ring-emerald-400/80",
-    wait: "bg-card text-muted-foreground ring-emerald-500/25",
-    mark: "text-emerald-400",
-    bar: "bg-emerald-500",
+  lime: {
+    ready: "bg-boss text-ink ring-lime/50",
+    wait: "bg-card text-muted-foreground ring-boss/20",
+    mark: "text-boss",
+    bar: "bg-boss",
   },
   gold: {
-    ready: "bg-primary text-primary-foreground ring-primary/80",
-    wait: "bg-card text-muted-foreground ring-primary/25",
-    mark: "text-primary",
-    bar: "bg-primary",
-  },
-  sky: {
-    ready: "bg-sky-500 text-sky-950 ring-sky-400/80",
-    wait: "bg-card text-muted-foreground ring-sky-500/25",
-    mark: "text-sky-400",
-    bar: "bg-sky-500",
-  },
-  amber: {
-    ready: "bg-amber-400 text-amber-950 ring-amber-300/80",
-    wait: "bg-card text-muted-foreground ring-amber-400/25",
-    mark: "text-amber-400",
-    bar: "bg-amber-400",
+    ready: "bg-logo text-ink ring-logo/70",
+    wait: "bg-card text-muted-foreground ring-logo/25",
+    mark: "text-logo",
+    bar: "bg-logo",
   },
   orange: {
-    ready: "bg-orange-500 text-orange-950 ring-orange-400/80",
-    wait: "bg-card text-muted-foreground ring-orange-500/25",
-    mark: "text-orange-400",
-    bar: "bg-orange-500",
+    ready: "bg-employee text-ink ring-employee/70",
+    wait: "bg-card text-muted-foreground ring-employee/25",
+    mark: "text-employee",
+    bar: "bg-employee",
   },
-  rose: {
-    ready: "bg-rose-500 text-rose-50 ring-rose-400/80",
-    wait: "bg-card text-muted-foreground ring-rose-500/25",
-    mark: "text-rose-400",
-    bar: "bg-rose-500",
+  pending: {
+    ready: "bg-pending text-ink ring-pending/70",
+    wait: "bg-card text-muted-foreground ring-pending/25",
+    mark: "text-pending",
+    bar: "bg-pending",
+  },
+  yellow: {
+    ready: "bg-yellow text-ink ring-yellow/70",
+    wait: "bg-card text-muted-foreground ring-yellow/25",
+    mark: "text-yellow",
+    bar: "bg-yellow",
+  },
+  ember: {
+    ready: "bg-employee-deep text-white ring-employee/50",
+    wait: "bg-card text-muted-foreground ring-employee-deep/30",
+    mark: "text-employee",
+    bar: "bg-employee-deep",
   },
 } as const;
 
@@ -69,7 +69,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     short: "Jobs",
     hint: "Staffed work, maps, and live crew",
     ready: true,
-    tone: "green",
+    tone: "lime",
   },
   {
     id: "two",
@@ -87,7 +87,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     short: "03",
     hint: "Next function",
     ready: false,
-    tone: "sky",
+    tone: "orange",
   },
   {
     id: "four",
@@ -96,7 +96,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     short: "04",
     hint: "Next function",
     ready: false,
-    tone: "amber",
+    tone: "pending",
   },
   {
     id: "five",
@@ -105,7 +105,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     short: "05",
     hint: "Next function",
     ready: false,
-    tone: "orange",
+    tone: "yellow",
   },
   {
     id: "six",
@@ -114,7 +114,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     short: "06",
     hint: "Next function",
     ready: false,
-    tone: "rose",
+    tone: "ember",
   },
 ];
 

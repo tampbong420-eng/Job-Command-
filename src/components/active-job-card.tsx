@@ -59,8 +59,8 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
                   className={cn(
                     "size-12",
                     member.shift.clockedIn
-                      ? "clock-in-move ring-2 ring-emerald-400"
-                      : "ring-2 ring-red-600",
+                      ? "clock-in-move ring-2 ring-boss"
+                      : "ring-2 ring-duty",
                   )}
                 >
                   <AvatarImage src={member.avatarUrl} alt={member.name} />
@@ -76,7 +76,7 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
                   <p
                     className={cn(
                       "font-mono text-[11px] uppercase tracking-[0.14em]",
-                      member.tracking.status === "on_site" ? "text-emerald-400" : "text-primary",
+                      member.tracking.status === "on_site" ? "text-boss" : "text-employee",
                     )}
                   >
                     {CREW_LOCATION_LABELS[member.tracking.status]}
