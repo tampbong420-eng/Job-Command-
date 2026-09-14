@@ -13,9 +13,9 @@ export default async function SettingsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Workspace and account details.</p>
+        <p className="text-sm text-muted-foreground">Your login. The shop lives in Company.</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Your profile</CardTitle>
@@ -57,10 +57,6 @@ export default async function SettingsPage() {
             ) : (
               <p>Connected to Neon via <code>DATABASE_URL</code>.</p>
             )}
-            <p>
-              Custom domains are attached on the Vercel project after the first production
-              deploy: Project → Settings → Domains.
-            </p>
           </CardContent>
         </Card>
       </div>

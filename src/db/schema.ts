@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: text("role").$type<UserRole>().notNull().default("technician"),
   phone: text("phone"),
+  avatarUrl: text("avatar_url"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -54,6 +55,8 @@ export const jobs = pgTable(
     scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     location: text("location"),
+    trade: text("trade"),
+    contractCents: integer("contract_cents"),
     createdByUserId: text("created_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -71,7 +74,8 @@ export const jobNotes = pgTable("job_notes", {
     .notNull()
     .references(() => jobs.id, { onDelete: "cascade" }),
   authorUserId: text("author_user_id").references(() => users.id),
-  body: text("body").notNull(),
+  body: text("body").notNull().default(""),
+  imageUrl: text("image_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -90,9 +94,44 @@ export const jobEvents = pgTable(
   (table) => [index("job_events_job_idx").on(table.jobId)],
 );
 
+export const jobAssignments = pgTable(
+  "job_assignments",
+  {
+    id: text("id").primaryKey(),
+    jobId: text("job_id")
+      .notNull()
+      .references(() => jobs.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("job_assignments_job_idx").on(table.jobId),
+    index("job_assignments_user_idx").on(table.userId),
+  ],
+);
+
+export const timeEntries = pgTable(
+  "time_entries",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    jobId: text("job_id").references(() => jobs.id, { onDelete: "set null" }),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("time_entries_user_idx").on(table.userId)],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   assignedJobs: many(jobs),
   notes: many(jobNotes),
+  assignments: many(jobAssignments),
+  timeEntries: many(timeEntries),
 }));
 
 export const customersRelations = relations(customers, ({ many, one }) => ({
@@ -120,6 +159,7 @@ export const jobsRelations = relations(jobs, ({ one, many }) => ({
   }),
   notes: many(jobNotes),
   events: many(jobEvents),
+  assignments: many(jobAssignments),
 }));
 
 export const jobNotesRelations = relations(jobNotes, ({ one }) => ({
@@ -144,8 +184,95 @@ export const jobEventsRelations = relations(jobEvents, ({ one }) => ({
   }),
 }));
 
+export const jobAssignmentsRelations = relations(jobAssignments, ({ one }) => ({
+  job: one(jobs, {
+    fields: [jobAssignments.jobId],
+    references: [jobs.id],
+  }),
+  user: one(users, {
+    fields: [jobAssignments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const expenseReceipts = pgTable(
+  "expense_receipts",
+  {
+    id: text("id").primaryKey(),
+    jobId: text("job_id")
+      .notNull()
+      .references(() => jobs.id, { onDelete: "cascade" }),
+    vendor: text("vendor").notNull(),
+    purchasedAt: timestamp("purchased_at", { withTimezone: true }),
+    totalCents: integer("total_cents").notNull().default(0),
+    taxCents: integer("tax_cents").notNull().default(0),
+    lineItems: jsonb("line_items").$type<Array<{ name: string; amountCents: number }>>().notNull().default([]),
+    imageUrl: text("image_url"),
+    createdByUserId: text("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("expense_receipts_job_idx").on(table.jobId)],
+);
+
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: text("id").primaryKey(),
+    channel: text("channel").notNull(),
+    authorUserId: text("author_user_id").references(() => users.id),
+    body: text("body").notNull(),
+    imageUrl: text("image_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("chat_messages_channel_idx").on(table.channel)],
+);
+
+export const telemetryPings = pgTable(
+  "telemetry_pings",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    lat: text("lat"),
+    lng: text("lng"),
+    battery: integer("battery"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("telemetry_pings_user_idx").on(table.userId)],
+);
+
+export const voiceCalls = pgTable("voice_calls", {
+  id: text("id").primaryKey(),
+  fromPhone: text("from_phone"),
+  callerName: text("caller_name"),
+  transcript: text("transcript").notNull().default(""),
+  recordingUrl: text("recording_url"),
+  extracted: jsonb("extracted").$type<Record<string, string | null>>().notNull().default({}),
+  status: text("status").notNull().default("new"),
+  jobId: text("job_id").references(() => jobs.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [timeEntries.userId],
+    references: [users.id],
+  }),
+  job: one(jobs, {
+    fields: [timeEntries.jobId],
+    references: [jobs.id],
+  }),
+}));
+
 export type UserRow = typeof users.$inferSelect;
 export type CustomerRow = typeof customers.$inferSelect;
 export type JobRow = typeof jobs.$inferSelect;
 export type JobNoteRow = typeof jobNotes.$inferSelect;
 export type JobEventRow = typeof jobEvents.$inferSelect;
+export type JobAssignmentRow = typeof jobAssignments.$inferSelect;
+export type TimeEntryRow = typeof timeEntries.$inferSelect;
+export type ExpenseReceiptRow = typeof expenseReceipts.$inferSelect;
+export type ChatMessageRow = typeof chatMessages.$inferSelect;
+export type TelemetryPingRow = typeof telemetryPings.$inferSelect;
+export type VoiceCallRow = typeof voiceCalls.$inferSelect;

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Radio, Shield, RadioTower, Waypoints } from "lucide-react";
+import { Shield, RadioTower, Waypoints } from "lucide-react";
+import { BrandLockup } from "@/components/brand-lockup";
 import { Button } from "@/components/ui/button";
 import { getSessionUser } from "@/lib/auth";
 
@@ -10,10 +11,7 @@ export default async function LandingPage() {
     <div className="min-h-svh bg-background">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Radio className="size-4" />
-          </span>
-          <span className="text-sm font-semibold">Job Command</span>
+          <BrandLockup href="/" />
         </div>
         <div className="flex items-center gap-2">
           {user ? (

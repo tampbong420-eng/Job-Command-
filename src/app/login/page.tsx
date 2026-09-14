@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { Radio } from "lucide-react";
+import { BrandLockup } from "@/components/brand-lockup";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/login-form";
 import { getReadyDb, usesEphemeralDatabase } from "@/db";
@@ -15,25 +14,15 @@ export default async function LoginPage() {
   const total = await countUsers(db);
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-background px-4 py-10">
-      <div className="grid w-full max-w-4xl gap-6 md:grid-cols-[1.1fr_0.9fr]">
-        <div className="hidden flex-col justify-center md:flex">
-          <Link href="/" className="mb-6 flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Radio className="size-4" />
-            </span>
-            <span className="font-semibold">Job Command</span>
-          </Link>
-          <h1 className="text-3xl font-semibold tracking-tight">Sign in to the desk</h1>
-          <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-            Demo operators are ready on the local database. Production Neon starts empty so
-            the first signup becomes admin.
-          </p>
+    <div className="flex min-h-svh items-center justify-center bg-[#090a0d] px-4 py-8">
+      <div className="w-full max-w-[430px]">
+        <div className="mb-5">
+          <BrandLockup href="/login" />
         </div>
-        <Card>
+        <Card className="ring-1 ring-primary/20">
           <CardHeader>
             <CardTitle>Sign in</CardTitle>
-            <CardDescription>Use a teammate account or the seeded demo users.</CardDescription>
+            <CardDescription>Six boxes. Lime on steel. That is the desk.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <Suspense>

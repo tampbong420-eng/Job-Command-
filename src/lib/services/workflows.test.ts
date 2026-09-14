@@ -4,7 +4,7 @@ import { DEMO_PASSWORD } from "@/lib/domain";
 import { AppError, ForbiddenError } from "@/lib/errors";
 import { createCustomer } from "@/lib/services/customers";
 import { getDashboard } from "@/lib/services/dashboard";
-import { addJobNote, createJob, listJobs, updateJob } from "@/lib/services/jobs";
+import { addJobNote, createJob, listJobs, updateJob, writeJobScope } from "@/lib/services/jobs";
 import {
   authenticateUser,
   createTeammate,
@@ -80,6 +80,22 @@ describe("Job Command core workflows", () => {
     expect(completed.completedAt).toBeTruthy();
   });
 
+  it("lets dispatch send a lead through estimate before scheduling", async () => {
+    const { db } = await freshDb();
+    const dispatcher = await authenticateUser(
+      db,
+      "dispatch@jobcommand.local",
+      DEMO_PASSWORD,
+    );
+    const jobs = await listJobs(db, dispatcher);
+    const lead = jobs.find((item) => item.jobNumber === 1003);
+    expect(lead?.status).toBe("queued");
+    const sent = await updateJob(db, dispatcher, lead!.id, { status: "estimate_sent" });
+    expect(sent.status).toBe("estimate_sent");
+    const approved = await updateJob(db, dispatcher, lead!.id, { status: "estimate_approved" });
+    expect(approved.status).toBe("estimate_approved");
+  });
+
   it("scopes technicians to assigned jobs only", async () => {
     const { db } = await freshDb();
     const tech = await authenticateUser(db, "tech@jobcommand.local", DEMO_PASSWORD);
@@ -101,12 +117,54 @@ describe("Job Command core workflows", () => {
     expect(note.body).toContain("Compressor");
   });
 
+  it("writes a crew scope from typed notes", async () => {
+    const { db } = await freshDb();
+    const admin = await authenticateUser(db, "admin@jobcommand.local", DEMO_PASSWORD);
+    const jobs = await listJobs(db, admin);
+    const job = jobs.find((item) => item.jobNumber === 1001);
+    expect(job).toBeTruthy();
+    const scope = await writeJobScope(
+      db,
+      admin,
+      job!.id,
+      "swap the compressor and log the refrigerant charge",
+    );
+    expect(scope).toMatch(/compressor/i);
+    expect(scope.endsWith(".")).toBe(true);
+  });
+
+  it("lists staffed active jobs with crew clocks and tracking", async () => {
+    const { db } = await freshDb();
+    const admin = await authenticateUser(db, "admin@jobcommand.local", DEMO_PASSWORD);
+    const { listActiveCrewJobs } = await import("@/lib/services/crew");
+    const crewJobs = await listActiveCrewJobs(db, admin);
+    expect(crewJobs.length).toBeGreaterThan(0);
+    const dock = crewJobs.find((job) => job.jobNumber === 1001);
+    expect(dock).toBeTruthy();
+    expect(dock?.customerName).toBe("Kim Rhodes");
+    expect(dock?.customerAddress).toContain("Hot Springs");
+    expect(dock?.destination).toContain("Hot Springs");
+    expect(dock?.crew.map((member) => member.name)).toEqual(
+      expect.arrayContaining(["Riley Okonkwo", "Dana Cole"]),
+    );
+    const dana = dock?.crew.find((member) => member.name === "Dana Cole");
+    expect(dana?.shift.clockedIn).toBe(true);
+    expect(dana?.shift.overtimeWarning).toBe(true);
+    expect(dana?.phone).toBe("555-0104");
+    const livJob = crewJobs.find((job) => job.crew.some((member) => member.name === "Liv Park"));
+    const liv = livJob?.crew.find((member) => member.name === "Liv Park");
+    expect(liv?.shift.clockedIn).toBe(false);
+  });
+
   it("returns dashboard metrics for the command board", async () => {
     const { db } = await freshDb();
     const admin = await authenticateUser(db, "admin@jobcommand.local", DEMO_PASSWORD);
     const dashboard = await getDashboard(db, admin);
     expect(dashboard.metrics.open).toBeGreaterThan(0);
     expect(dashboard.columns.in_progress.length).toBeGreaterThan(0);
+    expect(dashboard.columns.estimate_sent.length).toBeGreaterThan(0);
+    expect(dashboard.columns.estimate_approved.length).toBeGreaterThan(0);
+    expect(dashboard.columns.queued.length).toBeGreaterThan(0);
     expect(dashboard.focus).toBeTruthy();
     expect(dashboard.overdueJobs).toBeDefined();
   });

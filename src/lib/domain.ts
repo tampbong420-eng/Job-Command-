@@ -5,6 +5,8 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 export const JOB_STATUSES = [
   "queued",
+  "estimate_sent",
+  "estimate_approved",
   "assigned",
   "in_progress",
   "blocked",
@@ -31,23 +33,37 @@ export type PublicUser = {
   name: string;
   role: UserRole;
   phone: string | null;
+  avatarUrl: string | null;
   active: boolean;
   createdAt: Date;
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  admin: "Admin",
+  admin: "Administrator",
   dispatcher: "Dispatcher",
-  technician: "Technician",
+  technician: "Field crew",
   viewer: "Viewer",
 };
 
+export const PIPELINE_COLUMNS = [
+  { status: "queued", title: "New" },
+  { status: "estimate_sent", title: "Estimate out" },
+  { status: "estimate_approved", title: "Approved" },
+  { status: "assigned", title: "Booked" },
+  { status: "in_progress", title: "Painting" },
+  { status: "completed", title: "Paid" },
+] as const;
+
+export type PipelineStatus = (typeof PIPELINE_COLUMNS)[number]["status"];
+
 export const STATUS_LABELS: Record<JobStatus, string> = {
-  queued: "Queued",
-  assigned: "Assigned",
-  in_progress: "In progress",
-  blocked: "Blocked",
-  completed: "Completed",
+  queued: "New",
+  estimate_sent: "Estimate out",
+  estimate_approved: "Approved",
+  assigned: "Booked",
+  in_progress: "Painting",
+  blocked: "Stuck",
+  completed: "Paid",
   cancelled: "Cancelled",
 };
 
@@ -59,15 +75,25 @@ export const PRIORITY_LABELS: Record<JobPriority, string> = {
 };
 
 export const STATUS_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
-  queued: ["assigned", "cancelled"],
-  assigned: ["queued", "in_progress", "cancelled"],
-  in_progress: ["blocked", "completed", "cancelled"],
+  queued: ["estimate_sent", "assigned", "cancelled"],
+  estimate_sent: ["estimate_approved", "queued", "cancelled"],
+  estimate_approved: ["assigned", "estimate_sent", "cancelled"],
+  assigned: ["in_progress", "estimate_approved", "queued", "cancelled"],
+  in_progress: ["blocked", "completed", "assigned"],
   blocked: ["in_progress", "cancelled"],
   completed: ["in_progress"],
   cancelled: ["queued"],
 };
 
 export function canManageTeam(role: UserRole) {
+  return role === "admin";
+}
+
+export function canAccessBilling(role: UserRole) {
+  return role === "admin";
+}
+
+export function canConfigureAi(role: UserRole) {
   return role === "admin";
 }
 
@@ -85,6 +111,10 @@ export function canAssignJobs(role: UserRole) {
 
 export function canViewAllJobs(role: UserRole) {
   return role === "admin" || role === "dispatcher" || role === "viewer";
+}
+
+export function isFieldCrew(role: UserRole) {
+  return role === "technician";
 }
 
 export function canMutateJob(

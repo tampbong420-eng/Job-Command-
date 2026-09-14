@@ -1,15 +1,16 @@
 "use client";
 
-import { MapPin, Phone, Play } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { tapHaptic } from "@/lib/haptic";
 import {
   fieldDestination,
   mapsUrl,
+  nextActionLabel,
   preferredNextStatus,
   telUrl,
 } from "@/lib/field";
-import { STATUS_LABELS, canMutateJob, type JobStatus, type PublicUser } from "@/lib/domain";
+import { canMutateJob, type JobStatus, type PublicUser } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 
 type FieldJob = {
@@ -83,8 +84,7 @@ export function FieldActions({
             onAdvance?.(next);
           }}
         >
-          <Play className="size-3.5" />
-          {STATUS_LABELS[next]}
+          {nextActionLabel(job.status) ?? "Next"}
         </Button>
       ) : null}
     </div>

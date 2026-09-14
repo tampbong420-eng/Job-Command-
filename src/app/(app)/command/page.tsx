@@ -1,13 +1,14 @@
-import { CommandBoard } from "@/components/command-board";
+import { HomePad } from "@/components/home-pad";
 import { getReadyDb } from "@/db";
 import { requireUser } from "@/lib/auth";
-import { getDashboard } from "@/lib/services/dashboard";
+import { PRIMARY_SCREENS } from "@/lib/primary-screens";
+import { listActiveCrewJobs } from "@/lib/services/crew";
 
-export const metadata = { title: "Command board" };
+export const metadata = { title: "Home" };
 
-export default async function CommandPage() {
+export default async function HomePadPage() {
   const user = await requireUser();
   const db = await getReadyDb();
-  const dashboard = await getDashboard(db, user);
-  return <CommandBoard initial={dashboard} user={user} />;
+  const jobs = await listActiveCrewJobs(db, user);
+  return <HomePad screens={PRIMARY_SCREENS} badges={{ fleet: jobs.length || undefined }} />;
 }

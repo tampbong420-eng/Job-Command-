@@ -24,6 +24,15 @@ export function formatDate(value: Date | string | null | undefined) {
   }).format(date);
 }
 
+export function formatCents(cents: number | null | undefined) {
+  if (cents == null) return "—";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
 export function toDateTimeLocal(value: Date | string | null | undefined) {
   if (!value) return "";
   const date = value instanceof Date ? value : new Date(value);

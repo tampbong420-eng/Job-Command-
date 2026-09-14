@@ -1,7 +1,7 @@
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AppDb } from "@/db/types";
-import { customers, jobEvents, jobNotes, jobs, users } from "@/db/schema";
+import { customers, expenseReceipts, jobAssignments, jobEvents, jobNotes, jobs, timeEntries, users } from "@/db/schema";
 import {
   JOB_PRIORITIES,
   JOB_STATUSES,
@@ -14,6 +14,7 @@ import {
   type JobStatus,
   type PublicUser,
 } from "@/lib/domain";
+import { polishScope, scopePrompt } from "@/lib/scope";
 import { AppError, ForbiddenError, NotFoundError } from "@/lib/errors";
 
 export const jobCreateSchema = z.object({
@@ -24,6 +25,8 @@ export const jobCreateSchema = z.object({
   assignedToUserId: z.string().nullable().optional(),
   scheduledAt: z.string().nullable().optional(),
   location: z.string().max(200).optional(),
+  trade: z.string().max(80).optional(),
+  contractCents: z.number().int().nonnegative().optional(),
 });
 
 export const jobUpdateSchema = jobCreateSchema.partial().extend({
@@ -32,6 +35,10 @@ export const jobUpdateSchema = jobCreateSchema.partial().extend({
 
 export const noteSchema = z.object({
   body: z.string().min(1).max(2000),
+});
+
+export const scopeInputSchema = z.object({
+  notes: z.string().min(1).max(4000),
 });
 
 export type JobListItem = {
@@ -50,6 +57,8 @@ export type JobListItem = {
   scheduledAt: Date | null;
   completedAt: Date | null;
   location: string | null;
+  trade: string | null;
+  contractCents: number | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -75,6 +84,8 @@ function mapJobRow(row: {
     scheduledAt: row.job.scheduledAt,
     completedAt: row.job.completedAt,
     location: row.job.location,
+    trade: row.job.trade,
+    contractCents: row.job.contractCents,
     createdAt: row.job.createdAt,
     updatedAt: row.job.updatedAt,
   };
@@ -96,7 +107,16 @@ export async function listJobs(
 ) {
   const conditions = [];
   if (!canViewAllJobs(actor.role)) {
-    conditions.push(eq(jobs.assignedToUserId, actor.id));
+    const assigned = await db
+      .select({ jobId: jobAssignments.jobId })
+      .from(jobAssignments)
+      .where(eq(jobAssignments.userId, actor.id));
+    const assignedIds = assigned.map((row) => row.jobId);
+    conditions.push(
+      assignedIds.length
+        ? or(eq(jobs.assignedToUserId, actor.id), inArray(jobs.id, assignedIds))
+        : eq(jobs.assignedToUserId, actor.id),
+    );
   }
   if (filters?.status) {
     conditions.push(eq(jobs.status, filters.status));
@@ -141,7 +161,12 @@ export async function getJob(db: AppDb, actor: PublicUser, id: string) {
     .limit(1);
   if (!row) throw new NotFoundError("Job not found");
   if (!canViewAllJobs(actor.role) && row.job.assignedToUserId !== actor.id) {
-    throw new ForbiddenError();
+    const [assignment] = await db
+      .select({ id: jobAssignments.id })
+      .from(jobAssignments)
+      .where(and(eq(jobAssignments.jobId, id), eq(jobAssignments.userId, actor.id)))
+      .limit(1);
+    if (!assignment) throw new ForbiddenError();
   }
   const notes = await db
     .select({
@@ -200,6 +225,8 @@ export async function createJob(
       assignedToUserId,
       scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
       location: input.location?.trim() || null,
+      trade: input.trade?.trim() || "Painting",
+      contractCents: input.contractCents ?? null,
       createdByUserId: actor.id,
     })
     .returning();
@@ -209,6 +236,7 @@ export async function createJob(
   });
   if (assignedToUserId) {
     await recordEvent(db, created.id, actor.id, "assigned", { assignedToUserId });
+    await ensureJobAssignment(db, created.id, assignedToUserId);
   }
   return getJob(db, actor, created.id);
 }
@@ -246,9 +274,6 @@ export async function updateJob(
   if (nextAssignee && nextStatus === "queued") {
     nextStatus = "assigned";
   }
-  if (!nextAssignee && nextStatus === "assigned") {
-    nextStatus = "queued";
-  }
 
   if (nextStatus !== current.status) {
     const allowed = STATUS_TRANSITIONS[current.status];
@@ -283,6 +308,10 @@ export async function updateJob(
         input.location === undefined
           ? current.location
           : input.location.trim() || null,
+      trade:
+        input.trade === undefined ? current.trade : input.trade.trim() || null,
+      contractCents:
+        input.contractCents === undefined ? current.contractCents : input.contractCents,
       completedAt:
         nextStatus === "completed"
           ? (current.completedAt ?? new Date())
@@ -304,6 +333,9 @@ export async function updateJob(
     await recordEvent(db, id, actor.id, "assigned", {
       assignedToUserId: nextAssignee,
     });
+    if (nextAssignee) {
+      await ensureJobAssignment(db, id, nextAssignee);
+    }
   }
   if (
     input.title ||
@@ -316,6 +348,38 @@ export async function updateJob(
   }
 
   return getJob(db, actor, id);
+}
+
+export async function writeJobScope(
+  db: AppDb,
+  actor: PublicUser,
+  id: string,
+  notes: string,
+) {
+  const current = await getJob(db, actor, id);
+  if (!canMutateJob(actor.role, current.assignedToUserId, actor.id)) {
+    throw new ForbiddenError();
+  }
+  let scope = polishScope(notes);
+  if (!process.env.VITEST) {
+    try {
+      const { generateText } = await import("ai");
+      const { text } = await generateText({
+        model: "google/gemini-3.8-flash",
+        prompt: scopePrompt({
+          title: current.title,
+          customer: current.customerName,
+          notes,
+        }),
+        abortSignal: AbortSignal.timeout(8000),
+      });
+      if (text.trim()) scope = polishScope(text);
+    } catch {
+      // Spoken or typed notes still save if the model is unavailable.
+    }
+  }
+  await updateJob(db, actor, id, { description: scope });
+  return scope;
 }
 
 export async function addJobNote(
@@ -351,5 +415,26 @@ export async function deleteJob(db: AppDb, actor: PublicUser, id: string) {
   await getJob(db, actor, id);
   await db.delete(jobNotes).where(eq(jobNotes.jobId, id));
   await db.delete(jobEvents).where(eq(jobEvents.jobId, id));
+  await db.delete(jobAssignments).where(eq(jobAssignments.jobId, id));
+  await db.delete(timeEntries).where(eq(timeEntries.jobId, id));
+  await db.delete(expenseReceipts).where(eq(expenseReceipts.jobId, id));
   await db.delete(jobs).where(eq(jobs.id, id));
+}
+
+export async function ensureJobAssignment(db: AppDb, jobId: string, userId: string) {
+  const [existing] = await db
+    .select({ id: jobAssignments.id })
+    .from(jobAssignments)
+    .where(and(eq(jobAssignments.jobId, jobId), eq(jobAssignments.userId, userId)))
+    .limit(1);
+  if (existing) return existing.id;
+  const [created] = await db
+    .insert(jobAssignments)
+    .values({
+      id: crypto.randomUUID(),
+      jobId,
+      userId,
+    })
+    .returning();
+  return created.id;
 }

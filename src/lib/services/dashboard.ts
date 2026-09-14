@@ -1,7 +1,7 @@
 import { and, eq, lte, ne, sql } from "drizzle-orm";
 import type { AppDb } from "@/db/types";
 import { jobs } from "@/db/schema";
-import { canViewAllJobs, type JobStatus, type PublicUser } from "@/lib/domain";
+import { JOB_STATUSES, canViewAllJobs, type JobStatus, type PublicUser } from "@/lib/domain";
 import { listJobs, type JobListItem } from "@/lib/services/jobs";
 
 export type DashboardData = {
@@ -19,6 +19,16 @@ export type DashboardData = {
   focus: JobListItem | null;
   generatedAt: string;
 };
+
+function emptyColumns(): Record<JobStatus, JobListItem[]> {
+  return JOB_STATUSES.reduce(
+    (acc, status) => {
+      acc[status] = [];
+      return acc;
+    },
+    {} as Record<JobStatus, JobListItem[]>,
+  );
+}
 
 export async function getDashboard(db: AppDb, actor: PublicUser): Promise<DashboardData> {
   const visible = canViewAllJobs(actor.role)
@@ -51,14 +61,7 @@ export async function getDashboard(db: AppDb, actor: PublicUser): Promise<Dashbo
     );
 
   const board = await listJobs(db, actor);
-  const columns: Record<JobStatus, JobListItem[]> = {
-    queued: [],
-    assigned: [],
-    in_progress: [],
-    blocked: [],
-    completed: [],
-    cancelled: [],
-  };
+  const columns = emptyColumns();
   for (const job of board) {
     columns[job.status].push(job);
   }

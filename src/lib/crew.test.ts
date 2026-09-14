@@ -1,0 +1,141 @@
+import { describe, expect, it } from "vitest";
+import {
+  broadcastSmsUrl,
+  clockStateLabel,
+  crewTracking,
+  formatElapsed,
+  mapEmbedUrl,
+  shiftMeter,
+  smsUrl,
+  streetViewEmbedUrl,
+  SHIFT_LENGTH_MS,
+  OT_WARNING_MS,
+} from "@/lib/crew";
+
+import { getWorkspaceBrand, PRODUCT_LOGO } from "@/lib/brand";
+import { polishScope } from "@/lib/scope";
+import { PAD_TONE_CLASS, PRIMARY_SCREENS } from "@/lib/primary-screens";
+
+describe("crew tracking and shift meter", () => {
+  it("turns orange after six hours and flashes red in the last 90 minutes", () => {
+    const late = shiftMeter(new Date(Date.now() - (6 * 60 * 60 * 1000 + 5 * 60 * 1000)));
+    expect(late.lateShift).toBe(true);
+    expect(late.overtimeWarning).toBe(false);
+
+    const start = new Date(Date.now() - (SHIFT_LENGTH_MS - OT_WARNING_MS / 2));
+    const meter = shiftMeter(start);
+    expect(meter.clockedIn).toBe(true);
+    expect(meter.overtimeWarning).toBe(true);
+    expect(meter.overtime).toBe(false);
+    expect(meter.lateShift).toBe(false);
+  });
+
+  it("flags overtime after eight hours", () => {
+    const start = new Date(Date.now() - SHIFT_LENGTH_MS - 5 * 60 * 1000);
+    const meter = shiftMeter(start);
+    expect(meter.overtime).toBe(true);
+    expect(meter.overtimeWarning).toBe(true);
+    expect(meter.progress).toBe(1);
+  });
+
+  it("keeps a fresh clock-in out of the overtime band", () => {
+    const start = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const meter = shiftMeter(start);
+    expect(meter.overtimeWarning).toBe(false);
+    expect(formatElapsed(meter.elapsedMs)).toMatch(/^2h /);
+  });
+
+  it("puts in-progress crew on site and assigned crew en route", () => {
+    const onSite = crewTracking("user_tech", "job_dock_cooler", "in_progress");
+    const enRoute = crewTracking("user_liv", "job_clinic_hvac", "assigned");
+    expect(["on_site", "en_route", "staging"]).toContain(onSite.status);
+    expect(enRoute.status).toBe("en_route");
+    expect(enRoute.miles).toBeGreaterThan(0);
+    expect(enRoute.minutes).toBeGreaterThan(0);
+  });
+
+  it("labels clocked-in crew IN and clocked-out crew OUT", () => {
+    expect(clockStateLabel(true)).toBe("IN");
+    expect(clockStateLabel(false)).toBe("OUT");
+  });
+
+  it("builds street view, map, and sms links", () => {
+    expect(streetViewEmbedUrl("410 Dockside Ave")).toContain("layer=c");
+    expect(streetViewEmbedUrl("410 Dockside Ave")).toContain("output=embed");
+    expect(mapEmbedUrl("410 Dockside Ave")).toContain("output=embed");
+    expect(smsUrl("555-0104", "On the way")).toBe("sms:5550104?body=On%20the%20way");
+    expect(broadcastSmsUrl(["555-0102", "555-0104"])).toContain("sms:/open?addresses=5550102,5550104");
+  });
+});
+
+describe("home pad screens", () => {
+  it("has six live boxes on the lime-steel desk", () => {
+    expect(PRIMARY_SCREENS).toHaveLength(6);
+    expect(PRIMARY_SCREENS.filter((item) => item.ready).map((item) => item.id)).toEqual([
+      "fleet",
+      "phone",
+      "pipeline",
+      "expenses",
+      "chat",
+      "company",
+    ]);
+    expect(PRIMARY_SCREENS.map((item) => item.label)).toEqual([
+      "Fleet",
+      "Phone",
+      "Jobs",
+      "Expenses",
+      "Chat",
+      "Company",
+    ]);
+    expect(PRIMARY_SCREENS.map((item) => item.href)).toEqual([
+      "/command/crew",
+      "/command/phone",
+      "/command/board",
+      "/command/expenses",
+      "/command/chat",
+      "/command/company",
+    ]);
+  });
+
+  it("covers GPS, AI phone, kanban, receipts, chat, and the company hub", () => {
+    const copy = PRIMARY_SCREENS.flatMap((screen) => [screen.hint, ...screen.opens]).join(" ");
+    expect(copy).toMatch(/Live crew/);
+    expect(copy).toMatch(/AI receptionist/);
+    expect(copy).toMatch(/painting/i);
+    expect(copy).toMatch(/receipt/);
+    expect(copy).toMatch(/job threads/);
+    expect(copy).toMatch(/Invite a tech/);
+  });
+
+  it("paints Fleet and Phone in JC lime and the rest steel with lime type", () => {
+    expect(PRIMARY_SCREENS[0]?.tone).toBe("lime");
+    expect(PRIMARY_SCREENS.map((item) => item.tone)).toEqual([
+      "lime",
+      "gold",
+      "orange",
+      "pending",
+      "yellow",
+      "ember",
+    ]);
+    expect(PAD_TONE_CLASS.lime.ready).toMatch(/bg-boss/);
+    expect(PAD_TONE_CLASS.gold.ready).toMatch(/bg-lime/);
+    expect(PAD_TONE_CLASS.orange.ready).toMatch(/text-boss/);
+    expect(PAD_TONE_CLASS.ember.ready).toMatch(/#14161c/);
+  });
+
+  it("keeps the Job Command mark on the left and names the shop in Company", () => {
+    const brand = getWorkspaceBrand();
+    expect(brand.productLogo).toBe(PRODUCT_LOGO);
+    expect(brand.companyLogo).toBeNull();
+    expect(brand.companyName).toBe("Top Gun Painting");
+    expect(brand.companyCity).toBe("Hot Springs, AR");
+  });
+});
+
+describe("job scope", () => {
+  it("turns spoken notes into a clean crew instruction", () => {
+    expect(polishScope("  swap the compressor and log the charge ")).toBe(
+      "Swap the compressor and log the charge.",
+    );
+  });
+});
