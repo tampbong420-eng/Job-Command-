@@ -21,6 +21,12 @@ export function ActiveJobsCrew({ initial }: { initial: ActiveCrewJob[] }) {
     return () => clearInterval(timer);
   }, []);
 
+  function saveScope(jobId: string, scope: string) {
+    setJobs((current) =>
+      current.map((job) => (job.id === jobId ? { ...job, scope, description: scope } : job)),
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2 px-0.5">
@@ -33,7 +39,11 @@ export function ActiveJobsCrew({ initial }: { initial: ActiveCrewJob[] }) {
         </span>
       </div>
       {jobs.map((job) => (
-        <ActiveJobCard key={job.id} job={job} />
+        <ActiveJobCard
+          key={job.id}
+          job={job}
+          onScopeSaved={(scope) => saveScope(job.id, scope)}
+        />
       ))}
       {jobs.length === 0 ? (
         <div className="rounded-2xl bg-card p-8 text-center ring-1 ring-primary/15">
