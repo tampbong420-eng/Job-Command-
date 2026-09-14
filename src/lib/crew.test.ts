@@ -17,12 +17,17 @@ import { polishScope } from "@/lib/scope";
 import { PRIMARY_SCREENS } from "@/lib/primary-screens";
 
 describe("crew tracking and shift meter", () => {
-  it("marks the last hour before overtime in red", () => {
+  it("turns orange after six hours and flashes red in the last 90 minutes", () => {
+    const late = shiftMeter(new Date(Date.now() - (6 * 60 * 60 * 1000 + 5 * 60 * 1000)));
+    expect(late.lateShift).toBe(true);
+    expect(late.overtimeWarning).toBe(false);
+
     const start = new Date(Date.now() - (SHIFT_LENGTH_MS - OT_WARNING_MS / 2));
     const meter = shiftMeter(start);
     expect(meter.clockedIn).toBe(true);
     expect(meter.overtimeWarning).toBe(true);
     expect(meter.overtime).toBe(false);
+    expect(meter.lateShift).toBe(false);
   });
 
   it("flags overtime after eight hours", () => {
@@ -64,11 +69,15 @@ describe("crew tracking and shift meter", () => {
 });
 
 describe("home pad screens", () => {
-  it("has six boxes, with Fleet and Pipeline live", () => {
+  it("has six live boxes on the lime-steel desk", () => {
     expect(PRIMARY_SCREENS).toHaveLength(6);
     expect(PRIMARY_SCREENS.filter((item) => item.ready).map((item) => item.id)).toEqual([
       "fleet",
+      "phone",
       "pipeline",
+      "expenses",
+      "chat",
+      "company",
     ]);
     expect(PRIMARY_SCREENS.map((item) => item.label)).toEqual([
       "Fleet",

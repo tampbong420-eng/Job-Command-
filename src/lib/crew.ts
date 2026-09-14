@@ -2,7 +2,10 @@ import { portraitUrl } from "@/lib/avatars";
 import type { JobStatus } from "@/lib/domain";
 
 export const SHIFT_LENGTH_MS = 8 * 60 * 60 * 1000;
-export const OT_WARNING_MS = 60 * 60 * 1000;
+export const SHIFT_LATE_MS = 6 * 60 * 60 * 1000;
+export const OT_WARNING_MS = 90 * 60 * 1000;
+
+export const HOT_SPRINGS = { lat: 34.5037, lng: -93.0552, label: "Hot Springs, AR" };
 
 export const CREW_LOCATION_STATUSES = ["on_site", "en_route", "staging"] as const;
 export type CrewLocationStatus = (typeof CREW_LOCATION_STATUSES)[number];
@@ -17,6 +20,7 @@ export type ShiftMeter = {
   clockedIn: boolean;
   elapsedMs: number;
   progress: number;
+  lateShift: boolean;
   overtimeWarning: boolean;
   overtime: boolean;
   remainingMs: number;
@@ -65,6 +69,7 @@ export function shiftMeter(startedAt: Date | string | null | undefined, now = ne
       clockedIn: false,
       elapsedMs: 0,
       progress: 0,
+      lateShift: false,
       overtimeWarning: false,
       overtime: false,
       remainingMs: SHIFT_LENGTH_MS,
@@ -74,10 +79,12 @@ export function shiftMeter(startedAt: Date | string | null | undefined, now = ne
   const elapsedMs = Math.max(0, now.getTime() - start.getTime());
   const overtime = elapsedMs >= SHIFT_LENGTH_MS;
   const overtimeWarning = elapsedMs >= SHIFT_LENGTH_MS - OT_WARNING_MS;
+  const lateShift = elapsedMs >= SHIFT_LATE_MS && !overtimeWarning;
   return {
     clockedIn: true,
     elapsedMs,
     progress: Math.min(elapsedMs / SHIFT_LENGTH_MS, 1),
+    lateShift,
     overtimeWarning,
     overtime,
     remainingMs: Math.max(0, SHIFT_LENGTH_MS - elapsedMs),
@@ -96,8 +103,53 @@ export function streetViewEmbedUrl(query: string) {
   return `https://www.google.com/maps?q=${encodeURIComponent(query)}&layer=c&cbp=12,0,0,0,0&output=embed`;
 }
 
-export function mapEmbedUrl(query: string) {
-  return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+export function mapEmbedUrl(query: string, satellite = false) {
+  const layer = satellite ? "&t=k" : "";
+  return `https://www.google.com/maps?q=${encodeURIComponent(query)}${layer}&output=embed`;
+}
+
+export function regionMapUrl(satellite = false) {
+  return mapEmbedUrl(HOT_SPRINGS.label, satellite);
+}
+
+export type FleetFix = {
+  lat: number;
+  lng: number;
+  battery: number;
+  speedMph: number;
+};
+
+export function simulatedFix(userId: string): FleetFix {
+  const n = hashSeed(userId);
+  return {
+    lat: HOT_SPRINGS.lat + ((n % 80) - 40) / 1200,
+    lng: HOT_SPRINGS.lng + ((n % 90) - 45) / 1000,
+    battery: 48 + (n % 47),
+    speedMph: n % 5 === 0 ? 0 : 8 + (n % 27),
+  };
+}
+
+export function pinPercent(lat: number, lng: number) {
+  const lat0 = 34.46;
+  const lat1 = 34.55;
+  const lng0 = -93.13;
+  const lng1 = -92.97;
+  const top = ((lat1 - lat) / (lat1 - lat0)) * 100;
+  const left = ((lng - lng0) / (lng1 - lng0)) * 100;
+  return {
+    top: `${Math.min(92, Math.max(8, top))}%`,
+    left: `${Math.min(92, Math.max(8, left))}%`,
+  };
+}
+
+export const FLEET_FILTERS = ["all", "active", "idle", "off"] as const;
+export type FleetFilter = (typeof FLEET_FILTERS)[number];
+
+export function fleetFilterLabel(filter: FleetFilter) {
+  if (filter === "active") return "Active";
+  if (filter === "idle") return "Idle";
+  if (filter === "off") return "Off-shift";
+  return "All";
 }
 
 export function smsUrl(phone: string, body?: string) {

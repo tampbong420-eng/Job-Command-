@@ -80,6 +80,22 @@ describe("Job Command core workflows", () => {
     expect(completed.completedAt).toBeTruthy();
   });
 
+  it("lets dispatch send a lead through estimate before scheduling", async () => {
+    const { db } = await freshDb();
+    const dispatcher = await authenticateUser(
+      db,
+      "dispatch@jobcommand.local",
+      DEMO_PASSWORD,
+    );
+    const jobs = await listJobs(db, dispatcher);
+    const lead = jobs.find((item) => item.jobNumber === 1003);
+    expect(lead?.status).toBe("queued");
+    const sent = await updateJob(db, dispatcher, lead!.id, { status: "estimate_sent" });
+    expect(sent.status).toBe("estimate_sent");
+    const approved = await updateJob(db, dispatcher, lead!.id, { status: "estimate_approved" });
+    expect(approved.status).toBe("estimate_approved");
+  });
+
   it("scopes technicians to assigned jobs only", async () => {
     const { db } = await freshDb();
     const tech = await authenticateUser(db, "tech@jobcommand.local", DEMO_PASSWORD);
@@ -146,6 +162,9 @@ describe("Job Command core workflows", () => {
     const dashboard = await getDashboard(db, admin);
     expect(dashboard.metrics.open).toBeGreaterThan(0);
     expect(dashboard.columns.in_progress.length).toBeGreaterThan(0);
+    expect(dashboard.columns.estimate_sent.length).toBeGreaterThan(0);
+    expect(dashboard.columns.estimate_approved.length).toBeGreaterThan(0);
+    expect(dashboard.columns.queued.length).toBeGreaterThan(0);
     expect(dashboard.focus).toBeTruthy();
     expect(dashboard.overdueJobs).toBeDefined();
   });

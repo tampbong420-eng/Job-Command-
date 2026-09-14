@@ -1,4 +1,4 @@
-import { ActiveJobsCrew } from "@/components/active-jobs-crew";
+import { FleetCommand } from "@/components/fleet-command";
 import { CommandDeck } from "@/components/command-deck";
 import { getReadyDb } from "@/db";
 import { requireUser } from "@/lib/auth";
@@ -20,7 +20,7 @@ export default async function ActiveCrewPage() {
       title={fleetScreen?.label ?? "Fleet"}
       hint={fleetScreen?.hint}
     >
-      <ActiveJobsCrew initial={jobs} />
+      <FleetCommand initial={jobs} />
     </CommandDeck>
   );
 }

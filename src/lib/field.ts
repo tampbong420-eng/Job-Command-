@@ -19,6 +19,9 @@ export function telUrl(phone: string) {
 }
 
 export function preferredNextStatus(status: JobStatus): JobStatus | null {
+  if (status === "queued") return "estimate_sent";
+  if (status === "estimate_sent") return "estimate_approved";
+  if (status === "estimate_approved") return "assigned";
   if (status === "assigned") return "in_progress";
   if (status === "in_progress") return "completed";
   if (status === "blocked") return "in_progress";

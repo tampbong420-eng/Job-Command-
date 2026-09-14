@@ -1,7 +1,7 @@
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AppDb } from "@/db/types";
-import { customers, jobAssignments, jobEvents, jobNotes, jobs, timeEntries, users } from "@/db/schema";
+import { customers, expenseReceipts, jobAssignments, jobEvents, jobNotes, jobs, timeEntries, users } from "@/db/schema";
 import {
   JOB_PRIORITIES,
   JOB_STATUSES,
@@ -25,6 +25,8 @@ export const jobCreateSchema = z.object({
   assignedToUserId: z.string().nullable().optional(),
   scheduledAt: z.string().nullable().optional(),
   location: z.string().max(200).optional(),
+  trade: z.string().max(80).optional(),
+  contractCents: z.number().int().nonnegative().optional(),
 });
 
 export const jobUpdateSchema = jobCreateSchema.partial().extend({
@@ -55,6 +57,8 @@ export type JobListItem = {
   scheduledAt: Date | null;
   completedAt: Date | null;
   location: string | null;
+  trade: string | null;
+  contractCents: number | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -80,6 +84,8 @@ function mapJobRow(row: {
     scheduledAt: row.job.scheduledAt,
     completedAt: row.job.completedAt,
     location: row.job.location,
+    trade: row.job.trade,
+    contractCents: row.job.contractCents,
     createdAt: row.job.createdAt,
     updatedAt: row.job.updatedAt,
   };
@@ -219,6 +225,8 @@ export async function createJob(
       assignedToUserId,
       scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
       location: input.location?.trim() || null,
+      trade: input.trade?.trim() || "Painting",
+      contractCents: input.contractCents ?? null,
       createdByUserId: actor.id,
     })
     .returning();
@@ -266,9 +274,6 @@ export async function updateJob(
   if (nextAssignee && nextStatus === "queued") {
     nextStatus = "assigned";
   }
-  if (!nextAssignee && nextStatus === "assigned") {
-    nextStatus = "queued";
-  }
 
   if (nextStatus !== current.status) {
     const allowed = STATUS_TRANSITIONS[current.status];
@@ -303,6 +308,10 @@ export async function updateJob(
         input.location === undefined
           ? current.location
           : input.location.trim() || null,
+      trade:
+        input.trade === undefined ? current.trade : input.trade.trim() || null,
+      contractCents:
+        input.contractCents === undefined ? current.contractCents : input.contractCents,
       completedAt:
         nextStatus === "completed"
           ? (current.completedAt ?? new Date())
@@ -408,6 +417,7 @@ export async function deleteJob(db: AppDb, actor: PublicUser, id: string) {
   await db.delete(jobEvents).where(eq(jobEvents.jobId, id));
   await db.delete(jobAssignments).where(eq(jobAssignments.jobId, id));
   await db.delete(timeEntries).where(eq(timeEntries.jobId, id));
+  await db.delete(expenseReceipts).where(eq(expenseReceipts.jobId, id));
   await db.delete(jobs).where(eq(jobs.id, id));
 }
 

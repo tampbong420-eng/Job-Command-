@@ -31,10 +31,10 @@ export const PAD_TONE_CLASS = {
     bar: "bg-boss",
   },
   gold: {
-    ready: "bg-logo text-ink ring-logo/70",
+    ready: "bg-lime text-ink ring-lime/70",
     wait: "bg-card text-muted-foreground ring-logo/25",
-    mark: "text-logo",
-    bar: "bg-logo",
+    mark: "text-lime",
+    bar: "bg-lime",
   },
   orange: {
     ready: "bg-employee text-ink ring-employee/70",
@@ -68,7 +68,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     href: "/command/crew",
     label: "Fleet",
     short: "GPS",
-    hint: "Live crew, maps, and shift bars",
+    hint: "Live crew on the Hot Springs map",
     ready: true,
     tone: "lime",
     opens: [
@@ -83,7 +83,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     label: "Phone",
     short: "AI",
     hint: "AI receptionist and call log",
-    ready: false,
+    ready: true,
     tone: "gold",
     opens: [
       "Missed and answered calls",
@@ -110,7 +110,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     label: "Expenses",
     short: "Scan",
     hint: "Scan a receipt onto a job",
-    ready: false,
+    ready: true,
     tone: "pending",
     opens: [
       "Camera scan of a material receipt",
@@ -123,7 +123,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     label: "Chat",
     short: "Talk",
     hint: "Office, field, and job threads",
-    ready: false,
+    ready: true,
     tone: "yellow",
     opens: [
       "Direct messages",
@@ -137,7 +137,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     label: "Company",
     short: "Hub",
     hint: "Profile, people, and billing",
-    ready: false,
+    ready: true,
     tone: "ember",
     opens: [
       "Business name and logo",

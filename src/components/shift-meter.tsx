@@ -14,19 +14,30 @@ export function ShiftMeterBar({ clockedInAt }: { clockedInAt: string | null }) {
 
   const meter = shiftMeter(clockedInAt, new Date(now));
   const hot = meter.overtimeWarning;
+  const late = meter.lateShift;
   const width = `${Math.max(meter.progress * 100, meter.clockedIn ? 4 : 0)}%`;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className={cn("font-medium", hot ? "text-duty" : "text-boss")}>
+        <span
+          className={cn(
+            "font-medium",
+            hot ? "text-duty" : late ? "text-employee" : "text-boss",
+          )}
+        >
           {meter.clockedIn
             ? meter.overtime
               ? `OT ${formatElapsed(meter.elapsedMs)}`
               : `On clock ${formatElapsed(meter.elapsedMs)}`
             : "Off clock"}
         </span>
-        <span className={cn("font-mono text-[11px]", hot ? "text-duty" : "text-muted-foreground")}>
+        <span
+          className={cn(
+            "font-mono text-[11px]",
+            hot ? "text-duty" : late ? "text-employee" : "text-muted-foreground",
+          )}
+        >
           {meter.clockedIn
             ? meter.overtime
               ? "Past 8h"
@@ -38,7 +49,7 @@ export function ShiftMeterBar({ clockedInAt }: { clockedInAt: string | null }) {
         <div
           className={cn(
             "h-full rounded-full transition-[width,background-color] duration-500",
-            hot ? "bg-duty" : "bg-boss",
+            hot ? "ot-flash bg-duty" : late ? "bg-employee" : "bg-boss",
           )}
           style={{ width }}
         />

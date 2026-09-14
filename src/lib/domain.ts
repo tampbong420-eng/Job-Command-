@@ -5,6 +5,8 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 export const JOB_STATUSES = [
   "queued",
+  "estimate_sent",
+  "estimate_approved",
   "assigned",
   "in_progress",
   "blocked",
@@ -37,18 +39,31 @@ export type PublicUser = {
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  admin: "Admin",
+  admin: "Administrator",
   dispatcher: "Dispatcher",
-  technician: "Technician",
+  technician: "Field crew",
   viewer: "Viewer",
 };
 
+export const PIPELINE_COLUMNS = [
+  { status: "queued", title: "Lead Intake" },
+  { status: "estimate_sent", title: "Estimate Sent" },
+  { status: "estimate_approved", title: "Estimate Approved" },
+  { status: "assigned", title: "Scheduled" },
+  { status: "in_progress", title: "In Progress" },
+  { status: "completed", title: "Invoiced" },
+] as const;
+
+export type PipelineStatus = (typeof PIPELINE_COLUMNS)[number]["status"];
+
 export const STATUS_LABELS: Record<JobStatus, string> = {
-  queued: "Queued",
-  assigned: "Assigned",
-  in_progress: "In progress",
+  queued: "Lead Intake",
+  estimate_sent: "Estimate Sent",
+  estimate_approved: "Estimate Approved",
+  assigned: "Scheduled",
+  in_progress: "In Progress",
   blocked: "Blocked",
-  completed: "Completed",
+  completed: "Invoiced",
   cancelled: "Cancelled",
 };
 
@@ -60,15 +75,25 @@ export const PRIORITY_LABELS: Record<JobPriority, string> = {
 };
 
 export const STATUS_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
-  queued: ["assigned", "cancelled"],
-  assigned: ["queued", "in_progress", "cancelled"],
-  in_progress: ["blocked", "completed", "cancelled"],
+  queued: ["estimate_sent", "assigned", "cancelled"],
+  estimate_sent: ["estimate_approved", "queued", "cancelled"],
+  estimate_approved: ["assigned", "estimate_sent", "cancelled"],
+  assigned: ["in_progress", "estimate_approved", "queued", "cancelled"],
+  in_progress: ["blocked", "completed", "assigned"],
   blocked: ["in_progress", "cancelled"],
   completed: ["in_progress"],
   cancelled: ["queued"],
 };
 
 export function canManageTeam(role: UserRole) {
+  return role === "admin";
+}
+
+export function canAccessBilling(role: UserRole) {
+  return role === "admin";
+}
+
+export function canConfigureAi(role: UserRole) {
   return role === "admin";
 }
 
@@ -86,6 +111,10 @@ export function canAssignJobs(role: UserRole) {
 
 export function canViewAllJobs(role: UserRole) {
   return role === "admin" || role === "dispatcher" || role === "viewer";
+}
+
+export function isFieldCrew(role: UserRole) {
+  return role === "technician";
 }
 
 export function canMutateJob(
