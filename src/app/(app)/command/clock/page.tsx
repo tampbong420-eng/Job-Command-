@@ -5,9 +5,8 @@ export const metadata = { title: "Time deck" };
 export default function ClockScreenPage() {
   return (
     <NextScreenStub
-      screen="clock"
-      title="Time deck"
-      copy="Clock, timesheets, and payroll hours plug into this slot next. Crew hours already run on the Active jobs cards."
+      title="Coming next"
+      copy="This box is not live yet. We will build one home button and its page at a time."
     />
   );
 }

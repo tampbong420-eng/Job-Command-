@@ -17,16 +17,16 @@ export function ShiftMeterBar({ clockedInAt }: { clockedInAt: string | null }) {
   const width = `${Math.max(meter.progress * 100, meter.clockedIn ? 4 : 0)}%`;
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between gap-2 text-[11px]">
-        <span className={cn("font-medium", hot ? "text-red-400" : "text-muted-foreground")}>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className={cn("font-medium", hot ? "text-red-400" : "text-primary")}>
           {meter.clockedIn
             ? meter.overtime
               ? `OT ${formatElapsed(meter.elapsedMs)}`
               : `On clock ${formatElapsed(meter.elapsedMs)}`
             : "Off clock"}
         </span>
-        <span className={cn("font-mono", hot ? "text-red-400" : "text-muted-foreground")}>
+        <span className={cn("font-mono text-[11px]", hot ? "text-red-400" : "text-muted-foreground")}>
           {meter.clockedIn
             ? meter.overtime
               ? "Past 8h"
@@ -34,7 +34,7 @@ export function ShiftMeterBar({ clockedInAt }: { clockedInAt: string | null }) {
             : "8h day"}
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+      <div className="h-2.5 overflow-hidden rounded-full bg-muted">
         <div
           className={cn(
             "h-full rounded-full transition-[width,background-color] duration-500",

@@ -12,7 +12,7 @@ export default async function DispatchBoardPage() {
   const dashboard = await getDashboard(db, user);
 
   return (
-    <CommandDeck screen="board">
+    <CommandDeck title="Dispatch" hint="Status lanes">
       <CommandBoard initial={dashboard} user={user} embedded />
     </CommandDeck>
   );

@@ -11,6 +11,8 @@ import {
   OT_WARNING_MS,
 } from "@/lib/crew";
 
+import { PRIMARY_SCREENS } from "@/lib/primary-screens";
+
 describe("crew tracking and shift meter", () => {
   it("marks the last hour before overtime in red", () => {
     const start = new Date(Date.now() - (SHIFT_LENGTH_MS - OT_WARNING_MS / 2));
@@ -50,5 +52,13 @@ describe("crew tracking and shift meter", () => {
     expect(mapEmbedUrl("410 Dockside Ave")).toContain("output=embed");
     expect(smsUrl("555-0104", "On the way")).toBe("sms:5550104?body=On%20the%20way");
     expect(broadcastSmsUrl(["555-0102", "555-0104"])).toContain("sms:/open?addresses=5550102,5550104");
+  });
+});
+
+describe("home pad screens", () => {
+  it("has six boxes and only the first is live", () => {
+    expect(PRIMARY_SCREENS).toHaveLength(6);
+    expect(PRIMARY_SCREENS.filter((item) => item.ready)).toHaveLength(1);
+    expect(PRIMARY_SCREENS[0]?.href).toBe("/command/crew");
   });
 });

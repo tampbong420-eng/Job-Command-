@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { MapPinned, PanelsTopLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MapPinned, Navigation, PanelsTopLeft } from "lucide-react";
 import { mapsUrl } from "@/lib/field";
 import { mapEmbedUrl, streetViewEmbedUrl } from "@/lib/crew";
 import { tapHaptic } from "@/lib/haptic";
+import { cn } from "@/lib/utils";
 
 export function PropertyPreview({ destination }: { destination: string }) {
   const [mode, setMode] = useState<"street" | "map">("street");
 
   if (!destination) {
     return (
-      <div className="flex h-44 items-center justify-center rounded-lg bg-muted/40 text-sm text-muted-foreground">
+      <div className="flex h-48 items-center justify-center rounded-2xl bg-muted/40 text-sm text-muted-foreground">
         No property pin on file
       </div>
     );
@@ -22,33 +22,29 @@ export function PropertyPreview({ destination }: { destination: string }) {
 
   return (
     <div className="space-y-2">
-      <div className="overflow-hidden rounded-lg ring-1 ring-foreground/10">
+      <div className="overflow-hidden rounded-2xl ring-1 ring-primary/20">
         <iframe
           title={`${mode === "street" ? "Street View" : "Map"} of ${destination}`}
           src={src}
-          className="h-44 w-full border-0 bg-muted"
+          className="h-48 w-full border-0 bg-muted"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           allowFullScreen
         />
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === "street" ? "default" : "outline"}
+      <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted/60 p-1">
+        <ToggleChip
+          active={mode === "street"}
           onClick={() => {
             tapHaptic();
             setMode("street");
           }}
         >
           <PanelsTopLeft className="size-3.5" />
-          Street View
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === "map" ? "default" : "outline"}
+          Street
+        </ToggleChip>
+        <ToggleChip
+          active={mode === "map"}
           onClick={() => {
             tapHaptic();
             setMode("map");
@@ -56,18 +52,41 @@ export function PropertyPreview({ destination }: { destination: string }) {
         >
           <MapPinned className="size-3.5" />
           Maps
-        </Button>
-        <Button asChild size="sm" variant="outline">
-          <a
-            href={mapsUrl(destination)}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => tapHaptic()}
-          >
-            Directions
-          </a>
-        </Button>
+        </ToggleChip>
+        <a
+          href={mapsUrl(destination)}
+          target="_blank"
+          rel="noreferrer"
+          onClick={() => tapHaptic()}
+          className="flex h-10 items-center justify-center gap-1 rounded-lg text-xs font-medium text-muted-foreground"
+        >
+          <Navigation className="size-3.5" />
+          Go
+        </a>
       </div>
     </div>
+  );
+}
+
+function ToggleChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex h-10 items-center justify-center gap-1 rounded-lg text-xs font-medium",
+        active ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+      )}
+    >
+      {children}
+    </button>
   );
 }

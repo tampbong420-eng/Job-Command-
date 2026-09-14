@@ -22,21 +22,21 @@ export function ActiveJobsCrew({ initial }: { initial: ActiveCrewJob[] }) {
   }, []);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2 px-0.5">
         <p className="text-sm text-muted-foreground">
-          {jobs.length} staffed {jobs.length === 1 ? "job" : "jobs"} on the board
+          {jobs.length} staffed {jobs.length === 1 ? "job" : "jobs"}
         </p>
-        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-          <span className={`size-2 rounded-full ${live ? "bg-emerald-400" : "bg-muted-foreground"}`} />
-          {live ? "Live feed" : "Standby"}
+        <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+          <span className={`size-2 rounded-full ${live ? "bg-emerald-400" : "bg-primary/50"}`} />
+          {live ? "Live" : "Standby"}
         </span>
       </div>
       {jobs.map((job) => (
         <ActiveJobCard key={job.id} job={job} />
       ))}
       {jobs.length === 0 ? (
-        <div className="rounded-xl bg-card p-8 text-center ring-1 ring-foreground/10">
+        <div className="rounded-2xl bg-card p-8 text-center ring-1 ring-primary/15">
           <p className="font-medium">No staffed jobs</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Assign a technician and this feed will light up.

@@ -1,7 +1,6 @@
 "use client";
 
 import { MessageSquare, Phone, Radio } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { broadcastSmsUrl, smsUrl } from "@/lib/crew";
 import { telUrl } from "@/lib/field";
 import { tapHaptic } from "@/lib/haptic";
@@ -16,26 +15,27 @@ export function CrewComms({
   jobTitle: string;
 }) {
   if (!phone) {
-    return <p className="text-[11px] text-muted-foreground">No radio</p>;
+    return <p className="text-xs text-muted-foreground">No radio</p>;
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5">
-      <Button asChild size="xs" variant="outline">
-        <a href={telUrl(phone)} onClick={() => tapHaptic()}>
-          <Phone className="size-3" />
-          Call
-        </a>
-      </Button>
-      <Button asChild size="xs" variant="outline">
-        <a
-          href={smsUrl(phone, `Job Command: ${name} — ${jobTitle}`)}
-          onClick={() => tapHaptic()}
-        >
-          <MessageSquare className="size-3" />
-          Text
-        </a>
-      </Button>
+    <div className="grid grid-cols-2 gap-2">
+      <a
+        href={telUrl(phone)}
+        onClick={() => tapHaptic()}
+        className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-semibold text-primary-foreground"
+      >
+        <Phone className="size-4" />
+        Call
+      </a>
+      <a
+        href={smsUrl(phone, `Job Command: ${name} — ${jobTitle}`)}
+        onClick={() => tapHaptic()}
+        className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-secondary text-sm font-semibold ring-1 ring-primary/30"
+      >
+        <MessageSquare className="size-4" />
+        Text
+      </a>
     </div>
   );
 }
@@ -51,11 +51,13 @@ export function BroadcastCrew({
   if (!href) return null;
 
   return (
-    <Button asChild size="sm" variant="secondary">
-      <a href={href} onClick={() => tapHaptic()}>
-        <Radio className="size-3.5" />
-        Broadcast crew
-      </a>
-    </Button>
+    <a
+      href={href}
+      onClick={() => tapHaptic()}
+      className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-primary/15 text-sm font-semibold text-primary ring-1 ring-primary/40"
+    >
+      <Radio className="size-4" />
+      Broadcast crew
+    </a>
   );
 }

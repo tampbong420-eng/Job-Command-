@@ -5,9 +5,8 @@ export const metadata = { title: "Shop books" };
 export default function ShopScreenPage() {
   return (
     <NextScreenStub
-      screen="shop"
-      title="Shop books"
-      copy="Estimates, invoices, and job costing plug into this slot next."
+      title="Coming next"
+      copy="This box is not live yet. We will build one home button and its page at a time."
     />
   );
 }
