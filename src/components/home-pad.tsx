@@ -10,7 +10,7 @@ export function HomePad() {
       <div className="mb-4 px-1">
         <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-primary">Home</p>
         <h1 className="text-2xl font-semibold tracking-tight">Job Command</h1>
-        <p className="text-sm text-muted-foreground">Six functions. Three boxes on each side.</p>
+        <p className="text-sm text-muted-foreground">Six boxes. Tap one. That is the desk.</p>
       </div>
 
       <div className="grid flex-1 grid-cols-2 grid-rows-3 gap-3">
@@ -33,19 +33,26 @@ export function HomePad() {
               >
                 {n}
               </span>
-              <span className="text-[15px] font-semibold leading-tight text-balance">
-                {item.ready ? item.label : "Coming next"}
+              <span className="space-y-1">
+                <span
+                  className={cn(
+                    "block text-[15px] font-semibold leading-tight text-balance",
+                    !item.ready && "text-foreground",
+                  )}
+                >
+                  {item.label}
+                </span>
+                <span
+                  className={cn(
+                    "block text-[11px] leading-snug text-pretty",
+                    item.ready ? "opacity-80" : "text-muted-foreground",
+                  )}
+                >
+                  {item.hint}
+                </span>
               </span>
             </>
           );
-
-          if (!item.ready) {
-            return (
-              <div key={item.id} className={className}>
-                {body}
-              </div>
-            );
-          }
 
           return (
             <Link key={item.id} href={item.href} className={className}>

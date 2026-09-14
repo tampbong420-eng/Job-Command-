@@ -64,11 +64,26 @@ describe("crew tracking and shift meter", () => {
 });
 
 describe("home pad screens", () => {
-  it("has six boxes and only the first is live", () => {
+  it("has six boxes and only Active Jobs is live", () => {
     expect(PRIMARY_SCREENS).toHaveLength(6);
     expect(PRIMARY_SCREENS.filter((item) => item.ready)).toHaveLength(1);
-    expect(PRIMARY_SCREENS[0]?.href).toBe("/command/crew");
-    expect(PRIMARY_SCREENS[0]?.label).toBe("Active Jobs");
+    expect(PRIMARY_SCREENS.map((item) => item.label)).toEqual([
+      "Active Jobs",
+      "Schedule",
+      "Customers",
+      "Money",
+      "Shop",
+      "Hours",
+    ]);
+    expect(PRIMARY_SCREENS.map((item) => item.href)).toEqual([
+      "/command/crew",
+      "/command/schedule",
+      "/command/customers",
+      "/command/money",
+      "/command/shop",
+      "/command/hours",
+    ]);
+    expect(PRIMARY_SCREENS[0]?.ready).toBe(true);
   });
 
   it("gives active jobs the logo lime and keeps each box on the gold-orange theme", () => {
