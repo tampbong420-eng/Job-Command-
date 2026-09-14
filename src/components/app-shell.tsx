@@ -102,8 +102,11 @@ export function AppShell({
           <div className={cn("-mx-3 h-0.5", accent.bar)} />
         </header>
         <main
-          className="flex-1 overflow-y-auto px-3 py-3"
-          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          className={cn(
+            "flex flex-1 flex-col overflow-y-auto px-3",
+            atHome ? "py-2" : "py-3",
+          )}
+          style={{ paddingBottom: "max(0.85rem, env(safe-area-inset-bottom))" }}
         >
           {children}
         </main>
