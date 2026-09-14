@@ -1783,8 +1783,73 @@ label.ghost-action {
   margin: 10px 0 8px;
 }
 
-.card-invoice {
-  margin: 8px 0 4px;
+.estimate-open {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.estimate-panel {
+  margin: 0 0 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #00bfff55;
+  background: #0b1220;
+}
+
+.estimate-amount {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--shock);
+  font-family: var(--font-display), Oswald, sans-serif;
+  font-size: 22px;
+}
+
+.job-chat {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 8px 0;
+}
+
+.job-chat-row {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ffffff12;
+}
+
+.job-chat-row strong {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.job-chat-row em {
+  color: var(--shock);
+  font-style: normal;
+  font-size: 12px;
+}
+
+.estimate-compose {
+  display: grid;
+  gap: 8px;
+}
+
+.estimate-compose input {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #09090b;
+  color: inherit;
+  padding: 0 12px;
+}
+
+.site-text {
+  width: 100%;
+  margin: 0 0 10px;
 }
 
 .card-invoice b {

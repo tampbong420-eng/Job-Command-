@@ -2,6 +2,7 @@
 
 import { assignedJob, assignedJobs, onClockCrew } from "@/lib/assign";
 import { clockLabel, formatLiveHours } from "@/lib/format";
+import { jobScope } from "@/lib/job-site";
 import { scheduleOverview } from "@/lib/schedule";
 import type { CrewMember, Job } from "@/lib/types";
 import { useLiveClockTime, useLiveDate, useLiveGreeting, useLiveNow } from "@/lib/use-live-time";
@@ -99,6 +100,7 @@ export default function EmployeeHome({
                   <span>
                     {stop.scheduledTime} · {stop.customerName}
                     <small>{stop.address}</small>
+                    <small>{jobScope(stop)}</small>
                   </span>
                 </p>
               ))

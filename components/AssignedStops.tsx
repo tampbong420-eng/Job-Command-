@@ -2,7 +2,7 @@
 
 import CustomerCard from "@/components/CustomerCard";
 import { assignedJobs } from "@/lib/assign";
-import type { CrewMember, Estimate, Job, JobStatus, TimeCard } from "@/lib/types";
+import type { CrewMember, Estimate, Job, JobChatMessage, JobStatus, TimeCard } from "@/lib/types";
 
 export default function AssignedStops({
   member,
@@ -13,9 +13,11 @@ export default function AssignedStops({
   onBack,
   onStatus,
   onDelete,
-  onOpenEstimates,
   onOpenTimeCards,
   onPhoto,
+  jobChats,
+  canEstimate,
+  onPostChat,
 }: {
   member: CrewMember;
   jobs: Job[];
@@ -25,9 +27,11 @@ export default function AssignedStops({
   onBack: () => void;
   onStatus: (jobId: string, status: JobStatus) => void;
   onDelete: (jobId: string) => void;
-  onOpenEstimates: () => void;
   onOpenTimeCards: () => void;
   onPhoto: (jobId: string, kind: "before" | "after", dataUrl: string) => void;
+  jobChats: JobChatMessage[];
+  canEstimate: boolean;
+  onPostChat: (jobId: string, body: string, amount: number) => void;
 }) {
   const stops = assignedJobs(jobs, member.id);
 
@@ -56,11 +60,13 @@ export default function AssignedStops({
           estimates={estimates}
           timeCards={timeCards}
           crew={crew}
+          jobChats={jobChats}
+          canEstimate={canEstimate}
           onStatus={(status) => onStatus(job.id, status)}
           onDelete={() => onDelete(job.id)}
-          onOpenEstimates={onOpenEstimates}
           onOpenTimeCards={onOpenTimeCards}
           onPhoto={(kind, dataUrl) => onPhoto(job.id, kind, dataUrl)}
+          onPostChat={(body, amount) => onPostChat(job.id, body, amount)}
         />
       ))}
     </section>

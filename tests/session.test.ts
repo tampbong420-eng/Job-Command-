@@ -100,6 +100,7 @@ describe("shop session", { concurrency: false }, () => {
     assert.equal(loaded?.jobs.some((job) => job.id === "c-hale"), true);
     assert.equal(loaded?.estimates.some((row) => row.jobId === "c-hale"), true);
     assert.equal(loaded?.messages.some((row) => row.id === "msg-weather"), true);
+    assert.equal(loaded?.jobChats.some((row) => row.jobId === "c-hale"), true);
     assert.equal(loaded?.crew.find((row) => row.id === "e-mike")?.hourlyRate, 48);
     const persisted = JSON.parse(data.get(SHOP_KEY) ?? "{}") as { shopVersion?: number };
     assert.equal(persisted.shopVersion, SHOP_VERSION);

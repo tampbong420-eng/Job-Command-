@@ -1,4 +1,4 @@
-import { CREW, ESTIMATES, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
+import { CREW, ESTIMATES, JOB_CHATS, JOBS, MESSAGES, TIMECARDS } from "./demo-data";
 import { syncJobRoutes } from "./assign";
 import { defaultCostCode, hydrateTimeCard, refreshStaleShifts } from "./payroll";
 import { weekdayHours } from "./schedule";
@@ -6,6 +6,7 @@ import type {
   CrewMember,
   Estimate,
   Job,
+  JobChatMessage,
   PayAudit,
   Role,
   ShopMessage,
@@ -14,7 +15,7 @@ import type {
 } from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
-export const SHOP_VERSION = 6;
+export const SHOP_VERSION = 7;
 
 export type ShopSettings = {
   shopName: string;
@@ -30,6 +31,7 @@ export type PersistedShop = {
   timesheets: Timesheet[];
   payAudits: PayAudit[];
   messages: ShopMessage[];
+  jobChats: JobChatMessage[];
   employeeId: string;
   role: Role;
   settings: ShopSettings;
@@ -131,6 +133,7 @@ export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
       (parsed.messages ?? []).map(hydrateMessage),
       base.messages,
     ),
+    jobChats: mergeById(parsed.jobChats ?? [], base.jobChats),
     employeeId: parsed.employeeId ?? base.employeeId,
     role: parsed.role === "employee" ? "employee" : "boss",
     settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
@@ -156,6 +159,7 @@ export function defaultShop(): PersistedShop {
     timesheets: [],
     payAudits: [],
     messages: MESSAGES.map(hydrateMessage),
+    jobChats: JOB_CHATS,
     employeeId: CREW[0]?.id ?? "e-mike",
     role: "boss",
     settings: DEFAULT_SETTINGS,

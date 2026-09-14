@@ -2,7 +2,14 @@
 
 import CustomerCard from "@/components/CustomerCard";
 import { jobStatusLabel, jobTone } from "@/lib/format";
-import type { CrewMember, Estimate, Job, JobStatus, TimeCard } from "@/lib/types";
+import type {
+  CrewMember,
+  Estimate,
+  Job,
+  JobChatMessage,
+  JobStatus,
+  TimeCard,
+} from "@/lib/types";
 import type { ReactNode } from "react";
 
 const GROUPS: JobStatus[] = ["lead", "pending", "in_progress", "completed"];
@@ -12,22 +19,24 @@ export default function BossJobsBoard({
   estimates,
   timeCards,
   crew,
+  jobChats,
   onStatus,
   onDelete,
-  onOpenEstimates,
   onOpenTimeCards,
   onPhoto,
+  onPostChat,
   children,
 }: {
   jobs: Job[];
   estimates: Estimate[];
   timeCards: TimeCard[];
   crew: CrewMember[];
+  jobChats: JobChatMessage[];
   onStatus: (jobId: string, status: JobStatus) => void;
   onDelete: (jobId: string) => void;
-  onOpenEstimates: (jobId: string) => void;
   onOpenTimeCards: (jobId: string) => void;
   onPhoto: (jobId: string, kind: "before" | "after", dataUrl: string) => void;
+  onPostChat: (jobId: string, body: string, amount: number) => void;
   children?: ReactNode;
 }) {
   return (
@@ -63,11 +72,13 @@ export default function BossJobsBoard({
                   estimates={estimates}
                   timeCards={timeCards}
                   crew={crew}
+                  jobChats={jobChats}
+                  canEstimate
                   onStatus={(next) => onStatus(job.id, next)}
                   onDelete={() => onDelete(job.id)}
-                  onOpenEstimates={() => onOpenEstimates(job.id)}
                   onOpenTimeCards={() => onOpenTimeCards(job.id)}
                   onPhoto={(kind, dataUrl) => onPhoto(job.id, kind, dataUrl)}
+                  onPostChat={(body, amount) => onPostChat(job.id, body, amount)}
                 />
               ))
             )}
