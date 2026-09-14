@@ -14,7 +14,7 @@ import {
 
 import { getWorkspaceBrand, PRODUCT_LOGO } from "@/lib/brand";
 import { polishScope } from "@/lib/scope";
-import { PRIMARY_SCREENS } from "@/lib/primary-screens";
+import { PAD_TONE_CLASS, PRIMARY_SCREENS } from "@/lib/primary-screens";
 
 describe("crew tracking and shift meter", () => {
   it("turns orange after six hours and flashes red in the last 90 minutes", () => {
@@ -107,7 +107,7 @@ describe("home pad screens", () => {
     expect(copy).toMatch(/Invite a tech/);
   });
 
-  it("gives fleet the logo lime and keeps each box on the gold-orange theme", () => {
+  it("paints Fleet and Phone in JC lime and the rest steel with lime type", () => {
     expect(PRIMARY_SCREENS[0]?.tone).toBe("lime");
     expect(PRIMARY_SCREENS.map((item) => item.tone)).toEqual([
       "lime",
@@ -117,6 +117,10 @@ describe("home pad screens", () => {
       "yellow",
       "ember",
     ]);
+    expect(PAD_TONE_CLASS.lime.ready).toMatch(/bg-boss/);
+    expect(PAD_TONE_CLASS.gold.ready).toMatch(/bg-lime/);
+    expect(PAD_TONE_CLASS.orange.ready).toMatch(/text-boss/);
+    expect(PAD_TONE_CLASS.ember.ready).toMatch(/#14161c/);
   });
 
   it("keeps the Job Command mark on the left and names the shop in Company", () => {

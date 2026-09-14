@@ -31,7 +31,9 @@ export function HomePad({
             <span
               className={cn(
                 "absolute left-3 top-3 font-mono text-[11px] tracking-[0.16em]",
-                item.ready ? "text-ink/70" : tone.mark,
+                item.ready && (item.tone === "lime" || item.tone === "gold")
+                  ? "text-ink/70"
+                  : tone.mark,
               )}
             >
               {n}
@@ -40,7 +42,9 @@ export function HomePad({
               <span
                 className={cn(
                   "absolute right-3 top-3 flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 font-mono text-[11px] font-semibold",
-                  item.ready ? "bg-ink text-boss" : "bg-primary text-primary-foreground",
+                  item.tone === "lime" || item.tone === "gold"
+                    ? "bg-ink text-boss"
+                    : "bg-boss text-ink",
                 )}
               >
                 {count}
@@ -49,7 +53,7 @@ export function HomePad({
             <span
               className={cn(
                 "px-1 text-[1.45rem] font-semibold leading-none tracking-tight",
-                !item.ready && "text-foreground",
+                item.tone === "lime" || item.tone === "gold" ? "text-ink" : "text-boss",
               )}
             >
               {item.label}

@@ -36,7 +36,18 @@ async function applySchema(db: AppDb) {
     .map((statement) => statement.trim())
     .filter(Boolean);
   for (const statement of statements) {
-    await db.execute(sql.raw(statement));
+    try {
+      await db.execute(sql.raw(statement));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (
+        /already exists|duplicate/i.test(message) ||
+        (statement.startsWith("ALTER TABLE") && /does not exist/i.test(message))
+      ) {
+        continue;
+      }
+      throw error;
+    }
   }
 }
 

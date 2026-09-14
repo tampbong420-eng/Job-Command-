@@ -25,40 +25,40 @@ export type PrimaryScreen = {
 
 export const PAD_TONE_CLASS = {
   lime: {
-    ready: "bg-boss text-ink ring-lime/50",
+    ready: "bg-boss text-ink ring-lime/60",
     wait: "bg-card text-muted-foreground ring-boss/20",
+    mark: "text-ink/70",
+    bar: "bg-lime",
+  },
+  gold: {
+    ready: "bg-lime text-ink ring-boss/50",
+    wait: "bg-card text-muted-foreground ring-boss/20",
+    mark: "text-ink/70",
+    bar: "bg-boss",
+  },
+  orange: {
+    ready: "bg-[#14161c] text-boss ring-boss/45",
+    wait: "bg-card text-muted-foreground ring-white/10",
     mark: "text-boss",
     bar: "bg-boss",
   },
-  gold: {
-    ready: "bg-lime text-ink ring-lime/70",
-    wait: "bg-card text-muted-foreground ring-logo/25",
+  pending: {
+    ready: "bg-[#14161c] text-boss ring-boss/45",
+    wait: "bg-card text-muted-foreground ring-white/10",
+    mark: "text-boss",
+    bar: "bg-lime",
+  },
+  yellow: {
+    ready: "bg-[#14161c] text-lime ring-lime/40",
+    wait: "bg-card text-muted-foreground ring-white/10",
     mark: "text-lime",
     bar: "bg-lime",
   },
-  orange: {
-    ready: "bg-employee text-ink ring-employee/70",
-    wait: "bg-card text-muted-foreground ring-employee/25",
-    mark: "text-employee",
-    bar: "bg-employee",
-  },
-  pending: {
-    ready: "bg-pending text-ink ring-pending/70",
-    wait: "bg-card text-muted-foreground ring-pending/25",
-    mark: "text-pending",
-    bar: "bg-pending",
-  },
-  yellow: {
-    ready: "bg-yellow text-ink ring-yellow/70",
-    wait: "bg-card text-muted-foreground ring-yellow/25",
-    mark: "text-yellow",
-    bar: "bg-yellow",
-  },
   ember: {
-    ready: "bg-employee-deep text-white ring-employee/50",
-    wait: "bg-card text-muted-foreground ring-employee-deep/30",
-    mark: "text-employee",
-    bar: "bg-employee-deep",
+    ready: "bg-[#14161c] text-boss ring-boss/45",
+    wait: "bg-card text-muted-foreground ring-white/10",
+    mark: "text-boss",
+    bar: "bg-boss",
   },
 } as const;
 
