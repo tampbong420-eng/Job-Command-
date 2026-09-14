@@ -90,9 +90,44 @@ export const jobEvents = pgTable(
   (table) => [index("job_events_job_idx").on(table.jobId)],
 );
 
+export const jobAssignments = pgTable(
+  "job_assignments",
+  {
+    id: text("id").primaryKey(),
+    jobId: text("job_id")
+      .notNull()
+      .references(() => jobs.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("job_assignments_job_idx").on(table.jobId),
+    index("job_assignments_user_idx").on(table.userId),
+  ],
+);
+
+export const timeEntries = pgTable(
+  "time_entries",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    jobId: text("job_id").references(() => jobs.id, { onDelete: "set null" }),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("time_entries_user_idx").on(table.userId)],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   assignedJobs: many(jobs),
   notes: many(jobNotes),
+  assignments: many(jobAssignments),
+  timeEntries: many(timeEntries),
 }));
 
 export const customersRelations = relations(customers, ({ many, one }) => ({
@@ -120,6 +155,7 @@ export const jobsRelations = relations(jobs, ({ one, many }) => ({
   }),
   notes: many(jobNotes),
   events: many(jobEvents),
+  assignments: many(jobAssignments),
 }));
 
 export const jobNotesRelations = relations(jobNotes, ({ one }) => ({
@@ -144,8 +180,32 @@ export const jobEventsRelations = relations(jobEvents, ({ one }) => ({
   }),
 }));
 
+export const jobAssignmentsRelations = relations(jobAssignments, ({ one }) => ({
+  job: one(jobs, {
+    fields: [jobAssignments.jobId],
+    references: [jobs.id],
+  }),
+  user: one(users, {
+    fields: [jobAssignments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [timeEntries.userId],
+    references: [users.id],
+  }),
+  job: one(jobs, {
+    fields: [timeEntries.jobId],
+    references: [jobs.id],
+  }),
+}));
+
 export type UserRow = typeof users.$inferSelect;
 export type CustomerRow = typeof customers.$inferSelect;
 export type JobRow = typeof jobs.$inferSelect;
 export type JobNoteRow = typeof jobNotes.$inferSelect;
 export type JobEventRow = typeof jobEvents.$inferSelect;
+export type JobAssignmentRow = typeof jobAssignments.$inferSelect;
+export type TimeEntryRow = typeof timeEntries.$inferSelect;

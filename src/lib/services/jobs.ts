@@ -1,7 +1,7 @@
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AppDb } from "@/db/types";
-import { customers, jobEvents, jobNotes, jobs, users } from "@/db/schema";
+import { customers, jobAssignments, jobEvents, jobNotes, jobs, timeEntries, users } from "@/db/schema";
 import {
   JOB_PRIORITIES,
   JOB_STATUSES,
@@ -96,7 +96,16 @@ export async function listJobs(
 ) {
   const conditions = [];
   if (!canViewAllJobs(actor.role)) {
-    conditions.push(eq(jobs.assignedToUserId, actor.id));
+    const assigned = await db
+      .select({ jobId: jobAssignments.jobId })
+      .from(jobAssignments)
+      .where(eq(jobAssignments.userId, actor.id));
+    const assignedIds = assigned.map((row) => row.jobId);
+    conditions.push(
+      assignedIds.length
+        ? or(eq(jobs.assignedToUserId, actor.id), inArray(jobs.id, assignedIds))
+        : eq(jobs.assignedToUserId, actor.id),
+    );
   }
   if (filters?.status) {
     conditions.push(eq(jobs.status, filters.status));
@@ -141,7 +150,12 @@ export async function getJob(db: AppDb, actor: PublicUser, id: string) {
     .limit(1);
   if (!row) throw new NotFoundError("Job not found");
   if (!canViewAllJobs(actor.role) && row.job.assignedToUserId !== actor.id) {
-    throw new ForbiddenError();
+    const [assignment] = await db
+      .select({ id: jobAssignments.id })
+      .from(jobAssignments)
+      .where(and(eq(jobAssignments.jobId, id), eq(jobAssignments.userId, actor.id)))
+      .limit(1);
+    if (!assignment) throw new ForbiddenError();
   }
   const notes = await db
     .select({
@@ -209,6 +223,7 @@ export async function createJob(
   });
   if (assignedToUserId) {
     await recordEvent(db, created.id, actor.id, "assigned", { assignedToUserId });
+    await ensureJobAssignment(db, created.id, assignedToUserId);
   }
   return getJob(db, actor, created.id);
 }
@@ -304,6 +319,9 @@ export async function updateJob(
     await recordEvent(db, id, actor.id, "assigned", {
       assignedToUserId: nextAssignee,
     });
+    if (nextAssignee) {
+      await ensureJobAssignment(db, id, nextAssignee);
+    }
   }
   if (
     input.title ||
@@ -351,5 +369,25 @@ export async function deleteJob(db: AppDb, actor: PublicUser, id: string) {
   await getJob(db, actor, id);
   await db.delete(jobNotes).where(eq(jobNotes.jobId, id));
   await db.delete(jobEvents).where(eq(jobEvents.jobId, id));
+  await db.delete(jobAssignments).where(eq(jobAssignments.jobId, id));
+  await db.delete(timeEntries).where(eq(timeEntries.jobId, id));
   await db.delete(jobs).where(eq(jobs.id, id));
+}
+
+export async function ensureJobAssignment(db: AppDb, jobId: string, userId: string) {
+  const [existing] = await db
+    .select({ id: jobAssignments.id })
+    .from(jobAssignments)
+    .where(and(eq(jobAssignments.jobId, jobId), eq(jobAssignments.userId, userId)))
+    .limit(1);
+  if (existing) return existing.id;
+  const [created] = await db
+    .insert(jobAssignments)
+    .values({
+      id: crypto.randomUUID(),
+      jobId,
+      userId,
+    })
+    .returning();
+  return created.id;
 }

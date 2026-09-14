@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ClipboardList,
-  LayoutGrid,
   LogOut,
   Radio,
   Settings,
@@ -29,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
 const nav = [
-  { href: "/command", label: "Command board", icon: LayoutGrid },
+  { href: "/command", label: "Crew", icon: Radio },
   { href: "/jobs", label: "Jobs", icon: ClipboardList },
   { href: "/customers", label: "Customers", icon: Building2 },
   { href: "/team", label: "Team", icon: Users },
@@ -95,7 +94,7 @@ export function AppShell({
           <div>
             <p className="text-sm font-semibold tracking-tight">Job Command</p>
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Field ops
+              Airfield ops
             </p>
           </div>
         </Link>
@@ -115,7 +114,7 @@ export function AppShell({
             <span className="text-sm font-semibold">Job Command</span>
           </div>
           <p className="hidden font-mono text-xs text-muted-foreground md:block">
-            Live operations desk
+            Airfield operations desk
           </p>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

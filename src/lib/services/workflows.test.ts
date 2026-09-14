@@ -101,6 +101,23 @@ describe("Job Command core workflows", () => {
     expect(note.body).toContain("Compressor");
   });
 
+  it("lists staffed active jobs with crew clocks and tracking", async () => {
+    const { db } = await freshDb();
+    const admin = await authenticateUser(db, "admin@jobcommand.local", DEMO_PASSWORD);
+    const { listActiveCrewJobs } = await import("@/lib/services/crew");
+    const crewJobs = await listActiveCrewJobs(db, admin);
+    expect(crewJobs.length).toBeGreaterThan(0);
+    const dock = crewJobs.find((job) => job.jobNumber === 1001);
+    expect(dock).toBeTruthy();
+    expect(dock?.customerName).toBe("Northwind Logistics");
+    expect(dock?.crew.map((member) => member.name)).toEqual(
+      expect.arrayContaining(["Riley Okonkwo", "Dana Cole"]),
+    );
+    const dana = dock?.crew.find((member) => member.name === "Dana Cole");
+    expect(dana?.shift.overtimeWarning).toBe(true);
+    expect(dana?.phone).toBe("555-0104");
+  });
+
   it("returns dashboard metrics for the command board", async () => {
     const { db } = await freshDb();
     const admin = await authenticateUser(db, "admin@jobcommand.local", DEMO_PASSWORD);

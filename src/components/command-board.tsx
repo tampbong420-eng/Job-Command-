@@ -28,9 +28,11 @@ type DashboardPayload = {
 export function CommandBoard({
   initial,
   user,
+  embedded = false,
 }: {
   initial: DashboardData;
   user: PublicUser;
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const [data, setData] = useState<DashboardData>(initial);
@@ -86,23 +88,32 @@ export function CommandBoard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
-            {greeting}
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">Command board</h1>
-          <p className="text-sm text-muted-foreground">
-            Call the site, get directions, and move the job without leaving the board.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      {embedded ? (
+        <div className="flex items-center justify-end text-xs text-muted-foreground">
           <span
-            className={`size-2 rounded-full ${live ? "bg-emerald-400" : "bg-muted-foreground"}`}
+            className={`mr-2 size-2 rounded-full ${live ? "bg-emerald-400" : "bg-muted-foreground"}`}
           />
           {live ? "Live" : "Connecting"}
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+              {greeting}
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight">Command board</h1>
+            <p className="text-sm text-muted-foreground">
+              Call the site, get directions, and move the job without leaving the board.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span
+              className={`size-2 rounded-full ${live ? "bg-emerald-400" : "bg-muted-foreground"}`}
+            />
+            {live ? "Live" : "Connecting"}
+          </div>
+        </div>
+      )}
 
       {data.focus ? (
         <Card className="ring-1 ring-primary/30">

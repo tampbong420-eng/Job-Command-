@@ -64,4 +64,26 @@ CREATE TABLE IF NOT EXISTS job_events (
 );
 
 CREATE INDEX IF NOT EXISTS job_events_job_idx ON job_events (job_id);
+
+CREATE TABLE IF NOT EXISTS job_assignments (
+  id text PRIMARY KEY,
+  job_id text NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+  user_id text NOT NULL REFERENCES users(id),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS job_assignments_job_idx ON job_assignments (job_id);
+CREATE INDEX IF NOT EXISTS job_assignments_user_idx ON job_assignments (user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS job_assignments_job_user_idx ON job_assignments (job_id, user_id);
+
+CREATE TABLE IF NOT EXISTS time_entries (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id),
+  job_id text REFERENCES jobs(id) ON DELETE SET NULL,
+  started_at timestamptz NOT NULL,
+  ended_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS time_entries_user_idx ON time_entries (user_id);
 `;

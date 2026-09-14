@@ -1,12 +1,18 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { AppDb } from "@/db/types";
-import { customers, jobs, users } from "@/db/schema";
+import { customers, jobAssignments, jobs, timeEntries, users } from "@/db/schema";
 import { DEMO_PASSWORD } from "@/lib/domain";
 import { hashPassword } from "@/lib/password";
 
 export async function seedDemoData(db: AppDb) {
   const existing = await db.select({ id: users.id }).from(users).limit(1);
-  if (existing.length > 0) return;
+  if (existing.length === 0) {
+    await seedCoreDemo(db);
+  }
+  await seedCrewDemo(db);
+}
+
+async function seedCoreDemo(db: AppDb) {
 
   const passwordHash = await hashPassword(DEMO_PASSWORD);
   const now = new Date();
@@ -14,6 +20,8 @@ export async function seedDemoData(db: AppDb) {
   const adminId = "user_admin";
   const dispatcherId = "user_dispatcher";
   const techId = "user_tech";
+  const danaId = "user_dana";
+  const livId = "user_liv";
   const viewerId = "user_viewer";
 
   await db.insert(users).values([
@@ -44,6 +52,26 @@ export async function seedDemoData(db: AppDb) {
       passwordHash,
       role: "technician",
       phone: "555-0102",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: danaId,
+      email: "dana@jobcommand.local",
+      name: "Dana Cole",
+      passwordHash,
+      role: "technician",
+      phone: "555-0104",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: livId,
+      email: "liv@jobcommand.local",
+      name: "Liv Park",
+      passwordHash,
+      role: "technician",
+      phone: "555-0105",
       createdAt: now,
       updatedAt: now,
     },
@@ -168,5 +196,82 @@ export async function seedDemoData(db: AppDb) {
   const seeded = await db.select({ id: users.id }).from(users).where(eq(users.id, adminId));
   if (seeded.length === 0) {
     throw new Error("Demo seed failed");
+  }
+}
+
+async function seedCrewDemo(db: AppDb) {
+  const [admin] = await db.select({ id: users.id }).from(users).where(eq(users.id, "user_admin")).limit(1);
+  if (!admin) return;
+
+  const passwordHash = await hashPassword(DEMO_PASSWORD);
+  const now = new Date();
+  const extraTechs = [
+    {
+      id: "user_dana",
+      email: "dana@jobcommand.local",
+      name: "Dana Cole",
+      phone: "555-0104",
+    },
+    {
+      id: "user_liv",
+      email: "liv@jobcommand.local",
+      name: "Liv Park",
+      phone: "555-0105",
+    },
+  ];
+  for (const tech of extraTechs) {
+    const [found] = await db.select({ id: users.id }).from(users).where(eq(users.id, tech.id)).limit(1);
+    if (found) continue;
+    await db.insert(users).values({
+      ...tech,
+      passwordHash,
+      role: "technician",
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  const roster: Array<[string, string[]]> = [
+    ["job_dock_cooler", ["user_tech", "user_dana"]],
+    ["job_clinic_hvac", ["user_tech", "user_liv"]],
+    ["job_gate_reader", ["user_tech"]],
+    ["job_completed_pump", ["user_tech"]],
+  ];
+  for (const [jobId, userIds] of roster) {
+    const [job] = await db.select({ id: jobs.id }).from(jobs).where(eq(jobs.id, jobId)).limit(1);
+    if (!job) continue;
+    for (const userId of userIds) {
+      const [existing] = await db
+        .select({ id: jobAssignments.id })
+        .from(jobAssignments)
+        .where(and(eq(jobAssignments.jobId, jobId), eq(jobAssignments.userId, userId)))
+        .limit(1);
+      if (existing) continue;
+      await db.insert(jobAssignments).values({
+        id: `assign_${jobId}_${userId}`,
+        jobId,
+        userId,
+      });
+    }
+  }
+
+  const clocks: Array<{ id: string; userId: string; jobId: string; hoursAgo: number }> = [
+    { id: "clock_tech", userId: "user_tech", jobId: "job_dock_cooler", hoursAgo: 6.15 },
+    { id: "clock_dana", userId: "user_dana", jobId: "job_dock_cooler", hoursAgo: 7.25 },
+    { id: "clock_liv", userId: "user_liv", jobId: "job_clinic_hvac", hoursAgo: 2.1 },
+  ];
+  for (const clock of clocks) {
+    const [open] = await db
+      .select({ id: timeEntries.id })
+      .from(timeEntries)
+      .where(and(eq(timeEntries.userId, clock.userId), isNull(timeEntries.endedAt)))
+      .limit(1);
+    if (open) continue;
+    await db.insert(timeEntries).values({
+      id: clock.id,
+      userId: clock.userId,
+      jobId: clock.jobId,
+      startedAt: new Date(Date.now() - clock.hoursAgo * 60 * 60 * 1000),
+    });
   }
 }
