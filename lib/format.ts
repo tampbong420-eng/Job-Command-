@@ -1,3 +1,5 @@
+import type { JobStatus } from "./types";
+
 export function wrapIndex(index: number, delta: number, length: number): number {
   if (length <= 0) return 0;
   return (index + delta + length * 10) % length;
@@ -52,21 +54,42 @@ export function formatLiveHours(startedAt: string | null, now = Date.now()): str
   return `${hours}h ${String(minutes).padStart(2, "0")}m`;
 }
 
-export function jobStatusAction(status: "lead" | "pending" | "in_progress" | "completed"): {
+export const JOB_STATUS_ORDER: JobStatus[] = [
+  "lead",
+  "pending",
+  "in_progress",
+  "completed",
+];
+
+export function nextJobStatus(status: JobStatus): JobStatus | null {
+  if (status === "lead") return "pending";
+  if (status === "pending") return "in_progress";
+  if (status === "in_progress") return "completed";
+  return null;
+}
+
+export function nextActionLabel(status: JobStatus): string | null {
+  if (status === "lead") return "Send estimate";
+  if (status === "pending") return "They said yes";
+  if (status === "in_progress") return "Mark paid";
+  return null;
+}
+
+export function jobStatusAction(status: JobStatus): {
   action: string;
   hint: string;
 } {
-  if (status === "lead") return { action: "Call", hint: "New" };
-  if (status === "pending") return { action: "Estimate", hint: "Pending" };
-  if (status === "in_progress") return { action: "On job", hint: "Working" };
-  return { action: "Finished", hint: "Archive" };
+  if (status === "lead") return { action: "New", hint: "Call" };
+  if (status === "pending") return { action: "Estimate", hint: "Out" };
+  if (status === "in_progress") return { action: "Painting", hint: "On job" };
+  return { action: "Paid", hint: "Done" };
 }
 
-export function jobStatusLabel(status: "lead" | "pending" | "in_progress" | "completed"): string {
-  if (status === "lead") return "New call";
-  if (status === "pending") return "Estimate";
-  if (status === "in_progress") return "On job";
-  return "Finished";
+export function jobStatusLabel(status: JobStatus): string {
+  if (status === "lead") return "New";
+  if (status === "pending") return "Estimate out";
+  if (status === "in_progress") return "Painting";
+  return "Paid";
 }
 
 export function money(amount: number): string {
@@ -77,7 +100,7 @@ export function money(amount: number): string {
   }).format(amount);
 }
 
-export function jobTone(status: "lead" | "pending" | "in_progress" | "completed"): string {
+export function jobTone(status: JobStatus): string {
   if (status === "lead") return "tone-lead";
   if (status === "pending") return "tone-pending";
   if (status === "in_progress") return "tone-active";

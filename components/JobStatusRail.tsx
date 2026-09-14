@@ -1,10 +1,10 @@
 "use client";
 
-import { jobStatusAction, jobStatusLabel, jobTone } from "@/lib/format";
+import { JOB_STATUS_ORDER, jobStatusAction, jobStatusLabel, jobTone } from "@/lib/format";
 import { jobsByStatus } from "@/lib/assign";
 import type { Job, JobStatus } from "@/lib/types";
 
-const ORDER: JobStatus[] = ["lead", "pending", "in_progress", "completed"];
+const ORDER = JOB_STATUS_ORDER;
 
 export default function JobStatusRail({
   jobs,

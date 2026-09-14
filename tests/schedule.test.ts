@@ -9,7 +9,13 @@ import {
   weekPayDue,
   weekdayHours,
 } from "../lib/schedule";
-import { jobStatusAction, jobStatusLabel, jobTone } from "../lib/format";
+import {
+  jobStatusAction,
+  jobStatusLabel,
+  jobTone,
+  nextActionLabel,
+  nextJobStatus,
+} from "../lib/format";
 
 test("weekdayHours marks weekend off by default", () => {
   const week = weekdayHours("07:00", "16:00");
@@ -39,17 +45,28 @@ test("patchDay can flip a Saturday on", () => {
   assert.equal(formatHourLabel("13:30"), "1:30 PM");
 });
 
-test("job tones follow the boss status hierarchy", () => {
+test("job tones follow the painting status hierarchy", () => {
   assert.equal(jobTone("lead"), "tone-lead");
   assert.equal(jobTone("pending"), "tone-pending");
   assert.equal(jobTone("in_progress"), "tone-active");
   assert.equal(jobTone("completed"), "tone-done");
-  assert.equal(jobStatusLabel("lead"), "New call");
-  assert.equal(jobStatusLabel("pending"), "Estimate");
-  assert.equal(jobStatusLabel("in_progress"), "On job");
-  assert.equal(jobStatusLabel("completed"), "Finished");
-  assert.deepEqual(jobStatusAction("lead"), { action: "Call", hint: "New" });
-  assert.deepEqual(jobStatusAction("pending"), { action: "Estimate", hint: "Pending" });
-  assert.deepEqual(jobStatusAction("in_progress"), { action: "On job", hint: "Working" });
-  assert.deepEqual(jobStatusAction("completed"), { action: "Finished", hint: "Archive" });
+  assert.equal(jobStatusLabel("lead"), "New");
+  assert.equal(jobStatusLabel("pending"), "Estimate out");
+  assert.equal(jobStatusLabel("in_progress"), "Painting");
+  assert.equal(jobStatusLabel("completed"), "Paid");
+  assert.deepEqual(jobStatusAction("lead"), { action: "New", hint: "Call" });
+  assert.deepEqual(jobStatusAction("pending"), { action: "Estimate", hint: "Out" });
+  assert.deepEqual(jobStatusAction("in_progress"), { action: "Painting", hint: "On job" });
+  assert.deepEqual(jobStatusAction("completed"), { action: "Paid", hint: "Done" });
+});
+
+test("green next-step verbs never name a finished status", () => {
+  assert.equal(nextActionLabel("lead"), "Send estimate");
+  assert.equal(nextActionLabel("pending"), "They said yes");
+  assert.equal(nextActionLabel("in_progress"), "Mark paid");
+  assert.equal(nextActionLabel("completed"), null);
+  assert.equal(nextJobStatus("lead"), "pending");
+  assert.equal(nextJobStatus("pending"), "in_progress");
+  assert.equal(nextJobStatus("in_progress"), "completed");
+  assert.equal(nextJobStatus("completed"), null);
 });

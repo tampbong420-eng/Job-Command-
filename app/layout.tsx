@@ -23,9 +23,9 @@ const display = Oswald({
 export const metadata: Metadata = {
   title: "JOB COMMAND",
   description:
-    "Boss employees desk with weekly hour editing, live Google Maps tracking, and color-coded job status.",
+    "Top Gun Painting desk — New, Estimate out, Painting, Paid. Crew clock, maps, and customer cards.",
   other: {
-    "job-command-build": "2026.09.14-scope-chat",
+    "job-command-build": "2026.09.14-paint-jobs",
   },
 };
 

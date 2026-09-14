@@ -1,7 +1,7 @@
 "use client";
 
 import CustomerCard from "@/components/CustomerCard";
-import { jobStatusLabel, jobTone } from "@/lib/format";
+import { JOB_STATUS_ORDER, jobStatusLabel, jobTone } from "@/lib/format";
 import type {
   CrewMember,
   Estimate,
@@ -12,7 +12,7 @@ import type {
 } from "@/lib/types";
 import type { ReactNode } from "react";
 
-const GROUPS: JobStatus[] = ["lead", "pending", "in_progress", "completed"];
+const GROUPS = JOB_STATUS_ORDER;
 
 export default function BossJobsBoard({
   jobs,
@@ -48,8 +48,9 @@ export default function BossJobsBoard({
         <strong>Cards.</strong>
       </h1>
       <p className="board-copy">
-        Tap New call, Estimate, On job, Finished, or Delete on a card. Invoice,
-        scope, street view, photos, and hours stay on the same customer.
+        Green button is the next step. Lanes are New, Estimate out, Painting,
+        and Paid. Scope, street view, photos, and hours stay on the same
+        customer.
       </p>
       {children}
       {GROUPS.map((status) => {

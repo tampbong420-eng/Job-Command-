@@ -30,7 +30,7 @@ export default function EmployeeJobs({
       </h1>
       <p className="board-copy">
         Jobs locked to you in order for the day. Get directions to open every
-        customer card, or mark a stop Finished when the work is done.
+        customer card, or tap Mark paid when the work is done.
       </p>
       {mine.length === 0 ? (
         <p className="empty-group">No active jobs on your card yet.</p>
@@ -72,7 +72,7 @@ export default function EmployeeJobs({
                 className="ghost-action hours"
                 onClick={() => onStatus(job.id, "completed")}
               >
-                Finished
+                Mark paid
               </button>
             </div>
           </article>

@@ -39,7 +39,7 @@ export function jobSiteSmsHref(
   ];
   if (nums.length === 0) return null;
   const text =
-    body ?? `Job Command: ${job.customerName} · ${job.jobTitle} · ${job.address}`;
+    body ?? `Top Gun Painting: ${job.customerName} · ${job.jobTitle} · ${job.address}`;
   return `sms:${nums.join(",")}?body=${encodeURIComponent(text)}`;
 }
 

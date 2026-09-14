@@ -15,11 +15,28 @@ import type {
 
 const STATUS_WORDS: { status: JobStatus; words: string[] }[] = [
   { status: "lead", words: ["new call", "new calls", "new lead", "new leads", "lead"] },
-  { status: "pending", words: ["estimate", "pending estimate", "pending"] },
-  { status: "in_progress", words: ["on job", "working", "active", "in progress"] },
+  {
+    status: "pending",
+    words: ["estimate out", "send estimate", "pending estimate", "estimate", "pending"],
+  },
+  {
+    status: "in_progress",
+    words: [
+      "they said yes",
+      "book it",
+      "start job",
+      "on job",
+      "painting",
+      "working",
+      "active",
+      "in progress",
+    ],
+  },
   {
     status: "completed",
     words: [
+      "mark paid",
+      "paid",
       "finished",
       "archive",
       "job archive",
@@ -246,9 +263,9 @@ export function applyCommand(
 }
 
 function jobTitleStatus(status: JobStatus): string {
-  if (status === "pending") return "an estimate";
-  if (status === "in_progress") return "on job";
-  if (status === "completed") return "finished";
+  if (status === "pending") return "estimate out";
+  if (status === "in_progress") return "painting";
+  if (status === "completed") return "paid";
   return "a new call";
 }
 
@@ -372,10 +389,12 @@ export function parseTalk(text: string, snapshot: ShopSnapshot): TalkResult {
     }
   }
 
-  const newLead = raw.match(/new lead(?:\s+for)?\s+([^,]+?)(?:\s+at\s+(.+?))?(?:\s+for\s+(.+))?$/i);
-  if (newLead && !parseStatus(lower.replace("new lead", ""))) {
+  const newLead = raw.match(
+    /new (?:call|lead)(?:\s+for)?\s+([^,]+?)(?:\s+at\s+(.+?))?(?:\s+for\s+(.+))?$/i,
+  );
+  if (newLead && !parseStatus(lower.replace(/new (?:call|lead)/, ""))) {
     return {
-      say: `Adding ${newLead[1]} as a new lead.`,
+      say: `Adding ${newLead[1]} as a new call.`,
       commands: [
         {
           type: "create_job",
@@ -393,9 +412,12 @@ export function parseTalk(text: string, snapshot: ShopSnapshot): TalkResult {
     const query =
       afterKeyword(
         raw,
-        /(?:mark|set|make|move|put)?\s*(.+?)\s+(?:as|to|is)?\s*(?:a\s+)?(?:new lead|pending|active|finished|job archive|complete[d]?|done|in progress)/i,
+        /(?:mark|set|make|move|put)?\s*(.+?)\s+(?:as|to|is)?\s*(?:a\s+)?(?:new call|new lead|estimate out|pending|painting|on job|paid|active|finished|job archive|complete[d]?|done|in progress|they said yes|send estimate|mark paid)/i,
       ) ||
-      afterKeyword(raw, /(?:new lead|pending|active|finished|job archive|complete[d]?)\s+(?:for\s+)?(.+)/i) ||
+      afterKeyword(
+        raw,
+        /(?:new call|new lead|estimate out|pending|painting|on job|paid|active|finished|job archive|complete[d]?|they said yes|send estimate|mark paid)\s+(?:for\s+|on\s+)?(.+)/i,
+      ) ||
       snapshot.jobs.find((job) => job.id === snapshot.selectedJobId)?.customerName ||
       "";
     if (query) {
