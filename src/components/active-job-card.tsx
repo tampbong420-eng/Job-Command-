@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ClockInOut } from "@/components/clock-in-out";
 import { BroadcastCrew, CrewComms } from "@/components/crew-comms";
+import { JobScopeTalk } from "@/components/job-scope-talk";
 import { PropertyPreview } from "@/components/property-preview";
 import { ShiftMeterBar } from "@/components/shift-meter";
 import { PriorityBadge, StatusBadge } from "@/components/status-badge";
@@ -15,6 +17,11 @@ import { cn } from "@/lib/utils";
 
 export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
   const phones = job.crew.map((member) => member.phone).filter((phone): phone is string => Boolean(phone));
+  const [scope, setScope] = useState(job.scope);
+
+  useEffect(() => {
+    setScope(job.scope);
+  }, [job.scope]);
 
   return (
     <article className="space-y-4 rounded-2xl bg-card p-4 ring-1 ring-primary/15">
@@ -41,9 +48,15 @@ export function ActiveJobCard({ job }: { job: ActiveCrewJob }) {
           <h3 className="text-base font-semibold leading-tight">
             <Link href={`/jobs/${job.id}`}>{job.title}</Link>
           </h3>
-          <p className="mt-1 text-sm leading-snug text-muted-foreground">{job.scope}</p>
+          <p className="mt-1 text-sm leading-snug text-muted-foreground">{scope}</p>
         </div>
       </header>
+
+      <JobScopeTalk
+        jobId={job.id}
+        customerName={job.customerName}
+        onSaved={setScope}
+      />
 
       <PropertyPreview destination={job.destination} />
 

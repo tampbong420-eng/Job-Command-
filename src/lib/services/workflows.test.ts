@@ -4,7 +4,7 @@ import { DEMO_PASSWORD } from "@/lib/domain";
 import { AppError, ForbiddenError } from "@/lib/errors";
 import { createCustomer } from "@/lib/services/customers";
 import { getDashboard } from "@/lib/services/dashboard";
-import { addJobNote, createJob, listJobs, updateJob } from "@/lib/services/jobs";
+import { addJobNote, createJob, listJobs, updateJob, writeJobScope } from "@/lib/services/jobs";
 import {
   authenticateUser,
   createTeammate,
@@ -99,6 +99,22 @@ describe("Job Command core workflows", () => {
     expect(job).toBeTruthy();
     const note = await addJobNote(db, tech, job!.id, "Compressor isolated, waiting on part.");
     expect(note.body).toContain("Compressor");
+  });
+
+  it("writes a crew scope from typed notes", async () => {
+    const { db } = await freshDb();
+    const admin = await authenticateUser(db, "admin@jobcommand.local", DEMO_PASSWORD);
+    const jobs = await listJobs(db, admin);
+    const job = jobs.find((item) => item.jobNumber === 1001);
+    expect(job).toBeTruthy();
+    const scope = await writeJobScope(
+      db,
+      admin,
+      job!.id,
+      "swap the compressor and log the refrigerant charge",
+    );
+    expect(scope).toMatch(/compressor/i);
+    expect(scope.endsWith(".")).toBe(true);
   });
 
   it("lists staffed active jobs with crew clocks and tracking", async () => {

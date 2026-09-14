@@ -14,6 +14,7 @@ import {
   type JobStatus,
   type PublicUser,
 } from "@/lib/domain";
+import { polishScope, scopePrompt } from "@/lib/scope";
 import { AppError, ForbiddenError, NotFoundError } from "@/lib/errors";
 
 export const jobCreateSchema = z.object({
@@ -32,6 +33,10 @@ export const jobUpdateSchema = jobCreateSchema.partial().extend({
 
 export const noteSchema = z.object({
   body: z.string().min(1).max(2000),
+});
+
+export const scopeInputSchema = z.object({
+  notes: z.string().min(1).max(4000),
 });
 
 export type JobListItem = {
@@ -334,6 +339,38 @@ export async function updateJob(
   }
 
   return getJob(db, actor, id);
+}
+
+export async function writeJobScope(
+  db: AppDb,
+  actor: PublicUser,
+  id: string,
+  notes: string,
+) {
+  const current = await getJob(db, actor, id);
+  if (!canMutateJob(actor.role, current.assignedToUserId, actor.id)) {
+    throw new ForbiddenError();
+  }
+  let scope = polishScope(notes);
+  if (!process.env.VITEST) {
+    try {
+      const { generateText } = await import("ai");
+      const { text } = await generateText({
+        model: "google/gemini-3.8-flash",
+        prompt: scopePrompt({
+          title: current.title,
+          customer: current.customerName,
+          notes,
+        }),
+        abortSignal: AbortSignal.timeout(8000),
+      });
+      if (text.trim()) scope = polishScope(text);
+    } catch {
+      // Spoken or typed notes still save if the model is unavailable.
+    }
+  }
+  await updateJob(db, actor, id, { description: scope });
+  return scope;
 }
 
 export async function addJobNote(

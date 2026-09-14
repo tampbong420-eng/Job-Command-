@@ -13,6 +13,7 @@ import {
 } from "@/lib/crew";
 
 import { getWorkspaceBrand, PRODUCT_LOGO } from "@/lib/brand";
+import { polishScope } from "@/lib/scope";
 import { PRIMARY_SCREENS } from "@/lib/primary-screens";
 
 describe("crew tracking and shift meter", () => {
@@ -86,5 +87,13 @@ describe("home pad screens", () => {
     const brand = getWorkspaceBrand();
     expect(brand.productLogo).toBe(PRODUCT_LOGO);
     expect(brand.companyLogo).toBeNull();
+  });
+});
+
+describe("job scope", () => {
+  it("turns spoken notes into a clean crew instruction", () => {
+    expect(polishScope("  swap the compressor and log the charge ")).toBe(
+      "Swap the compressor and log the charge.",
+    );
   });
 });
