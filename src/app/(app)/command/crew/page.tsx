@@ -5,9 +5,9 @@ import { requireUser } from "@/lib/auth";
 import { PRIMARY_SCREENS } from "@/lib/primary-screens";
 import { listActiveCrewJobs } from "@/lib/services/crew";
 
-const crewScreen = PRIMARY_SCREENS.find((item) => item.id === "crew");
+const fleetScreen = PRIMARY_SCREENS.find((item) => item.id === "fleet");
 
-export const metadata = { title: crewScreen?.label ?? "Active Jobs" };
+export const metadata = { title: fleetScreen?.label ?? "Fleet" };
 
 export default async function ActiveCrewPage() {
   const user = await requireUser();
@@ -17,8 +17,8 @@ export default async function ActiveCrewPage() {
   return (
     <CommandDeck
       kicker="01"
-      title={crewScreen?.label ?? "Active Jobs"}
-      hint={crewScreen?.hint}
+      title={fleetScreen?.label ?? "Fleet"}
+      hint={fleetScreen?.hint}
     >
       <ActiveJobsCrew initial={jobs} />
     </CommandDeck>

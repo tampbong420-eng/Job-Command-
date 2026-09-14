@@ -11,10 +11,8 @@ export function HomePad({
   screens: PrimaryScreen[];
   badges?: Partial<Record<PrimaryScreenId, number>>;
 }) {
-  const hero = screens.length === 3;
-
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2.5">
+    <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-3 gap-2.5">
       {screens.map((item, index) => {
         const n = String(index + 1).padStart(2, "0");
         const tone = PAD_TONE_CLASS[item.tone];
@@ -27,7 +25,6 @@ export function HomePad({
             className={cn(
               "relative flex min-h-0 items-center justify-center overflow-hidden rounded-[1.35rem] px-3 text-center ring-1 active:scale-[0.99]",
               item.ready ? tone.ready : tone.wait,
-              hero && index === 0 && "col-span-2",
             )}
           >
             <span className={cn("absolute inset-x-0 top-0 h-1", tone.bar, !item.ready && "opacity-80")} />

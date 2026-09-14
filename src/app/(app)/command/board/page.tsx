@@ -4,7 +4,11 @@ import { getReadyDb } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { getDashboard } from "@/lib/services/dashboard";
 
-export const metadata = { title: "Dispatch board" };
+import { PRIMARY_SCREENS } from "@/lib/primary-screens";
+
+const pipelineScreen = PRIMARY_SCREENS.find((item) => item.id === "pipeline");
+
+export const metadata = { title: pipelineScreen?.label ?? "Pipeline" };
 
 export default async function DispatchBoardPage() {
   const user = await requireUser();
@@ -12,7 +16,11 @@ export default async function DispatchBoardPage() {
   const dashboard = await getDashboard(db, user);
 
   return (
-    <CommandDeck title="Dispatch" hint="Status lanes">
+    <CommandDeck
+      kicker="03"
+      title={pipelineScreen?.label ?? "Pipeline"}
+      hint={pipelineScreen?.hint}
+    >
       <CommandBoard initial={dashboard} user={user} embedded />
     </CommandDeck>
   );

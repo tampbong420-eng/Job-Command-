@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, Home, LogOut, Settings, Users } from "lucide-react";
+import { ChevronLeft, LogOut, Settings, Users } from "lucide-react";
 import { BrandLockup } from "@/components/brand-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -104,31 +104,11 @@ export function AppShell({
           <div className={cn("-mx-3 h-0.5", accent.bar)} />
         </header>
         <main
-          className={cn(
-            "flex flex-1 flex-col overflow-y-auto px-3",
-            atHome ? "py-2" : "py-3",
-            !atHome && "pb-0",
-          )}
-          style={{
-            paddingBottom: atHome ? "max(0.85rem, env(safe-area-inset-bottom))" : undefined,
-          }}
+          className={cn("flex flex-1 flex-col overflow-y-auto px-3", atHome ? "py-2" : "py-3")}
+          style={{ paddingBottom: "max(0.85rem, env(safe-area-inset-bottom))" }}
         >
           {children}
         </main>
-        {atHome ? null : (
-          <nav
-            className="sticky bottom-0 z-30 border-t border-border/80 bg-background/95 px-3 backdrop-blur"
-            style={{ paddingBottom: "max(0.55rem, env(safe-area-inset-bottom))" }}
-          >
-            <Link
-              href="/command"
-              className="flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold text-foreground"
-            >
-              <Home className="size-5 text-primary" />
-              Home
-            </Link>
-          </nav>
-        )}
       </div>
     </div>
   );

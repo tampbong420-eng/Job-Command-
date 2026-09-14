@@ -1,22 +1,16 @@
-import type { UserRole } from "@/lib/domain";
-
-export const PRIMARY_SCREEN_IDS = ["crew", "schedule", "money", "hours"] as const;
+export const PRIMARY_SCREEN_IDS = [
+  "fleet",
+  "phone",
+  "pipeline",
+  "expenses",
+  "chat",
+  "company",
+] as const;
 
 export type PrimaryScreenId = (typeof PRIMARY_SCREEN_IDS)[number];
 
 export const PAD_TONES = ["lime", "gold", "orange", "pending", "yellow", "ember"] as const;
 export type PadTone = (typeof PAD_TONES)[number];
-
-export type DeskItem = {
-  label: string;
-  bossOnly?: boolean;
-};
-
-export type DeskGroup = {
-  title: string;
-  line: string;
-  items: DeskItem[];
-};
 
 export type PrimaryScreen = {
   id: PrimaryScreenId;
@@ -26,7 +20,7 @@ export type PrimaryScreen = {
   hint: string;
   ready: boolean;
   tone: PadTone;
-  groups: DeskGroup[];
+  opens: string[];
 };
 
 export const PAD_TONE_CLASS = {
@@ -70,175 +64,93 @@ export const PAD_TONE_CLASS = {
 
 export const PRIMARY_SCREENS: PrimaryScreen[] = [
   {
-    id: "crew",
+    id: "fleet",
     href: "/command/crew",
-    label: "Active Jobs",
-    short: "Jobs",
-    hint: "Who is working what, right now",
+    label: "Fleet",
+    short: "GPS",
+    hint: "Live crew, maps, and shift bars",
     ready: true,
     tone: "lime",
-    groups: [
-      {
-        title: "The job",
-        line: "Maps, scope, photos, parts on the truck",
-        items: [
-          { label: "Maps, Street View, Go" },
-          { label: "Talk or type the scope" },
-          { label: "Photos in the job chat" },
-          { label: "Parts on this job" },
-        ],
-      },
-      {
-        title: "Who is on it",
-        line: "Crew, clock, call, text",
-        items: [
-          { label: "Crew on this job" },
-          { label: "Clock IN / OUT on the job" },
-          { label: "Call, text, broadcast" },
-        ],
-      },
+    opens: [
+      "Where each tech is, and how far",
+      "Shift bar, IN / OUT, overtime",
+      "One-tap directions to the job",
     ],
   },
   {
-    id: "schedule",
-    href: "/command/schedule",
-    label: "Schedule",
-    short: "Book",
-    hint: "The phone, the book, who you send",
+    id: "phone",
+    href: "/command/phone",
+    label: "Phone",
+    short: "AI",
+    hint: "AI receptionist and call log",
     ready: false,
     tone: "gold",
-    groups: [
-      {
-        title: "Phone",
-        line: "AI answering and calls to book",
-        items: [
-          { label: "AI answering", bossOnly: true },
-          { label: "Calls waiting to book" },
-        ],
-      },
-      {
-        title: "Book",
-        line: "The week, the house, a new job",
-        items: [
-          { label: "Today, tomorrow, the week" },
-          { label: "Add or find a customer", bossOnly: true },
-          { label: "New job", bossOnly: true },
-          { label: "Recurring visits from plans", bossOnly: true },
-        ],
-      },
-      {
-        title: "Assign",
-        line: "Pick who goes",
-        items: [
-          { label: "Pick who goes", bossOnly: true },
-          { label: "Who is already booked", bossOnly: true },
-          { label: "My day" },
-        ],
-      },
+    opens: [
+      "Missed and answered calls",
+      "Transcripts and a short lead summary",
+      "Send the lead to Pipeline",
     ],
   },
   {
-    id: "money",
-    href: "/command/money",
-    label: "Money",
-    short: "Pay",
-    hint: "Estimates, invoices, and plans",
-    ready: false,
+    id: "pipeline",
+    href: "/command/board",
+    label: "Pipeline",
+    short: "Jobs",
+    hint: "Lead to invoice on one board",
+    ready: true,
     tone: "orange",
-    groups: [
-      {
-        title: "Sell",
-        line: "Estimates and memberships",
-        items: [
-          { label: "Estimates", bossOnly: true },
-          { label: "Memberships and subscriptions", bossOnly: true },
-        ],
-      },
-      {
-        title: "Get paid",
-        line: "Invoices and what they owe",
-        items: [
-          { label: "Invoices", bossOnly: true },
-          { label: "Take a payment", bossOnly: true },
-          { label: "Who owes us", bossOnly: true },
-        ],
-      },
-      {
-        title: "Parts",
-        line: "Price book and trucks",
-        items: [
-          { label: "Price book" },
-          { label: "What is on the trucks" },
-          { label: "Order parts", bossOnly: true },
-        ],
-      },
+    opens: [
+      "Lead, estimate, schedule, on job, invoice",
+      "Move a job by tapping the next stage",
     ],
   },
   {
-    id: "hours",
-    href: "/command/hours",
-    label: "Hours",
-    short: "Time",
-    hint: "Time cards and payroll",
+    id: "expenses",
+    href: "/command/expenses",
+    label: "Expenses",
+    short: "Scan",
+    hint: "Scan a receipt onto a job",
+    ready: false,
+    tone: "pending",
+    opens: [
+      "Camera scan of a material receipt",
+      "Tied to the job, not a shoebox",
+    ],
+  },
+  {
+    id: "chat",
+    href: "/command/chat",
+    label: "Chat",
+    short: "Talk",
+    hint: "Office, field, and job threads",
+    ready: false,
+    tone: "yellow",
+    opens: [
+      "Direct messages",
+      "Company broadcast",
+      "Comments on a job",
+    ],
+  },
+  {
+    id: "company",
+    href: "/command/company",
+    label: "Company",
+    short: "Hub",
+    hint: "Profile, people, and billing",
     ready: false,
     tone: "ember",
-    groups: [
-      {
-        title: "Time",
-        line: "Cards, overtime, days off",
-        items: [
-          { label: "Time cards" },
-          { label: "Who is IN or OUT today" },
-          { label: "Overtime" },
-          { label: "Days off" },
-        ],
-      },
-      {
-        title: "Pay",
-        line: "Run payroll",
-        items: [{ label: "Run payroll", bossOnly: true }],
-      },
+    opens: [
+      "Business name and logo",
+      "Invite a tech",
+      "What this shop is subscribed to",
     ],
   },
 ];
-
-export const CREW_HOME_IDS: PrimaryScreenId[] = ["crew", "schedule", "hours"];
-
-export const OFFICE_ITEMS: DeskItem[] = [
-  { label: "Company logo", bossOnly: true },
-  { label: "AI answering: hours and greeting", bossOnly: true },
-  { label: "Tax and invoice footer", bossOnly: true },
-  { label: "Your login" },
-];
-
-export function screensForRole(role: UserRole) {
-  if (role === "technician") {
-    return PRIMARY_SCREENS.filter((item) => CREW_HOME_IDS.includes(item.id));
-  }
-  return PRIMARY_SCREENS;
-}
-
-export function canOpenScreen(role: UserRole, id: PrimaryScreenId) {
-  return screensForRole(role).some((item) => item.id === id);
-}
 
 export function screenForPath(pathname: string) {
   return PRIMARY_SCREENS.find((item) => item.href === pathname) ?? null;
 }
 
-export function screenKicker(role: UserRole, id: PrimaryScreenId) {
-  const visible = screensForRole(role);
-  const index = visible.findIndex((item) => item.id === id);
-  if (index >= 0) return String(index + 1).padStart(2, "0");
+export function screenNumber(id: PrimaryScreenId) {
   return String(PRIMARY_SCREENS.findIndex((item) => item.id === id) + 1).padStart(2, "0");
-}
-
-export function groupsForRole(screen: PrimaryScreen, role: UserRole): DeskGroup[] {
-  if (role !== "technician") return screen.groups;
-  return screen.groups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => !item.bossOnly),
-    }))
-    .filter((group) => group.items.length > 0);
 }

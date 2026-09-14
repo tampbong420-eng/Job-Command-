@@ -22,7 +22,7 @@ export default async function LoginPage() {
         <Card className="ring-1 ring-primary/20">
           <CardHeader>
             <CardTitle>Sign in</CardTitle>
-            <CardDescription>Same gold-and-charcoal shop. Four boxes. That is the desk.</CardDescription>
+            <CardDescription>Six boxes. That is the whole desk.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <Suspense>

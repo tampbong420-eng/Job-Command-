@@ -14,12 +14,7 @@ import {
 
 import { getWorkspaceBrand, PRODUCT_LOGO } from "@/lib/brand";
 import { polishScope } from "@/lib/scope";
-import {
-  PRIMARY_SCREENS,
-  canOpenScreen,
-  groupsForRole,
-  screensForRole,
-} from "@/lib/primary-screens";
+import { PRIMARY_SCREENS } from "@/lib/primary-screens";
 
 describe("crew tracking and shift meter", () => {
   it("marks the last hour before overtime in red", () => {
@@ -69,72 +64,58 @@ describe("crew tracking and shift meter", () => {
 });
 
 describe("home pad screens", () => {
-  it("has four boxes and only Active Jobs is live", () => {
-    expect(PRIMARY_SCREENS).toHaveLength(4);
-    expect(PRIMARY_SCREENS.filter((item) => item.ready)).toHaveLength(1);
+  it("has six boxes, with Fleet and Pipeline live", () => {
+    expect(PRIMARY_SCREENS).toHaveLength(6);
+    expect(PRIMARY_SCREENS.filter((item) => item.ready).map((item) => item.id)).toEqual([
+      "fleet",
+      "pipeline",
+    ]);
     expect(PRIMARY_SCREENS.map((item) => item.label)).toEqual([
-      "Active Jobs",
-      "Schedule",
-      "Money",
-      "Hours",
+      "Fleet",
+      "Phone",
+      "Pipeline",
+      "Expenses",
+      "Chat",
+      "Company",
     ]);
     expect(PRIMARY_SCREENS.map((item) => item.href)).toEqual([
       "/command/crew",
-      "/command/schedule",
-      "/command/money",
-      "/command/hours",
+      "/command/phone",
+      "/command/board",
+      "/command/expenses",
+      "/command/chat",
+      "/command/company",
     ]);
-    expect(PRIMARY_SCREENS[0]?.ready).toBe(true);
   });
 
-  it("puts the phone, payroll, plans, and parts in those four boxes", () => {
-    const labels = PRIMARY_SCREENS.flatMap((screen) =>
-      screen.groups.flatMap((group) => group.items.map((item) => item.label)),
-    );
-    expect(labels).toEqual(
-      expect.arrayContaining([
-        "AI answering",
-        "Add or find a customer",
-        "Pick who goes",
-        "Estimates",
-        "Invoices",
-        "Memberships and subscriptions",
-        "Price book",
-        "Time cards",
-        "Run payroll",
-        "Photos in the job chat",
-      ]),
-    );
+  it("covers GPS, AI phone, kanban, receipts, chat, and the company hub", () => {
+    const copy = PRIMARY_SCREENS.flatMap((screen) => [screen.hint, ...screen.opens]).join(" ");
+    expect(copy).toMatch(/Live crew/);
+    expect(copy).toMatch(/AI receptionist/);
+    expect(copy).toMatch(/Lead to invoice/);
+    expect(copy).toMatch(/receipt/);
+    expect(copy).toMatch(/job threads/);
+    expect(copy).toMatch(/Invite a tech/);
   });
 
-  it("gives crew three boxes and keeps money off their home", () => {
-    expect(screensForRole("technician").map((item) => item.id)).toEqual([
-      "crew",
-      "schedule",
-      "hours",
-    ]);
-    expect(screensForRole("admin")).toHaveLength(4);
-    expect(screensForRole("dispatcher")).toHaveLength(4);
-    expect(canOpenScreen("technician", "money")).toBe(false);
-    expect(groupsForRole(PRIMARY_SCREENS[3]!, "technician").some((group) => group.title === "Pay")).toBe(
-      false,
-    );
-  });
-
-  it("gives active jobs the logo lime and keeps each box on the gold-orange theme", () => {
+  it("gives fleet the logo lime and keeps each box on the gold-orange theme", () => {
     expect(PRIMARY_SCREENS[0]?.tone).toBe("lime");
     expect(PRIMARY_SCREENS.map((item) => item.tone)).toEqual([
       "lime",
       "gold",
       "orange",
+      "pending",
+      "yellow",
       "ember",
     ]);
   });
 
-  it("keeps the Job Command mark on the left and leaves company logo for settings", () => {
+  it("keeps the Job Command mark on the left and names the shop in Company", () => {
     const brand = getWorkspaceBrand();
     expect(brand.productLogo).toBe(PRODUCT_LOGO);
     expect(brand.companyLogo).toBeNull();
+    expect(brand.companyName).toBe("Top Gun Painting");
+    expect(brand.companyCity).toBe("Hot Springs, AR");
   });
 });
 

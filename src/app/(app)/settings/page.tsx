@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getReadyDb, usesEphemeralDatabase } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/domain";
-import { OFFICE_ITEMS } from "@/lib/primary-screens";
 
 export const metadata = { title: "Settings" };
 
@@ -14,9 +13,9 @@ export default async function SettingsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Workspace and account details.</p>
+        <p className="text-sm text-muted-foreground">Your login. The shop lives in Company.</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Your profile</CardTitle>
@@ -58,28 +57,6 @@ export default async function SettingsPage() {
             ) : (
               <p>Connected to Neon via <code>DATABASE_URL</code>.</p>
             )}
-            <p>
-              Custom domains are attached on the Vercel project after the first production
-              deploy: Project → Settings → Domains.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Office</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="text-muted-foreground">
-              Not a home box. Lives under the photo so the four boxes stay the daily desk.
-            </p>
-            <ul className="space-y-1.5">
-              {OFFICE_ITEMS.map((item) => (
-                <li key={item.label}>{item.label}</li>
-              ))}
-            </ul>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-              Named. Not built yet.
-            </p>
           </CardContent>
         </Card>
       </div>
