@@ -723,6 +723,9 @@ h1 strong {
   color: var(--shock);
   font-size: 14px;
   line-height: 1;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 2;
 }
 
 .tumbler-step:disabled {
@@ -815,6 +818,7 @@ h1 strong {
   margin-top: -9px;
   background: var(--shock);
   clip-path: polygon(0 0, 100% 50%, 0 100%);
+  pointer-events: none;
   z-index: 4;
 }
 
@@ -844,6 +848,11 @@ h1 strong {
 .tumbler-slot.is-tap {
   z-index: 4;
   cursor: pointer;
+}
+
+.tumbler-slot.is-far {
+  z-index: 0;
+  pointer-events: none;
 }
 
 .tumbler-slot.is-ticking {

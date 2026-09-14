@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   description:
     "Boss employees desk with weekly hour editing, live Google Maps tracking, and color-coded job status.",
   other: {
-    "job-command-build": "2026.09.13-paykeep",
+    "job-command-build": "2026.09.13-tumbler",
   },
 };
 

@@ -5,7 +5,7 @@ import { activeJobs, assignedJobs } from "@/lib/assign";
 import { clampIndex, jobStatusLabel, jobTone, wrapIndex } from "@/lib/format";
 import type { CrewMember, Job } from "@/lib/types";
 import { useSwipe } from "@/lib/use-swipe";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
 export default function JobTumbler({
   jobs,
@@ -25,14 +25,23 @@ export default function JobTumbler({
   const stack = useMemo(() => activeJobs(jobs), [jobs]);
   const index = clampIndex(jobIndex, stack.length);
   const current = stack[index] ?? null;
+  const lastStepAt = useRef(0);
   const swipe = useSwipe((delta) => {
-    onIndexChange(wrapIndex(index, delta, stack.length));
+    fire(delta);
   }, "y", 52);
   const nextStop = assignedJobs(jobs, member.id).length + 1;
 
   function step(delta: number) {
-    if (stack.length < 2) return;
+    if (stack.length < 2 || delta === 0) return;
     onIndexChange(wrapIndex(index, delta, stack.length));
+  }
+
+  function fire(delta: number) {
+    if (stack.length < 2 || delta === 0) return;
+    const now = Date.now();
+    if (now - lastStepAt.current < 280) return;
+    lastStepAt.current = now;
+    step(delta);
   }
 
   if (!current) {
@@ -59,7 +68,16 @@ export default function JobTumbler({
             className="tumbler-step"
             aria-label="Previous job"
             disabled={stack.length < 2}
-            onClick={() => step(-1)}
+            onPointerDown={(event) => event.stopPropagation()}
+            onPointerUp={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              fire(-1);
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              fire(-1);
+            }}
           >
             ▲
           </button>
@@ -71,7 +89,16 @@ export default function JobTumbler({
             className="tumbler-step"
             aria-label="Next job"
             disabled={stack.length < 2}
-            onClick={() => step(1)}
+            onPointerDown={(event) => event.stopPropagation()}
+            onPointerUp={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              fire(1);
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              fire(1);
+            }}
           >
             ▼
           </button>
@@ -82,13 +109,8 @@ export default function JobTumbler({
         aria-label="Active jobs tumbler"
         onPointerDown={swipe.onPointerDown}
         onPointerMove={swipe.onPointerMove}
-        onPointerUp={(event) => {
-          const stepped = swipe.onPointerUp();
-          if (stepped || stack.length < 2) return;
-          const rect = event.currentTarget.getBoundingClientRect();
-          const y = event.clientY - rect.top;
-          if (y < rect.height * 0.35) step(-1);
-          else if (y > rect.height * 0.65) step(1);
+        onPointerUp={() => {
+          swipe.onPointerUp();
         }}
         onPointerCancel={swipe.onPointerUp}
       >
@@ -103,26 +125,36 @@ export default function JobTumbler({
             if (!job) return null;
             const y = offset * 56 + swipe.drag * 0.42;
             const abs = Math.abs(offset);
+            const far = abs >= 2;
             return (
               <article
                 key={`${job.id}-${offset}`}
                 role={offset === 0 ? "group" : "button"}
-                tabIndex={offset === 0 ? undefined : 0}
+                tabIndex={offset === 0 || far ? undefined : 0}
                 className={`tumbler-slot${offset === 0 ? " is-center" : " is-tap"}${
-                  offset === 0 && ticking ? " is-ticking" : ""
-                }${swipe.dragging ? " is-dragging" : ""}`}
+                  far ? " is-far" : ""
+                }${offset === 0 && ticking ? " is-ticking" : ""}${
+                  swipe.dragging ? " is-dragging" : ""
+                }`}
                 style={{
                   transform: `translateY(${y}px)`,
                   opacity: abs === 0 ? 1 : abs === 1 ? 0.5 : 0.18,
                   filter: abs === 0 ? "none" : "blur(0.35px)",
                 }}
                 onPointerDown={(event) => {
-                  if (offset === 0) return;
+                  if (offset === 0 || far) return;
                   event.stopPropagation();
                 }}
-                onClick={() => {
-                  if (offset === 0 || stack.length < 2) return;
-                  step(offset > 0 ? 1 : -1);
+                onPointerUp={(event) => {
+                  if (offset === 0 || far || stack.length < 2) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  fire(offset > 0 ? 1 : -1);
+                }}
+                onClick={(event) => {
+                  if (offset === 0 || far || stack.length < 2) return;
+                  event.preventDefault();
+                  fire(offset > 0 ? 1 : -1);
                 }}
               >
                 <div className={`slot-copy ${jobTone(job.status)}`}>

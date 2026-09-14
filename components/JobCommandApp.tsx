@@ -109,13 +109,7 @@ export default function JobCommandApp() {
   const [laneStatus, setLaneStatus] = useState<JobStatus | null>(null);
   const [laneJobId, setLaneJobId] = useState<string | null>(null);
   const [crewIndex, setCrewIndex] = useState(0);
-  const [jobIndex, setJobIndex] = useState(() =>
-    tumblerIndexForCrew(
-      getServerShopSnapshot().jobs,
-      getServerShopSnapshot().crew[0]?.id ?? "",
-      getServerShopSnapshot().crew[0]?.currentJobId ?? null,
-    ),
-  );
+  const [jobIndex, setJobIndex] = useState(0);
   const [ticking, setTicking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [propertyOpen, setPropertyOpen] = useState(false);
@@ -400,13 +394,7 @@ export default function JobCommandApp() {
         resetShop();
         const next = getShopSnapshot();
         setCrewIndex(0);
-        setJobIndex(
-          tumblerIndexForCrew(
-            next.jobs,
-            next.crew[0]?.id ?? "",
-            next.crew[0]?.currentJobId ?? null,
-          ),
-        );
+        setJobIndex(0);
         setPaper("jobs");
         setDesk("crew");
         setLaneStatus(null);
@@ -871,13 +859,7 @@ export default function JobCommandApp() {
             if (!next) return false;
             commitShop(next);
             setCrewIndex(0);
-            setJobIndex(
-              tumblerIndexForCrew(
-                next.jobs,
-                next.crew[0]?.id ?? "",
-                next.crew[0]?.currentJobId ?? null,
-              ),
-            );
+            setJobIndex(0);
             return true;
           }}
         />
