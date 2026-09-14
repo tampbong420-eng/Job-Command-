@@ -69,39 +69,37 @@ describe("crew tracking and shift meter", () => {
 });
 
 describe("home pad screens", () => {
-  it("has six boxes and only Active Jobs is live", () => {
-    expect(PRIMARY_SCREENS).toHaveLength(6);
+  it("has four boxes and only Active Jobs is live", () => {
+    expect(PRIMARY_SCREENS).toHaveLength(4);
     expect(PRIMARY_SCREENS.filter((item) => item.ready)).toHaveLength(1);
     expect(PRIMARY_SCREENS.map((item) => item.label)).toEqual([
       "Active Jobs",
       "Schedule",
-      "Customers",
       "Money",
-      "Shop",
       "Hours",
     ]);
     expect(PRIMARY_SCREENS.map((item) => item.href)).toEqual([
       "/command/crew",
       "/command/schedule",
-      "/command/customers",
       "/command/money",
-      "/command/shop",
       "/command/hours",
     ]);
     expect(PRIMARY_SCREENS[0]?.ready).toBe(true);
   });
 
-  it("puts the phone, payroll, and plans in one box each", () => {
+  it("puts the phone, payroll, plans, and parts in those four boxes", () => {
     const labels = PRIMARY_SCREENS.flatMap((screen) =>
       screen.groups.flatMap((group) => group.items.map((item) => item.label)),
     );
     expect(labels).toEqual(
       expect.arrayContaining([
         "AI answering",
+        "Add or find a customer",
         "Pick who goes",
         "Estimates",
         "Invoices",
         "Memberships and subscriptions",
+        "Price book",
         "Time cards",
         "Run payroll",
         "Photos in the job chat",
@@ -109,17 +107,16 @@ describe("home pad screens", () => {
     );
   });
 
-  it("gives crew four boxes and keeps money off their home", () => {
+  it("gives crew three boxes and keeps money off their home", () => {
     expect(screensForRole("technician").map((item) => item.id)).toEqual([
       "crew",
       "schedule",
-      "shop",
       "hours",
     ]);
-    expect(screensForRole("admin")).toHaveLength(6);
-    expect(screensForRole("dispatcher")).toHaveLength(6);
+    expect(screensForRole("admin")).toHaveLength(4);
+    expect(screensForRole("dispatcher")).toHaveLength(4);
     expect(canOpenScreen("technician", "money")).toBe(false);
-    expect(groupsForRole(PRIMARY_SCREENS[5]!, "technician").some((group) => group.title === "Pay")).toBe(
+    expect(groupsForRole(PRIMARY_SCREENS[3]!, "technician").some((group) => group.title === "Pay")).toBe(
       false,
     );
   });
@@ -130,8 +127,6 @@ describe("home pad screens", () => {
       "lime",
       "gold",
       "orange",
-      "pending",
-      "yellow",
       "ember",
     ]);
   });

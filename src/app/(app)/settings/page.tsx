@@ -70,7 +70,7 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p className="text-muted-foreground">
-              Not a home box. Lives under the photo so the six boxes stay the daily desk.
+              Not a home box. Lives under the photo so the four boxes stay the daily desk.
             </p>
             <ul className="space-y-1.5">
               {OFFICE_ITEMS.map((item) => (

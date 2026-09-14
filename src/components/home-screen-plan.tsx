@@ -3,9 +3,10 @@ import type { UserRole } from "@/lib/domain";
 import {
   canOpenScreen,
   groupsForRole,
-  screenNumber,
+  screenKicker,
   type PrimaryScreen,
 } from "@/lib/primary-screens";
+import { PAD_TONE_CLASS } from "@/lib/primary-screens";
 import { cn } from "@/lib/utils";
 
 export function HomeScreenPlan({
@@ -17,60 +18,36 @@ export function HomeScreenPlan({
 }) {
   const allowed = canOpenScreen(role, screen.id);
   const groups = groupsForRole(screen, role);
+  const kicker = screenKicker(role, screen.id);
+  const tone = PAD_TONE_CLASS[screen.tone];
 
   if (!allowed) {
     return (
-      <CommandDeck
-        kicker={screenNumber(screen)}
-        title={screen.label}
-        hint="Boss desk. Not on your home."
-      >
-        <p className="px-1 text-sm text-muted-foreground">
-          Money and the customer book stay with the office.
-        </p>
+      <CommandDeck kicker={kicker} title={screen.label} hint="Office box. Not on your home.">
+        <p className="px-1 text-sm text-muted-foreground">Money stays with the office.</p>
       </CommandDeck>
     );
   }
 
   return (
-    <CommandDeck kicker={screenNumber(screen)} title={screen.label} hint={screen.hint}>
-      {groups.map((group) => (
-        <section key={group.title} className="space-y-2">
-          <p className="px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
-            {group.title}
-          </p>
-          {group.items.map((item) => (
-            <p
-              key={item.label}
-              className="flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3.5 text-[15px] leading-snug ring-1 ring-border"
-            >
-              <span>{item.label}</span>
-              {item.bossOnly ? (
-                <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-logo">
-                  Boss
-                </span>
-              ) : null}
-            </p>
-          ))}
-        </section>
-      ))}
-      {role === "technician" ? null : (
-        <section className="space-y-2 pt-1">
-          <p className="px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Look somewhere else
-          </p>
-          {screen.notHere.map((line) => (
-            <p key={line} className="px-1 text-sm leading-snug text-muted-foreground">
-              {line}
-            </p>
-          ))}
-        </section>
-      )}
-      {screen.ready ? null : (
-        <p className={cn("px-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary", role === "technician" ? "pt-2" : "pt-1")}>
-          Named. Not built yet.
-        </p>
-      )}
+    <CommandDeck kicker={kicker} title={screen.label} hint={screen.hint}>
+      <div
+        className={cn(
+          "grid flex-1 gap-2.5",
+          groups.length === 2 ? "grid-cols-2" : "grid-cols-1",
+        )}
+      >
+        {groups.map((group) => (
+          <div
+            key={group.title}
+            className="flex min-h-[7.5rem] flex-col items-center justify-center rounded-[1.35rem] bg-card px-4 text-center ring-1 ring-border"
+          >
+            <span className={cn("mb-2 h-1 w-10 rounded-full", tone.bar)} />
+            <span className="text-[1.35rem] font-semibold leading-none tracking-tight">{group.title}</span>
+            <span className="mt-2 text-[13px] leading-snug text-muted-foreground">{group.line}</span>
+          </div>
+        ))}
+      </div>
     </CommandDeck>
   );
 }

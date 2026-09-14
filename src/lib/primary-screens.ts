@@ -1,13 +1,6 @@
 import type { UserRole } from "@/lib/domain";
 
-export const PRIMARY_SCREEN_IDS = [
-  "crew",
-  "schedule",
-  "customers",
-  "money",
-  "shop",
-  "hours",
-] as const;
+export const PRIMARY_SCREEN_IDS = ["crew", "schedule", "money", "hours"] as const;
 
 export type PrimaryScreenId = (typeof PRIMARY_SCREEN_IDS)[number];
 
@@ -21,6 +14,7 @@ export type DeskItem = {
 
 export type DeskGroup = {
   title: string;
+  line: string;
   items: DeskItem[];
 };
 
@@ -33,7 +27,6 @@ export type PrimaryScreen = {
   ready: boolean;
   tone: PadTone;
   groups: DeskGroup[];
-  notHere: string[];
 };
 
 export const PAD_TONE_CLASS = {
@@ -87,24 +80,23 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     groups: [
       {
         title: "The job",
+        line: "Maps, scope, photos, parts on the truck",
         items: [
           { label: "Maps, Street View, Go" },
           { label: "Talk or type the scope" },
           { label: "Photos in the job chat" },
+          { label: "Parts on this job" },
         ],
       },
       {
         title: "Who is on it",
+        line: "Crew, clock, call, text",
         items: [
           { label: "Crew on this job" },
           { label: "Clock IN / OUT on the job" },
           { label: "Call, text, broadcast" },
         ],
       },
-    ],
-    notHere: [
-      "Tomorrow's book is Schedule",
-      "Time cards and payroll are Hours",
     ],
   },
   {
@@ -118,57 +110,31 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     groups: [
       {
         title: "Phone",
+        line: "AI answering and calls to book",
         items: [
           { label: "AI answering", bossOnly: true },
           { label: "Calls waiting to book" },
         ],
       },
       {
-        title: "The book",
+        title: "Book",
+        line: "The week, the house, a new job",
         items: [
           { label: "Today, tomorrow, the week" },
+          { label: "Add or find a customer", bossOnly: true },
           { label: "New job", bossOnly: true },
           { label: "Recurring visits from plans", bossOnly: true },
         ],
       },
       {
         title: "Assign",
+        line: "Pick who goes",
         items: [
           { label: "Pick who goes", bossOnly: true },
           { label: "Who is already booked", bossOnly: true },
           { label: "My day" },
         ],
       },
-    ],
-    notHere: [
-      "Live on-site work is Active Jobs",
-      "AI greeting and hours: photo → Settings",
-    ],
-  },
-  {
-    id: "customers",
-    href: "/command/customers",
-    label: "Customers",
-    short: "People",
-    hint: "People, houses, and history",
-    ready: false,
-    tone: "orange",
-    groups: [
-      {
-        title: "The house",
-        items: [
-          { label: "Add or find a person", bossOnly: true },
-          { label: "Phone, address, gate, notes" },
-          { label: "Equipment at the property" },
-          { label: "Past jobs" },
-          { label: "Which plan they are on", bossOnly: true },
-        ],
-      },
-    ],
-    notHere: [
-      "Crew opens the house from the job card",
-      "Bills and memberships are Money",
-      "Putting them on the book is Schedule",
     ],
   },
   {
@@ -178,10 +144,11 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     short: "Pay",
     hint: "Estimates, invoices, and plans",
     ready: false,
-    tone: "pending",
+    tone: "orange",
     groups: [
       {
         title: "Sell",
+        line: "Estimates and memberships",
         items: [
           { label: "Estimates", bossOnly: true },
           { label: "Memberships and subscriptions", bossOnly: true },
@@ -189,6 +156,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
       },
       {
         title: "Get paid",
+        line: "Invoices and what they owe",
         items: [
           { label: "Invoices", bossOnly: true },
           { label: "Take a payment", bossOnly: true },
@@ -196,43 +164,14 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
         ],
       },
       {
-        title: "The score",
+        title: "Parts",
+        line: "Price book and trucks",
         items: [
-          { label: "What a job made", bossOnly: true },
-        ],
-      },
-    ],
-    notHere: [
-      "Price book is Shop",
-      "Payroll is Hours",
-      "Crew does not get this box",
-    ],
-  },
-  {
-    id: "shop",
-    href: "/command/shop",
-    label: "Shop",
-    short: "Parts",
-    hint: "Parts, trucks, and the price book",
-    ready: false,
-    tone: "yellow",
-    groups: [
-      {
-        title: "Charge",
-        items: [{ label: "Price book: labor and parts" }],
-      },
-      {
-        title: "Stock",
-        items: [
+          { label: "Price book" },
           { label: "What is on the trucks" },
-          { label: "Warehouse" },
           { label: "Order parts", bossOnly: true },
         ],
       },
-    ],
-    notHere: [
-      "Invoices are Money",
-      "The public shop site is a different app",
     ],
   },
   {
@@ -246,6 +185,7 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
     groups: [
       {
         title: "Time",
+        line: "Cards, overtime, days off",
         items: [
           { label: "Time cards" },
           { label: "Who is IN or OUT today" },
@@ -255,18 +195,14 @@ export const PRIMARY_SCREENS: PrimaryScreen[] = [
       },
       {
         title: "Pay",
+        line: "Run payroll",
         items: [{ label: "Run payroll", bossOnly: true }],
       },
-    ],
-    notHere: [
-      "Clock IN / OUT on a job is Active Jobs",
-      "Hire people: photo → Team",
-      "Pay rates: photo → Team",
     ],
   },
 ];
 
-export const CREW_HOME_IDS: PrimaryScreenId[] = ["crew", "schedule", "shop", "hours"];
+export const CREW_HOME_IDS: PrimaryScreenId[] = ["crew", "schedule", "hours"];
 
 export const OFFICE_ITEMS: DeskItem[] = [
   { label: "Company logo", bossOnly: true },
@@ -290,8 +226,11 @@ export function screenForPath(pathname: string) {
   return PRIMARY_SCREENS.find((item) => item.href === pathname) ?? null;
 }
 
-export function screenNumber(screen: PrimaryScreen) {
-  return String(PRIMARY_SCREENS.findIndex((item) => item.id === screen.id) + 1).padStart(2, "0");
+export function screenKicker(role: UserRole, id: PrimaryScreenId) {
+  const visible = screensForRole(role);
+  const index = visible.findIndex((item) => item.id === id);
+  if (index >= 0) return String(index + 1).padStart(2, "0");
+  return String(PRIMARY_SCREENS.findIndex((item) => item.id === id) + 1).padStart(2, "0");
 }
 
 export function groupsForRole(screen: PrimaryScreen, role: UserRole): DeskGroup[] {
