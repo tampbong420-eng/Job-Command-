@@ -126,7 +126,7 @@ export default function TalkButton({
               className="talk-input"
               rows={3}
               value={text}
-              placeholder='Try “mark Priya pending” or “estimate $1800 for Maya Chen”'
+              placeholder='Try “they said yes on Jordan Ellis” or “estimate $1800 for Pat Hamilton”'
               onChange={(event) => setText(event.target.value)}
             />
             <div className="talk-actions">

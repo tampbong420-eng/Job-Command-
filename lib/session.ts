@@ -15,7 +15,8 @@ import type {
 } from "./types";
 
 export const SHOP_KEY = "job-command-shop-v1";
-export const SHOP_VERSION = 7;
+export const SHOP_VERSION = 8;
+const PAINT_SHOP_VERSION = 8;
 
 export type ShopSettings = {
   shopName: string;
@@ -39,7 +40,7 @@ export type PersistedShop = {
 };
 
 export const DEFAULT_SETTINGS: ShopSettings = {
-  shopName: "Job Command",
+  shopName: "Top Gun Painting",
   account: "ERIC12345",
   pageAlerts: true,
 };
@@ -111,32 +112,103 @@ function mergeJobs(saved: Job[], fresh: Job[]): Job[] {
   return next;
 }
 
+function overlayById<T extends { id: string }>(saved: T[], fresh: T[]): T[] {
+  const demo = new Map(fresh.map((row) => [row.id, row]));
+  const seen = new Set<string>();
+  const next = saved.map((row) => {
+    seen.add(row.id);
+    const seed = demo.get(row.id);
+    return seed ? { ...row, ...seed } : row;
+  });
+  for (const row of fresh) {
+    if (!seen.has(row.id)) next.push(row);
+  }
+  return next;
+}
+
+function retargetCrew(saved: CrewMember[], fresh: CrewMember[]): CrewMember[] {
+  const demo = new Map(fresh.map((row) => [row.id, row]));
+  const seen = new Set<string>();
+  const next = saved.map((row) => {
+    seen.add(row.id);
+    const seed = demo.get(row.id);
+    if (!seed) return hydrateCrew(row);
+    return hydrateCrew(
+      {
+        ...row,
+        ...seed,
+        status: row.status,
+        startedAt: row.startedAt,
+        weeklyHoursLogged: row.weeklyHoursLogged,
+        gpsLive: row.gpsLive,
+      },
+      seed,
+    );
+  });
+  for (const row of fresh) {
+    if (!seen.has(row.id)) next.push(hydrateCrew(row));
+  }
+  return next;
+}
+
 export function upgradeShop(parsed: Partial<PersistedShop>): PersistedShop {
   const base = defaultShop();
-  const crew = mergeCrew(parsed.crew ?? [], base.crew);
-  const timeCards = mergeById(
-    (parsed.timeCards ?? []).map((row) => hydrateTimeCard(row)),
-    base.timeCards,
-  );
+  const paintShop = (parsed.shopVersion ?? 0) < PAINT_SHOP_VERSION;
+  const crew = paintShop
+    ? retargetCrew(parsed.crew ?? [], base.crew)
+    : mergeCrew(parsed.crew ?? [], base.crew);
+  const timeCards = (
+    paintShop
+      ? overlayById(
+          (parsed.timeCards ?? []).map((row) => hydrateTimeCard(row)),
+          base.timeCards,
+        )
+      : mergeById(
+          (parsed.timeCards ?? []).map((row) => hydrateTimeCard(row)),
+          base.timeCards,
+        )
+  ).map((row) => hydrateTimeCard(row));
   const fresh = refreshStaleShifts(crew, timeCards);
+  const savedName = parsed.settings?.shopName?.trim();
+  const settings = {
+    ...DEFAULT_SETTINGS,
+    ...parsed.settings,
+    shopName:
+      paintShop && (!savedName || savedName === "Job Command")
+        ? DEFAULT_SETTINGS.shopName
+        : (savedName || DEFAULT_SETTINGS.shopName),
+  };
   return {
     ...base,
     ...parsed,
     shopVersion: SHOP_VERSION,
-    jobs: syncJobRoutes(mergeJobs(parsed.jobs ?? [], base.jobs)),
+    jobs: syncJobRoutes(
+      paintShop
+        ? overlayById(parsed.jobs ?? [], base.jobs).map(hydrateJob)
+        : mergeJobs(parsed.jobs ?? [], base.jobs),
+    ),
     crew: fresh.crew,
-    estimates: mergeById(parsed.estimates ?? [], base.estimates),
+    estimates: paintShop
+      ? overlayById(parsed.estimates ?? [], base.estimates)
+      : mergeById(parsed.estimates ?? [], base.estimates),
     timeCards: fresh.timeCards,
     timesheets: mergeById(parsed.timesheets ?? [], base.timesheets),
     payAudits: mergeById(parsed.payAudits ?? [], base.payAudits),
-    messages: mergeById(
-      (parsed.messages ?? []).map(hydrateMessage),
-      base.messages,
-    ),
-    jobChats: mergeById(parsed.jobChats ?? [], base.jobChats),
+    messages: paintShop
+      ? overlayById(
+          (parsed.messages ?? []).map(hydrateMessage),
+          base.messages,
+        ).map(hydrateMessage)
+      : mergeById(
+          (parsed.messages ?? []).map(hydrateMessage),
+          base.messages,
+        ),
+    jobChats: paintShop
+      ? overlayById(parsed.jobChats ?? [], base.jobChats)
+      : mergeById(parsed.jobChats ?? [], base.jobChats),
     employeeId: parsed.employeeId ?? base.employeeId,
     role: parsed.role === "employee" ? "employee" : "boss",
-    settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+    settings,
   };
 }
 

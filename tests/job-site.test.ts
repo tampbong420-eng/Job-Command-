@@ -17,7 +17,7 @@ const vasquez = JOBS.find((job) => job.id === "c-vasquez");
 test("jobScope uses the same written scope on estimate and field cards", () => {
   assert.ok(northline);
   assert.ok(hale);
-  assert.match(jobScope(northline), /Unit 4B/);
+  assert.match(jobScope(northline), /fascia/);
   assert.equal(jobScope(hale), hale.scope);
 });
 
@@ -34,8 +34,8 @@ test("jobSiteSmsHref texts every phone on that job", () => {
   const href = jobSiteSmsHref(northline, CREW, TIMECARDS);
   assert.ok(href);
   assert.match(href, /^sms:/);
-  assert.match(href, /2065550130/);
-  assert.match(href, /2065550144/);
+  assert.match(href, /5015550130/);
+  assert.match(href, /5015550144/);
   assert.match(href, /body=/);
 });
 
@@ -58,7 +58,7 @@ test("postJobChat records the line and files an estimate when a price is given",
     job: hale,
     fromId: "boss",
     fromName: "Boss command",
-    body: "Updated fence package $4500",
+    body: "Updated sanctuary package $4500",
     now: "2026-09-14T12:00:00.000Z",
   });
   const chat = chatsForJob(result.chats, hale.id)[0];
@@ -66,7 +66,7 @@ test("postJobChat records the line and files an estimate when a price is given",
   assert.equal(chat.amount, 4500);
   assert.equal(result.estimates[0]?.amount, 4500);
   assert.equal(result.estimates[0]?.jobId, hale.id);
-  assert.equal(result.estimates[0]?.notes.includes("fence"), true);
+  assert.equal(result.estimates[0]?.notes.includes("sanctuary"), true);
 });
 
 test("postJobChat can log a note without filing a new estimate", () => {

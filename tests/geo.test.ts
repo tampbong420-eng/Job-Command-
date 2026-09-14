@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { etaFromMiles, formatMiles, milesBetween } from "../lib/geo";
 import { wrapIndex, clampIndex, clockLabel, formatLiveHours } from "../lib/format";
 
-test("milesBetween is about 2.8 miles Queen Anne to Queen Anne HVAC", () => {
+test("milesBetween is about a mile across downtown Hot Springs demo pins", () => {
   const miles = milesBetween(
     { lat: 47.62482, lng: -122.3629 },
     { lat: 47.639844278404, lng: -122.368877694281 },

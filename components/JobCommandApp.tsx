@@ -258,7 +258,7 @@ export default function JobCommandApp() {
     phone: string;
   }) {
     applyTalk({
-      say: `Added ${input.customerName} as a new lead.`,
+      say: `Added ${input.customerName} as a new call.`,
       commands: [
         {
           type: "create_job",

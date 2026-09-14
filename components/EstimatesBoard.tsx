@@ -32,7 +32,7 @@ export default function EstimatesBoard({
         card.
       </p>
       {estimates.length === 0 ? (
-        <p className="empty-group">No estimates yet. Say “estimate $1800 for Priya”.</p>
+        <p className="empty-group">No estimates yet. Say “estimate $1800 for Pat Hamilton”.</p>
       ) : (
         estimates.map((row) => {
           const job = jobs.find((item) => item.id === row.jobId);
@@ -81,7 +81,7 @@ export function TimeCardsBoard({
         <strong>Cards.</strong>
       </h1>
       <p className="board-copy">
-        Say “log 8 hours for Mike on Northline” and the hours hit the right
+        Say “log 8 hours for Mike on Kim Rhodes” and the hours hit the right
         crew member.
       </p>
       {timeCards.length === 0 ? (

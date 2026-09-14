@@ -1949,6 +1949,25 @@ label.ghost-action {
   margin-top: 10px;
 }
 
+.lane-button.next-step {
+  grid-column: 1 / -1;
+  min-height: 46px;
+  background: var(--boss-grad);
+  color: #141800;
+  border-color: var(--boss-edge);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.status-next-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .lane-button {
   min-height: 36px;
   border-radius: 10px;

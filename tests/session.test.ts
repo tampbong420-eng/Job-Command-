@@ -93,8 +93,17 @@ describe("shop session", { concurrency: false }, () => {
 
     const loaded = loadShop();
     assert.equal(loaded?.shopVersion, SHOP_VERSION);
+    assert.equal(loaded?.settings.shopName, "Top Gun Painting");
     assert.equal(
-      loaded?.jobs.find((job) => job.id === "c-vasquez")?.scope?.includes("fascia"),
+      loaded?.jobs.find((job) => job.id === "c-vasquez")?.address.includes("Hot Springs"),
+      true,
+    );
+    assert.equal(
+      loaded?.jobs.find((job) => job.id === "c-northline")?.customerName,
+      "Kim Rhodes",
+    );
+    assert.equal(
+      loaded?.jobs.find((job) => job.id === "c-northline")?.scope?.includes("fascia"),
       true,
     );
     assert.equal(loaded?.jobs.some((job) => job.id === "c-hale"), true);
@@ -102,6 +111,7 @@ describe("shop session", { concurrency: false }, () => {
     assert.equal(loaded?.messages.some((row) => row.id === "msg-weather"), true);
     assert.equal(loaded?.jobChats.some((row) => row.jobId === "c-hale"), true);
     assert.equal(loaded?.crew.find((row) => row.id === "e-mike")?.hourlyRate, 48);
+    assert.equal(loaded?.crew.find((row) => row.id === "e-mike")?.role, "Lead painter");
     const persisted = JSON.parse(data.get(SHOP_KEY) ?? "{}") as { shopVersion?: number };
     assert.equal(persisted.shopVersion, SHOP_VERSION);
   });

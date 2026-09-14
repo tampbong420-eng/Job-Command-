@@ -1,6 +1,6 @@
 "use client";
 
-import { jobStatusLabel, jobTone } from "@/lib/format";
+import { jobStatusLabel, jobTone, nextActionLabel, nextJobStatus } from "@/lib/format";
 import type { Job, JobStatus } from "@/lib/types";
 
 const BUTTONS: JobStatus[] = ["lead", "pending", "in_progress", "completed"];
@@ -14,8 +14,25 @@ export default function StatusButtons({
   onStatus: (status: JobStatus) => void;
   onDelete: () => void;
 }) {
+  const next = nextJobStatus(job.status);
+  const nextLabel = nextActionLabel(job.status);
+
   return (
     <div className="status-buttons" role="group" aria-label="Customer status">
+      {next && nextLabel ? (
+        <>
+          <button
+            type="button"
+            className="lane-button next-step"
+            onClick={() => onStatus(next)}
+          >
+            {nextLabel}
+          </button>
+          <p className="status-next-hint">Green button is the next step.</p>
+        </>
+      ) : (
+        <p className="status-next-hint">This job is paid.</p>
+      )}
       {BUTTONS.map((status) => (
         <button
           key={status}

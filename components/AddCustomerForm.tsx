@@ -75,7 +75,7 @@ export default function AddCustomerForm({
           Cancel
         </button>
         <button type="submit" className="ghost-action hours">
-          Save lead
+          Save new
         </button>
       </div>
     </form>

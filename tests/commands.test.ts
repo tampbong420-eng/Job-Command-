@@ -15,8 +15,8 @@ const snapshot: ShopSnapshot = {
 
 test("jobsMarkedForDelete lists every customer a delete command would remove", () => {
   const marked = jobsMarkedForDelete(JOBS, [
-    { type: "delete_job", query: "Maya Chen" },
-    { type: "set_status", query: "Priya", status: "pending" },
+    { type: "delete_job", query: "Jordan Ellis" },
+    { type: "set_status", query: "Pat", status: "pending" },
     { type: "delete_job", query: "c-shah" },
   ]);
   assert.deepEqual(
@@ -38,23 +38,23 @@ test("customer cards can move a lead to pending", () => {
 test("finished and delete take a customer off the board", () => {
   const finished = applyCommand(snapshot, {
     type: "set_status",
-    query: "Northline",
+    query: "Rhodes",
     status: "completed",
   });
   assert.equal(
     finished.state.jobs.find((job) => job.id === "c-northline")?.status,
     "completed",
   );
-  assert.equal(finished.notice.includes("Finished"), true);
-  const gone = applyCommand(snapshot, { type: "delete_job", query: "Maya Chen" });
+  assert.equal(finished.notice.includes("Paid"), true);
+  const gone = applyCommand(snapshot, { type: "delete_job", query: "Jordan Ellis" });
   assert.equal(gone.state.jobs.some((job) => job.id === "c-chen"), false);
 });
 
 test("talk files an estimate onto the named customer", () => {
-  const talk = parseTalk("estimate $1800 for Priya Shah", snapshot);
+  const talk = parseTalk("estimate $1800 for Pat Hamilton", snapshot);
   assert.deepEqual(talk.commands[0], {
     type: "create_estimate",
-    query: "Priya Shah",
+    query: "Pat Hamilton",
     amount: 1800,
   });
   const filed = applyCommand(snapshot, talk.commands[0]);
@@ -64,7 +64,7 @@ test("talk files an estimate onto the named customer", () => {
 });
 
 test("talk logs a time card onto the named crew member", () => {
-  const talk = parseTalk("log 8 hours for Dana on Hale", snapshot);
+  const talk = parseTalk("log 8 hours for Dana on Cedar", snapshot);
   assert.equal(talk.commands[0]?.type, "create_timecard");
   const filed = applyCommand(snapshot, talk.commands[0]);
   assert.equal(filed.state.timeCards[0]?.hours, 8);
@@ -97,21 +97,30 @@ test("talk adds a spoken new lead", () => {
 });
 
 test("talk marks a customer pending from spoken copy", () => {
-  const talk = parseTalk("mark Priya pending", snapshot);
+  const talk = parseTalk("mark Pat pending", snapshot);
   assert.deepEqual(talk.commands[0], {
     type: "set_status",
-    query: "Priya",
+    query: "Pat",
     status: "pending",
   });
-  assert.equal(matchJob(JOBS, "Priya")?.id, "c-shah");
+  assert.equal(matchJob(JOBS, "Pat")?.id, "c-shah");
 });
 
-test("talk can send a job to Job Archive", () => {
-  const talk = parseTalk("mark Northline job archive", snapshot);
+test("talk can mark a painting job paid", () => {
+  const talk = parseTalk("mark Kim paid", snapshot);
   assert.equal(talk.commands[0]?.type, "set_status");
   if (talk.commands[0]?.type === "set_status") {
     assert.equal(talk.commands[0].status, "completed");
   }
+});
+
+test("talk they said yes moves estimate out into painting", () => {
+  const talk = parseTalk("they said yes on Jordan", snapshot);
+  assert.deepEqual(talk.commands[0], {
+    type: "set_status",
+    query: "Jordan",
+    status: "in_progress",
+  });
 });
 
 test("send_message pages the crew", () => {

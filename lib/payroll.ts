@@ -11,10 +11,12 @@ import type {
 } from "./types";
 
 export const COST_CODES = [
+  { id: "PAINT-LABOR", label: "Paint labor" },
+  { id: "PREP-LABOR", label: "Prep labor" },
+  { id: "APPR-LABOR", label: "Apprentice labor" },
   { id: "HVAC-LABOR", label: "HVAC labor" },
   { id: "ELEC-LABOR", label: "Electrical labor" },
   { id: "PLMB-LABOR", label: "Plumbing labor" },
-  { id: "APPR-LABOR", label: "Apprentice labor" },
   { id: "GEN-LABOR", label: "General labor" },
 ] as const;
 
@@ -227,10 +229,12 @@ export function hydrateTimeCard(card: TimeCard, seed?: TimeCard): TimeCard {
 
 export function defaultCostCode(role: string): string {
   const hay = role.toLowerCase();
+  if (hay.includes("paint")) return "PAINT-LABOR";
+  if (hay.includes("prep")) return "PREP-LABOR";
+  if (hay.includes("apprent")) return "APPR-LABOR";
   if (hay.includes("hvac")) return "HVAC-LABOR";
   if (hay.includes("electr")) return "ELEC-LABOR";
   if (hay.includes("plumb")) return "PLMB-LABOR";
-  if (hay.includes("apprent")) return "APPR-LABOR";
   return "GEN-LABOR";
 }
 
