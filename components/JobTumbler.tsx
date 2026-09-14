@@ -70,14 +70,10 @@ export default function JobTumbler({
             disabled={stack.length < 2}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => {
-              event.preventDefault();
               event.stopPropagation();
               fire(-1);
             }}
-            onClick={(event) => {
-              event.preventDefault();
-              fire(-1);
-            }}
+            onClick={() => fire(-1)}
           >
             ▲
           </button>
@@ -91,14 +87,10 @@ export default function JobTumbler({
             disabled={stack.length < 2}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => {
-              event.preventDefault();
               event.stopPropagation();
               fire(1);
             }}
-            onClick={(event) => {
-              event.preventDefault();
-              fire(1);
-            }}
+            onClick={() => fire(1)}
           >
             ▼
           </button>
@@ -147,13 +139,11 @@ export default function JobTumbler({
                 }}
                 onPointerUp={(event) => {
                   if (offset === 0 || far || stack.length < 2) return;
-                  event.preventDefault();
                   event.stopPropagation();
                   fire(offset > 0 ? 1 : -1);
                 }}
-                onClick={(event) => {
+                onClick={() => {
                   if (offset === 0 || far || stack.length < 2) return;
-                  event.preventDefault();
                   fire(offset > 0 ? 1 : -1);
                 }}
               >
