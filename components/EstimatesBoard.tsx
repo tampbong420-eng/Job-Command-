@@ -1,4 +1,5 @@
 import type { CrewMember, Estimate, Job, TimeCard } from "@/lib/types";
+import { jobScope } from "@/lib/job-site";
 import type { ReactNode } from "react";
 
 export default function EstimatesBoard({
@@ -40,7 +41,8 @@ export default function EstimatesBoard({
               <div>
                 <small>{job?.customerName ?? "Customer"}</small>
                 <b>${row.amount.toLocaleString()}</b>
-                <span>{row.notes || job?.jobTitle}</span>
+                <span>{job ? jobScope(job) : row.notes}</span>
+                {row.notes ? <span>{row.notes}</span> : null}
               </div>
               <em>{job?.address}</em>
             </article>

@@ -4,38 +4,63 @@ import StatusButtons from "@/components/StatusButtons";
 import StopBadge from "@/components/StopBadge";
 import { jobStatusLabel, jobTone, money } from "@/lib/format";
 import {
+  chatsForJob,
+  crewOnJob,
+  jobScope,
+  jobSiteSmsHref,
+} from "@/lib/job-site";
+import {
   mapsDirectionsUrl,
   mapsStreetViewEmbedUrl,
   mapsStreetViewUrl,
 } from "@/lib/maps";
-import type { CrewMember, Estimate, Job, JobStatus, TimeCard } from "@/lib/types";
+import type {
+  CrewMember,
+  Estimate,
+  Job,
+  JobChatMessage,
+  JobStatus,
+  TimeCard,
+} from "@/lib/types";
+import { useMemo, useState } from "react";
 
 export default function CustomerCard({
   job,
   estimates,
   timeCards,
   crew,
+  jobChats = [],
+  canEstimate = false,
   onStatus,
   onDelete,
-  onOpenEstimates,
   onOpenTimeCards,
   onPhoto,
+  onPostChat,
 }: {
   job: Job;
   estimates: Estimate[];
   timeCards: TimeCard[];
   crew: CrewMember[];
+  jobChats?: JobChatMessage[];
+  canEstimate?: boolean;
   onStatus: (status: JobStatus) => void;
   onDelete: () => void;
-  onOpenEstimates: () => void;
   onOpenTimeCards: () => void;
   onPhoto?: (kind: "before" | "after", dataUrl: string) => void;
+  onPostChat?: (body: string, amount: number) => void;
 }) {
   const quotes = estimates.filter((row) => row.jobId === job.id);
   const cards = timeCards.filter((row) => row.jobId === job.id);
   const invoice = quotes[0] ?? null;
   const quoteTotal = quotes.reduce((sum, row) => sum + row.amount, 0);
   const billed = invoice?.amount ?? quoteTotal;
+  const scope = jobScope(job);
+  const chat = useMemo(() => chatsForJob(jobChats, job.id), [jobChats, job.id]);
+  const siteCrew = useMemo(
+    () => crewOnJob(job, crew, timeCards),
+    [job, crew, timeCards],
+  );
+  const smsHref = jobSiteSmsHref(job, crew, timeCards);
   const streetViewEmbed =
     job.lat != null && job.lng != null
       ? mapsStreetViewEmbedUrl(job.lat, job.lng)
@@ -45,7 +70,19 @@ export default function CustomerCard({
       ? mapsStreetViewUrl(job.lat, job.lng)
       : mapsDirectionsUrl(job);
   const hoursTotal = cards.reduce((sum, row) => sum + row.hours, 0);
-  const invoiceLabel = job.status === "completed" ? "Invoice" : "Quote";
+  const [estimateOpen, setEstimateOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [amount, setAmount] = useState("");
+
+  function sendChat() {
+    const text = note.trim();
+    const dollars = Number(amount.replace(/[$,\s]/g, ""));
+    const filed = Number.isFinite(dollars) && dollars > 0 ? dollars : 0;
+    if (!text && filed <= 0) return;
+    onPostChat?.(text, filed);
+    setNote("");
+    setAmount("");
+  }
 
   return (
     <article className={`customer-card ${jobTone(job.status)}`}>
@@ -83,19 +120,83 @@ export default function CustomerCard({
       </dl>
 
       <p className="card-label">Scope of work</p>
-      <p className="board-copy tight">{job.scope || job.jobTitle}</p>
+      <p className="board-copy tight">{scope}</p>
 
-      <div className="card-invoice">
-        <p className="card-label">{invoiceLabel}</p>
-        <b>{quotes.length ? money(billed) : "—"}</b>
-        <span>
-          {invoice?.labor != null
-            ? `Labor ${money(invoice.labor)} · Materials ${money(invoice.materials ?? 0)}`
-            : quotes.length
-              ? invoice?.notes || "Filed on this customer"
-              : "No invoice yet"}
-        </span>
-      </div>
+      {canEstimate && (
+        <>
+          <button
+            type="button"
+            className="ghost-action hours estimate-open"
+            aria-expanded={estimateOpen}
+            onClick={() => setEstimateOpen((open) => !open)}
+          >
+            {estimateOpen ? "Hide estimate" : "Estimate"}
+            {quotes.length ? ` · ${money(quoteTotal)}` : ""}
+          </button>
+          {estimateOpen && (
+            <div className="estimate-panel">
+              <p className="card-label">Estimate</p>
+              <b className="estimate-amount">
+                {quotes.length ? money(billed) : "No estimate yet"}
+              </b>
+              {invoice?.labor != null && (
+                <span className="board-copy tight">
+                  Labor {money(invoice.labor)} · Materials {money(invoice.materials ?? 0)}
+                </span>
+              )}
+              <p className="card-label">Scope of work</p>
+              <p className="board-copy tight">{scope}</p>
+              <p className="card-label">Estimate chat</p>
+              <div className="job-chat" aria-live="polite">
+                {chat.length === 0 ? (
+                  <p className="board-copy tight">
+                    Type the estimate here. Every line stays on this customer.
+                  </p>
+                ) : (
+                  chat.map((row) => (
+                    <p key={row.id} className="job-chat-row">
+                      <strong>{row.fromName}</strong>
+                      <span>{row.body}</span>
+                      {row.amount != null && <em>{money(row.amount)}</em>}
+                    </p>
+                  ))
+                )}
+              </div>
+              <div className="estimate-compose">
+                <textarea
+                  className="talk-input"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder="Write the estimate or a note for this job"
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  placeholder="Amount $"
+                  aria-label="Estimate amount"
+                />
+                <button
+                  type="button"
+                  className="ghost-action hours"
+                  onClick={sendChat}
+                  disabled={!onPostChat || (!note.trim() && !amount.trim())}
+                >
+                  Record on card
+                </button>
+              </div>
+            </div>
+          )}
+          {smsHref ? (
+            <a className="ghost-action directions site-text" href={smsHref}>
+              Text job site · {siteCrew.map((row) => row.name.split(" ")[0]).join(", ")}
+            </a>
+          ) : (
+            <p className="board-copy tight">Lock crew to this job to text the site.</p>
+          )}
+        </>
+      )}
 
       <StatusButtons job={job} onStatus={onStatus} onDelete={onDelete} />
 
@@ -189,9 +290,17 @@ export default function CustomerCard({
       )}
 
       <div className="customer-card-foot">
-        <button type="button" className="text-back" onClick={onOpenEstimates}>
-          {invoiceLabel} {quotes.length ? money(quoteTotal) : "—"}
-        </button>
+        {canEstimate ? (
+          <button
+            type="button"
+            className="text-back"
+            onClick={() => setEstimateOpen(true)}
+          >
+            Estimate {quotes.length ? money(quoteTotal) : "—"}
+          </button>
+        ) : (
+          <span className="text-back">Scope on this stop</span>
+        )}
         <button type="button" className="text-back" onClick={onOpenTimeCards}>
           Time cards {cards.length || 0}
         </button>

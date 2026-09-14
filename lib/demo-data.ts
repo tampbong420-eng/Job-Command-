@@ -1,4 +1,4 @@
-import type { CrewMember, Estimate, Job, ShopMessage, TimeCard } from "./types";
+import type { CrewMember, Estimate, Job, JobChatMessage, ShopMessage, TimeCard } from "./types";
 import { weekdayHours } from "./schedule";
 
 const thisMorning = "2026-09-12T14:05:00.000Z";
@@ -245,6 +245,27 @@ export const ESTIMATES: Estimate[] = [
     createdAt: "2026-09-09T20:00:00.000Z",
     labor: 6200,
     materials: 3600,
+  },
+];
+
+export const JOB_CHATS: JobChatMessage[] = [
+  {
+    id: "chat-hale-1",
+    jobId: "c-hale",
+    fromId: "boss",
+    fromName: "Boss command",
+    body: "Cedar fence and gate package $4,200. Labor $2,800 · Materials $1,400.",
+    createdAt: "2026-09-09T18:00:00.000Z",
+    amount: 4200,
+  },
+  {
+    id: "chat-elliott-1",
+    jobId: "c-elliott",
+    fromId: "boss",
+    fromName: "Boss command",
+    body: "Rooftop unit swap invoice $9,800.",
+    createdAt: "2026-09-09T20:00:00.000Z",
+    amount: 9800,
   },
 ];
 

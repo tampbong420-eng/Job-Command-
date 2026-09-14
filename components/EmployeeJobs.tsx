@@ -3,6 +3,7 @@
 import StopBadge from "@/components/StopBadge";
 import { employeeJobs } from "@/lib/assign";
 import { jobStatusLabel, jobTone } from "@/lib/format";
+import { jobScope } from "@/lib/job-site";
 import { mapsDirectionsUrl, originQuery } from "@/lib/maps";
 import type { CrewMember, Job, JobStatus } from "@/lib/types";
 
@@ -51,6 +52,8 @@ export default function EmployeeJobs({
                 {job.routeOrder != null && <StopBadge n={job.routeOrder} />}
               </div>
             </div>
+            <p className="card-label">Scope of work</p>
+            <p className="board-copy tight">{jobScope(job)}</p>
             <div className="rolodex-actions">
               <a
                 className="ghost-action directions"

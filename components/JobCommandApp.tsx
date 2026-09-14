@@ -28,13 +28,13 @@ import {
   assignedJob,
   assignedJobs,
   jobsByStatus,
-  tumblerIndexForCrew,
   toggleCrewGps,
   updateHourlyRate,
   updateWeeklySchedule,
 } from "@/lib/assign";
 import { applyCommands, jobsMarkedForDelete } from "@/lib/commands";
-import { clampIndex } from "@/lib/format";
+import { clampIndex, money } from "@/lib/format";
+import { postJobChat } from "@/lib/job-site";
 import { hasUnreadMessage, markMessagesSeen } from "@/lib/messages";
 import {
   appendPayAudit,
@@ -94,7 +94,7 @@ export default function JobCommandApp() {
     getShopSnapshot,
     getServerShopSnapshot,
   );
-  const { jobs, crew, estimates, timeCards, timesheets, payAudits, messages, employeeId, role: shopRole, settings } = shop;
+  const { jobs, crew, estimates, timeCards, timesheets, payAudits, messages, jobChats, employeeId, role: shopRole, settings } = shop;
   useEffect(() => {
     const current = getShopSnapshot();
     if ((current.shopVersion ?? 0) < SHOP_VERSION) {
@@ -189,19 +189,12 @@ export default function JobCommandApp() {
       estimates: next.state.estimates,
       timeCards: next.state.timeCards,
       messages: next.state.messages ?? getShopSnapshot().messages,
+      jobChats: (getShopSnapshot().jobChats ?? []).filter((row) =>
+        next.state.jobs.some((job) => job.id === row.jobId),
+      ),
     });
     if (navigate) goView(next.view);
     ping(result.say || next.notices.join(" "));
-    if (member) {
-      setJobIndex(
-        tumblerIndexForCrew(
-          next.state.jobs,
-          member.id,
-          next.state.crew.find((row) => row.id === member.id)?.currentJobId ??
-            null,
-        ),
-      );
-    }
     after?.();
   }
 
@@ -309,10 +302,26 @@ export default function JobCommandApp() {
 
   function selectCrew(nextIndex: number) {
     setCrewIndex(nextIndex);
-    const nextMember = crew[nextIndex];
-    if (!nextMember) return;
-    setJobIndex(
-      tumblerIndexForCrew(jobs, nextMember.id, nextMember.currentJobId),
+  }
+
+  function postCardChat(jobId: string, body: string, amount: number) {
+    const shopNow = getShopSnapshot();
+    const job = shopNow.jobs.find((row) => row.id === jobId);
+    if (!job) return;
+    const result = postJobChat({
+      chats: shopNow.jobChats ?? [],
+      estimates: shopNow.estimates,
+      job,
+      fromId: role === "boss" ? "boss" : (actor?.id ?? "boss"),
+      fromName: role === "boss" ? "Boss command" : (actor?.name ?? "Crew"),
+      body,
+      amount,
+    });
+    patchShop({ jobChats: result.chats, estimates: result.estimates });
+    ping(
+      amount > 0
+        ? `Estimate ${money(amount)} on ${job.customerName}.`
+        : `Logged on ${job.customerName}.`,
     );
   }
 
@@ -523,14 +532,12 @@ export default function JobCommandApp() {
           estimates={estimates}
           timeCards={timeCards}
           crew={crew}
+          jobChats={jobChats ?? []}
+          canEstimate={role === "boss"}
           onBack={() => setDesk("crew")}
           onStatus={(jobId, status) => setJobStatus(jobId, status, false)}
           onDelete={(jobId) => {
             applyTalk({ say: "", commands: [{ type: "delete_job", query: jobId }] }, false);
-          }}
-          onOpenEstimates={() => {
-            setTab("jobs");
-            setPaper("estimates");
           }}
           onOpenTimeCards={() => {
             setTab("jobs");
@@ -551,6 +558,7 @@ export default function JobCommandApp() {
               ),
             });
           }}
+          onPostChat={postCardChat}
         />
       )}
 
@@ -569,6 +577,7 @@ export default function JobCommandApp() {
           estimates={estimates}
           timeCards={timeCards}
           crew={crew}
+          jobChats={jobChats ?? []}
           jobId={laneJobId}
           onJobId={setLaneJobId}
           onBack={() => {
@@ -579,10 +588,6 @@ export default function JobCommandApp() {
           onStatus={(jobId, status) => setJobStatus(jobId, status, false)}
           onDelete={(jobId) => {
             applyTalk({ say: "", commands: [{ type: "delete_job", query: jobId }] }, false);
-          }}
-          onOpenEstimates={() => {
-            setTab("jobs");
-            setPaper("estimates");
           }}
           onOpenTimeCards={() => {
             setTab("jobs");
@@ -603,6 +608,7 @@ export default function JobCommandApp() {
               ),
             });
           }}
+          onPostChat={postCardChat}
         />
       )}
 
@@ -645,9 +651,9 @@ export default function JobCommandApp() {
           estimates={estimates}
           timeCards={timeCards}
           crew={crew}
+          jobChats={jobChats ?? []}
           onStatus={setJobStatus}
           onDelete={deleteJob}
-          onOpenEstimates={() => setPaper("estimates")}
           onOpenTimeCards={() => setPaper("timecards")}
           onPhoto={(jobId, kind, dataUrl) => {
             patchShop({
@@ -664,6 +670,7 @@ export default function JobCommandApp() {
               ),
             });
           }}
+          onPostChat={postCardChat}
         >
           {paperTabs}
           <AddCustomerForm onAdd={addCustomer} />

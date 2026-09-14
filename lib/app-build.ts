@@ -1,2 +1,2 @@
-export const APP_BUILD = "2026.09.14-tumbler-lanes";
-export const APP_BUILD_LABEL = "Tumbler taps plus call, estimate, on job, finished";
+export const APP_BUILD = "2026.09.14-scope-chat";
+export const APP_BUILD_LABEL = "Estimate chat, job scope, and site text";

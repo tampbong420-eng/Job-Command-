@@ -3,7 +3,7 @@
 import CustomerCard from "@/components/CustomerCard";
 import { jobsByStatus } from "@/lib/assign";
 import { jobStatusLabel, jobTone, wrapIndex } from "@/lib/format";
-import type { CrewMember, Estimate, Job, JobStatus, TimeCard } from "@/lib/types";
+import type { CrewMember, Estimate, Job, JobChatMessage, JobStatus, TimeCard } from "@/lib/types";
 import { useSwipe } from "@/lib/use-swipe";
 import { useEffect, useMemo } from "react";
 
@@ -18,9 +18,10 @@ export default function LaneJobsDeck({
   onBack,
   onStatus,
   onDelete,
-  onOpenEstimates,
   onOpenTimeCards,
   onPhoto,
+  jobChats,
+  onPostChat,
 }: {
   status: JobStatus;
   jobs: Job[];
@@ -32,9 +33,10 @@ export default function LaneJobsDeck({
   onBack: () => void;
   onStatus: (jobId: string, status: JobStatus) => void;
   onDelete: (jobId: string) => void;
-  onOpenEstimates: () => void;
   onOpenTimeCards: () => void;
   onPhoto: (jobId: string, kind: "before" | "after", dataUrl: string) => void;
+  jobChats: JobChatMessage[];
+  onPostChat: (jobId: string, body: string, amount: number) => void;
 }) {
   const lane = useMemo(() => jobsByStatus(jobs, status), [jobs, status]);
   const index = Math.max(
@@ -125,11 +127,13 @@ export default function LaneJobsDeck({
             estimates={estimates}
             timeCards={timeCards}
             crew={crew}
+            jobChats={jobChats}
+            canEstimate
             onStatus={(next) => onStatus(current.id, next)}
             onDelete={() => onDelete(current.id)}
-            onOpenEstimates={onOpenEstimates}
             onOpenTimeCards={onOpenTimeCards}
             onPhoto={(kind, dataUrl) => onPhoto(current.id, kind, dataUrl)}
+            onPostChat={(body, amount) => onPostChat(current.id, body, amount)}
           />
           <div className="rolodex-dots">
             {lane.map((job) => (

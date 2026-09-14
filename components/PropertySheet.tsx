@@ -2,6 +2,7 @@
 
 import StatusButtons from "@/components/StatusButtons";
 import { jobStatusLabel, jobTone } from "@/lib/format";
+import { jobScope } from "@/lib/job-site";
 import {
   mapsDirectionsUrl,
   mapsPlaceUrl,
@@ -74,6 +75,8 @@ export default function PropertySheet({
             <dd>{job.worker}</dd>
           </div>
         </dl>
+        <p className="card-label">Scope of work</p>
+        <p className="board-copy tight">{jobScope(job)}</p>
         <StatusButtons
           job={job}
           onStatus={(status) => onStatus(status)}

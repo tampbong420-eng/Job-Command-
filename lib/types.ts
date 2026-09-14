@@ -89,6 +89,16 @@ export type Estimate = {
   materials?: number;
 };
 
+export type JobChatMessage = {
+  id: string;
+  jobId: string;
+  fromId: string;
+  fromName: string;
+  body: string;
+  createdAt: string;
+  amount?: number;
+};
+
 export type TimeCard = {
   id: string;
   employeeId: string;
